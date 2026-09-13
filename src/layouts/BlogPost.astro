@@ -1,4 +1,5 @@
 ---
+import Community from '../components/Community.astro';
 import { Image } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
@@ -6,9 +7,18 @@ import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import Header from '../components/Header.astro';
 
-type Props = CollectionEntry<'blog'>['data'];
+type Props = CollectionEntry<'blog'>['data'] & {
+	postId: string;
+};
 
-const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+const {
+	title,
+	description,
+	pubDate,
+	updatedDate,
+	heroImage,
+	postId,
+} = Astro.props;
 ---
 
 <html lang="en">
@@ -52,6 +62,31 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 			.last-updated-on {
 				font-style: italic;
 			}
+			.share-link {
+				margin: 2rem 0;
+				text-align: center;
+			}
+
+			.share-link button {
+				padding: 0.7rem 1.2rem;
+				border: 1px solid rgba(168, 85, 247, 0.45);
+				border-radius: 999px;
+				background: rgba(168, 85, 247, 0.08);
+				color: rgb(192, 132, 252);
+				font: inherit;
+				font-weight: 600;
+				cursor: pointer;
+				transition:
+					background 0.2s ease,
+					border-color 0.2s ease,
+					transform 0.2s ease;
+			}
+
+			.share-link button:hover {
+				background: rgba(168, 85, 247, 0.16);
+				border-color: rgba(192, 132, 252, 0.7);
+				transform: translateY(-1px);
+			}
 		</style>
 	</head>
 
@@ -78,9 +113,38 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 						<hr />
 					</div>
 					<slot />
+					<div class="share-link">
+						<button id="copy-link" type="button">🔗 Copy Link</button>
+					</div>
+                    <Community postId={postId} />
 				</div>
 			</article>
 		</main>
 		<Footer />
 	</body>
 </html>
+
+<script>
+	const copyButton = document.querySelector('#copy-link');
+
+	if (copyButton instanceof HTMLButtonElement) {
+		copyButton.addEventListener('click', async () => {
+			try {
+				await navigator.clipboard.writeText(window.location.href);
+
+				copyButton.textContent = '✓ Link Copied!';
+
+				setTimeout(() => {
+					copyButton.textContent = '🔗 Copy Link';
+				}, 2000);
+			} catch (error) {
+				console.error('Could not copy link:', error);
+				copyButton.textContent = 'Copy failed';
+
+				setTimeout(() => {
+					copyButton.textContent = '🔗 Copy Link';
+				}, 2000);
+			}
+		});
+	}
+</script>
