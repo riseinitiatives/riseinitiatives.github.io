@@ -22,7 +22,7 @@ RISE isn't just a single robot. It's an evolving ecosystem. 🤖🚁
 
 ![Riser prototype](../../assets/images/blog1-pic-5.jpg)
 
-Starting with RISER V1, I'm developing and testing the individual technologies step by step, alongside my JEE studies.
+Starting with RISER V1, I'm developing and testing the individual technologies step by step, alongside my JEE studies
 
 Built to explore. Built to protect. Built to RISE. 🚀
 
