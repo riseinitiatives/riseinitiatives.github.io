@@ -2,15 +2,30 @@
 title: 'Welcome to RISE'
 description: 'Documenting our progress and community projects.'
 pubDate: 'Jul 05 2026'
-heroImage: '../../assets/Untitled11.png'
+heroImage: '../../assets/blog1-pic1.png'
 ---
+<video controls width="100%">
+  <source src="/videos/0120-0250.mp4" type="video/mp4">
+  Your browser does not support video playback.
+</video>
+![Riser prototype](../../assets/blog1-pic-2.jpg)
 
 Project RISE is a long-term emergency-response technology project focused on developing intelligent UGVs and UAVs to assist during fires and other hazardous situations.
 
+![Riser prototype](../../assets/blog1-pic-3.jpg)
+
 The vision is to combine AI, computer vision, thermal sensing, and autonomous systems to help detect hazards, assess environments and support emergency responders—keeping humans away from unnecessary danger.
 
+![Riser prototype](../../assets/blog1-pic-4.jpg)
+
 RISE isn't just a single robot. It's an evolving ecosystem. 🤖🚁
+
+![Riser prototype](../../assets/blog1-pic-5.jpg)
 
 Starting with RISER V1, I'm developing and testing the individual technologies step by step, alongside my JEE studies.
 
 Built to explore. Built to protect. Built to RISE. 🚀
+
+![Riser prototype](../../assets/blog1-pic-6.jpg)
+![Riser prototype](../../assets/blog1-pic-7.jpg)
+![Riser prototype](../../assets/blog1-pic-8.jpg)
