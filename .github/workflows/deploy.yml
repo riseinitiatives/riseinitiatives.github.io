@@ -20,6 +20,9 @@ jobs:
         uses: withastro/action@v3
         with:
           node-version: 22
+        env:
+          PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
 
   deploy:
     needs: build
