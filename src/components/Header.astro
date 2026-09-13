@@ -1,8 +1,12 @@
 ---
 import HeaderLink from './HeaderLink.astro';
 ---
+<div class="edge-neon edge-neon-left"></div>
+<div class="edge-neon edge-neon-right"></div>
+
 
 <header>
+	
 	<nav>
 		<!-- LEFT: RISE LOGO -->
 		<a class="header-logo" href="/" aria-label="RISE Initiatives home">
@@ -50,6 +54,7 @@ import HeaderLink from './HeaderLink.astro';
 			>
 		</a>
 		</div>
+		
 	</nav>
 </header>
 
@@ -201,5 +206,77 @@ import HeaderLink from './HeaderLink.astro';
 			padding: 0.45em 0.7em;
 			margin: 0 0.05em;
 		}
+	}
+	.edge-neon {
+		position: fixed;
+		top: 50%;
+		transform: translateY(-50%);
+
+		width: 70px;
+		height: 180px;
+
+		pointer-events: none;
+		z-index: 10;
+
+		opacity: 0.8;
+		filter: blur(18px);
+		border-radius: 50%;
+
+		transition: opacity 0.3s ease;
+	}
+
+
+	/* LEFT — PURPLE ENERGY */
+	.edge-neon-left {
+		left: -35px;
+
+		background:
+			radial-gradient(
+				ellipse at center,
+				rgba(187, 113, 255, 0.75) 0%,
+				rgba(139, 92, 246, 0.4) 35%,
+				rgba(139, 92, 246, 0.12) 60%,
+				transparent 75%
+			);
+	}
+
+
+	/* RIGHT — CYAN ENERGY */
+	.edge-neon-right {
+		right: -35px;
+
+		background:
+			radial-gradient(
+				ellipse at center,
+				rgba(76, 255, 237, 0.75) 0%,
+				rgba(76, 255, 237, 0.4) 35%,
+				rgba(76, 255, 237, 0.12) 60%,
+				transparent 75%
+			);
+	}
+		.edge-neon::after {
+		content: "";
+		position: absolute;
+
+		width: 18px;
+		height: 4px;
+
+		top: 16px;
+		left: 22px;
+
+		background: currentColor;
+
+		box-shadow:
+			0 0 6px currentColor,
+			0 0 12px currentColor;
+
+		opacity: 0.7;
+	}
+	.edge-neon-left {
+		color: #bb71ff;
+	}
+
+	.edge-neon-right {
+		color: #4cffed;
 	}
 </style>
