@@ -4,6 +4,8 @@ import HeaderLink from './HeaderLink.astro';
 <div class="edge-neon edge-neon-left"></div>
 <div class="edge-neon edge-neon-right"></div>
 
+<div class="edge-branch edge-branch-left"></div>
+<div class="edge-branch edge-branch-right"></div>
 
 <header>
 	
@@ -64,6 +66,8 @@ import HeaderLink from './HeaderLink.astro';
 		backdrop-filter: blur(12px);
 		-webkit-backdrop-filter: blur(12px);
 		border-bottom: 1px solid rgba(168, 85, 247, 0.15);
+		position: relative;
+		z-index: 10;
 	}
 
 	nav {
@@ -209,74 +213,160 @@ import HeaderLink from './HeaderLink.astro';
 	}
 	.edge-neon {
 		position: fixed;
-		top: 50%;
-		transform: translateY(-50%);
+		top: 0;
 
-		width: 70px;
-		height: 180px;
+		width: clamp(180px, 20vw, 340px);
+		height: 100vh;
 
 		pointer-events: none;
-		z-index: 10;
+		z-index: 1;
 
-		opacity: 0.8;
-		filter: blur(18px);
-		border-radius: 50%;
-
-		transition: opacity 0.3s ease;
+		opacity: 0.95;
 	}
 
 
-	/* LEFT — PURPLE ENERGY */
+	/* LEFT */
 	.edge-neon-left {
-		left: -35px;
+		left: 0;
 
 		background:
 			radial-gradient(
-				ellipse at center,
-				rgba(187, 113, 255, 0.75) 0%,
-				rgba(139, 92, 246, 0.4) 35%,
-				rgba(139, 92, 246, 0.12) 60%,
-				transparent 75%
+				ellipse 100% 130% at 0% 5%,
+				rgba(139, 92, 246, 0.58) 0%,
+				rgba(139, 92, 246, 0.34) 25%,
+				rgba(76, 110, 255, 0.18) 48%,
+				rgba(76, 110, 255, 0.07) 70%,
+				transparent 92%
+			),
+
+			radial-gradient(
+				ellipse 70% 120% at 0% 10%,
+				rgba(76, 110, 255, 0.20),
+				transparent 82%
 			);
 	}
 
 
-	/* RIGHT — CYAN ENERGY */
+	/* RIGHT */
 	.edge-neon-right {
-		right: -35px;
+		right: 0;
+
+		opacity: 0.78;
 
 		background:
 			radial-gradient(
-				ellipse at center,
-				rgba(76, 255, 237, 0.75) 0%,
-				rgba(76, 255, 237, 0.4) 35%,
-				rgba(76, 255, 237, 0.12) 60%,
-				transparent 75%
+				ellipse 90% 125% at 100% 5%,
+				rgba(139, 92, 246, 0.50) 0%,
+				rgba(139, 92, 246, 0.28) 25%,
+				rgba(76, 110, 255, 0.15) 48%,
+				rgba(76, 110, 255, 0.06) 70%,
+				transparent 92%
+			),
+
+			radial-gradient(
+				ellipse 62% 115% at 100% 10%,
+				rgba(76, 110, 255, 0.17),
+				transparent 82%
 			);
 	}
-		.edge-neon::after {
-		content: "";
-		position: absolute;
 
-		width: 18px;
-		height: 4px;
 
-		top: 16px;
-		left: 22px;
-
-		background: currentColor;
-
-		box-shadow:
-			0 0 6px currentColor,
-			0 0 12px currentColor;
-
-		opacity: 0.7;
-	}
-	.edge-neon-left {
-		color: #bb71ff;
+	/* SMALLER SCREENS */
+	@media (max-width: 900px) {
+		.edge-neon {
+			width: clamp(130px, 22vw, 250px);
+			height: 100vh;
+		}
 	}
 
-	.edge-neon-right {
-		color: #4cffed;
+
+	/* MOBILE */
+	@media (max-width: 720px) {
+		.edge-neon {
+			width: 28vw;
+			height: 100vh;
+		}
+
+		.edge-neon-left {
+			opacity: 0.52;
+		}
+
+		.edge-neon-right {
+			opacity: 0.42;
+		}
+	}
+	.edge-branch {
+	position: fixed;
+	top: 28%;
+	width: clamp(180px, 22vw, 360px);
+	height: 65vh;
+	pointer-events: none;
+	z-index: 2;
+	opacity: 0.7;
+	}
+
+	/* MAIN CURVED BRANCH */
+	.edge-branch::before {
+	content: "";
+	position: absolute;
+
+	top: 0;
+	left: -120px;
+
+	width: 260px;
+	height: 420px;
+
+	border-right: 3px solid rgba(187, 113, 255, 0.6);
+	border-bottom: 3px solid rgba(139, 92, 246, 0.45);
+
+	border-radius: 0 0 70% 70%;
+
+	transform: rotate(12deg);
+
+	box-shadow:
+		0 0 8px rgba(187, 113, 255, 0.45),
+		0 0 20px rgba(139, 92, 246, 0.2);
+	}
+
+	/* SMALL CURVED OFFSHOOT */
+	.edge-branch::after {
+	content: "";
+	position: absolute;
+
+	top: 150px;
+	left: 35px;
+
+	width: 170px;
+	height: 130px;
+
+	border-top: 2px solid rgba(187, 113, 255, 0.5);
+	border-right: 2px solid rgba(76, 255, 237, 0.2);
+
+	border-radius: 50% 70% 0 0;
+
+	transform: rotate(-20deg);
+
+	box-shadow:
+		0 0 7px rgba(187, 113, 255, 0.35);
+	}
+
+	/* LEFT */
+	.edge-branch-left {
+	left: 0;
+	}
+
+	/* RIGHT */
+	.edge-branch-right {
+	right: 0;
+	transform: scaleX(-1);
+	}
+
+	/* MOBILE */
+	@media (max-width: 720px) {
+	.edge-branch {
+		top: 35%;
+		width: 28vw;
+		opacity: 0.4;
+	}
 	}
 </style>
