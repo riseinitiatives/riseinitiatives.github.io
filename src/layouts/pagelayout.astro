@@ -1,0 +1,203 @@
+---
+import { Image } from 'astro:assets';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+
+interface Props {
+	title: string;
+	description: string;
+    heroImage?: ImageMetadata;
+}
+
+const { title, description, heroImage } = Astro.props;
+---
+
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} />
+    <style>
+        main {
+            position: relative;
+	        isolation: isolate;
+            width: min(1100px, calc(100% - 3rem));
+            margin: 0 auto;
+            padding: 4rem 0 7rem;
+        }
+        main::before {
+            content: "";
+            position: absolute;
+            width: 380px;
+            height: 380px;
+            top: 180px;
+            left: -220px;
+            background: rgba(139, 92, 246, 0.12);
+            filter: blur(100px);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        main::after {
+            content: "";
+            position: absolute;
+            width: 340px;
+            height: 340px;
+            top: 500px;
+            right: -200px;
+            background: rgba(76, 255, 237, 0.09);
+            filter: blur(110px);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .hero-image {
+            width: 100%;
+            margin-bottom: 3rem;
+        }
+
+        .hero-image img {
+            display: block;
+            width: 100%;
+            max-height: 520px;
+            object-fit: cover;
+            border-radius: 20px;
+        }
+
+        h1 {
+            margin: 0 0 2.5rem;
+            text-align: center;
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            line-height: 1;
+            color: #f5f3ff;
+        }
+        h1::after {
+            content: "";
+            display: block;
+            width: 250px;
+            height: 2px;
+            margin: 1.2rem auto 0;
+            background: linear-gradient(
+                90deg,
+                #8b5cf6,
+                #bb71ff,
+                #4cffed
+            );
+            box-shadow:
+                0 0 8px rgba(187, 113, 255, 0.45),
+                0 0 14px rgba(76, 255, 237, 0.25);
+        }
+    
+        .prose {
+            max-width: 800px;
+            margin: 0 auto;
+            color: #c8c3d9;
+            font-size: 1.05rem;
+            line-height: 1.9;
+        }
+
+        :global(.prose h2) {
+            margin: 5rem 0 1.5rem;
+            font-size: 2rem;
+            line-height: 1.2;
+            color: #f5f3ff;
+            position: relative;
+            padding-left: 1rem;
+        }
+
+        :global(.prose h2::before) {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            background: #8b5cf6;
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+            border-radius: 2px;
+        }
+        :global(.prose h2::after) {
+            content: "";
+            display: block;
+            width: 100px;
+            height: 2px;
+            margin-top: 0.7rem;
+            background: linear-gradient(
+                90deg,
+                #8b5cf6,
+                #4cffed
+            );
+            box-shadow:
+                0 0 7px rgba(139, 92, 246, 0.35),
+                0 0 10px rgba(76, 255, 237, 0.2);
+        }
+        :global(.prose h2 + p) {
+            margin-top: 0;
+        }
+
+        :global(.bottleneck) {
+            margin-top: 2rem;
+            padding: 2rem;
+            border: 1px solid rgba(187, 113, 255, 0.25);
+            border-left: 3px solid #bb71ff;
+            background: rgba(168, 85, 247, 0.05);
+            box-shadow:
+                0 0 25px rgba(168, 85, 247, 0.08),
+                inset 0 0 25px rgba(168, 85, 247, 0.02);
+            border-radius: 12px;
+        }
+
+        :global(.bottleneck-label) {
+            display: block;
+            font-family: monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.12em;
+            color: #aaa4b9;
+            margin-bottom: 0.5rem;
+        }
+
+        :global(.bottleneck strong) {
+            display: block;
+            font-family: monospace;
+            font-size: 1.4rem;
+            letter-spacing: 0.08em;
+            color: #f5f3ff;
+            margin-bottom: 1rem;
+        }
+
+        :global(.bottleneck p) {
+            margin: 0;
+        }
+
+        :global(.bottleneck-status) {
+            display: block;
+            margin-top: 1.5rem;
+            font-family: monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.08em;
+            color: #4cffed;
+        }
+
+    </style>
+	</head>
+
+	<body>
+		<Header />
+
+		<main>
+            {heroImage && (
+                <div class="hero-image">
+                    <Image src={heroImage} alt="" />
+                </div>
+            )}
+
+            <h1>{title}</h1>
+
+            <div class="prose">
+                <slot />
+            </div>
+        </main>
+     
+		<Footer />
+	</body>
+</html>
