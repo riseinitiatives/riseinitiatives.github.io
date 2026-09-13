@@ -4,9 +4,60 @@ import HeaderLink from './HeaderLink.astro';
 <div class="edge-neon edge-neon-left"></div>
 <div class="edge-neon edge-neon-right"></div>
 
-<div class="edge-branch edge-branch-left"></div>
-<div class="edge-branch edge-branch-right"></div>
+<div class="edge-branch edge-branch-left">
+  <svg viewBox="0 0 300 400" preserveAspectRatio="none">
 
+    <defs>
+      <linearGradient
+        id="branchGradientLeft"
+        gradientUnits="userSpaceOnUse"
+        x1="0"
+        y1="30"
+        x2="175"
+        y2="245"
+      >
+        <stop offset="0%" stop-color="#bb71ff" stop-opacity="1" />
+        <stop offset="25%" stop-color="#bb71ff" stop-opacity="0.75" />
+        <stop offset="50%" stop-color="#9b6cff" stop-opacity="0.45" />
+        <stop offset="75%" stop-color="#8060d9" stop-opacity="0.18" />
+        <stop offset="100%" stop-color="#8060d9" stop-opacity="0" />
+      </linearGradient>
+    </defs>
+
+    <path
+      d="M 0 30 C 45 70, 110 95, 125 145 S 115 210, 175 245"
+    />
+
+  </svg>
+</div>
+
+
+<div class="edge-branch edge-branch-right">
+  <svg viewBox="0 0 300 400" preserveAspectRatio="none">
+
+    <defs>
+      <linearGradient
+        id="branchGradientRight"
+        gradientUnits="userSpaceOnUse"
+        x1="0"
+        y1="30"
+        x2="175"
+        y2="245"
+      >
+        <stop offset="0%" stop-color="#bb71ff" stop-opacity="1" />
+        <stop offset="25%" stop-color="#bb71ff" stop-opacity="0.75" />
+        <stop offset="50%" stop-color="#9b6cff" stop-opacity="0.45" />
+        <stop offset="75%" stop-color="#8060d9" stop-opacity="0.18" />
+        <stop offset="100%" stop-color="#8060d9" stop-opacity="0" />
+      </linearGradient>
+    </defs>
+
+    <path
+      d="M 0 30 C 45 70, 110 95, 125 145 S 115 210, 175 245"
+    />
+
+  </svg>
+</div>
 <header>
 	
 	<nav>
@@ -67,7 +118,7 @@ import HeaderLink from './HeaderLink.astro';
 		-webkit-backdrop-filter: blur(12px);
 		border-bottom: 1px solid rgba(168, 85, 247, 0.15);
 		position: relative;
-		z-index: 10;
+		z-index: 1;
 	}
 
 	nav {
@@ -174,7 +225,7 @@ import HeaderLink from './HeaderLink.astro';
 	}
 
 	.social-links a.instagram:hover {
-		color: #FF0069;
+		color: #ff009d;
 		box-shadow: 0 0 10px rgba(255, 0, 105, 0.35);
 	}
 
@@ -272,7 +323,7 @@ import HeaderLink from './HeaderLink.astro';
 
 
 	/* SMALLER SCREENS */
-	@media (max-width: 900px) {
+	@media (max-width: 600px) {
 		.edge-neon {
 			width: clamp(130px, 22vw, 250px);
 			height: 100vh;
@@ -288,85 +339,58 @@ import HeaderLink from './HeaderLink.astro';
 		}
 
 		.edge-neon-left {
-			opacity: 0.52;
+			opacity: 0.2;
 		}
 
 		.edge-neon-right {
-			opacity: 0.42;
+			opacity: 0.2;
 		}
 	}
 	.edge-branch {
-	position: fixed;
-	top: 28%;
-	width: clamp(180px, 22vw, 360px);
-	height: 65vh;
+  	position: fixed;
+	top: 42%;
+	width: 260px;
+	height: 300px;
 	pointer-events: none;
 	z-index: 2;
-	opacity: 0.7;
+	opacity: 1;
 	}
 
-	/* MAIN CURVED BRANCH */
-	.edge-branch::before {
-	content: "";
-	position: absolute;
-
-	top: 0;
-	left: -120px;
-
-	width: 260px;
-	height: 420px;
-
-	border-right: 3px solid rgba(187, 113, 255, 0.6);
-	border-bottom: 3px solid rgba(139, 92, 246, 0.45);
-
-	border-radius: 0 0 70% 70%;
-
-	transform: rotate(12deg);
-
-	box-shadow:
-		0 0 8px rgba(187, 113, 255, 0.45),
-		0 0 20px rgba(139, 92, 246, 0.2);
+	.edge-branch svg {
+	width: 100%;
+	height: 100%;
+	overflow: visible;
 	}
 
-	/* SMALL CURVED OFFSHOOT */
-	.edge-branch::after {
-	content: "";
-	position: absolute;
+	.edge-branch path {
+	fill: none;
+	stroke-width: 2.4;
+	stroke-linecap: round;
 
-	top: 150px;
-	left: 35px;
-
-	width: 170px;
-	height: 130px;
-
-	border-top: 2px solid rgba(187, 113, 255, 0.5);
-	border-right: 2px solid rgba(76, 255, 237, 0.2);
-
-	border-radius: 50% 70% 0 0;
-
-	transform: rotate(-20deg);
-
-	box-shadow:
-		0 0 7px rgba(187, 113, 255, 0.35);
+	filter:
+		drop-shadow(0 0 5px rgba(187, 113, 255, 0.7))
+		drop-shadow(0 0 12px rgba(139, 92, 246, 0.25));
 	}
 
-	/* LEFT */
 	.edge-branch-left {
 	left: 0;
 	}
 
-	/* RIGHT */
+	.edge-branch-left path {
+	stroke: url(#branchGradientLeft);
+	}
+
 	.edge-branch-right {
 	right: 0;
 	transform: scaleX(-1);
 	}
 
-	/* MOBILE */
-	@media (max-width: 720px) {
+	.edge-branch-right path {
+		stroke: url(#branchGradientRight);
+		}
+		@media (max-width: 900px) {
 	.edge-branch {
-		top: 35%;
-		width: 28vw;
-		opacity: 0.4;
+		display: none;
 	}
 	}
 </style>
