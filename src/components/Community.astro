@@ -11,6 +11,7 @@ const { postId } = Astro.props;
 <section class="community" data-post-id={postId}>
   <div class="community-header">
     <h2>Community</h2>
+
     <div class="community-stats">
       <span>❤️ <strong class="like-count">0</strong> Likes</span>
       <span>💬 <strong class="comment-count">0</strong> Comments</span>
@@ -41,26 +42,27 @@ const { postId } = Astro.props;
     <button class="comment-submit" type="button">
       Post Comment
     </button>
+  </div>
+
+  <div class="community-divider">
+    <span>✦</span>
+  </div>
+
+  <div class="comments-section">
+    <div class="comments-header">
+      <h3>Comments</h3>
     </div>
 
-    <div class="community-divider">
-        <span>✦</span>
-    </div>
-
-    <div class="comments-section">
-        <div class="comments-header">
-        <h3>Comments</h3>
-        </div>
-
-        <div class="comments-list"></div>
-    </div>
+    <div class="comments-list"></div>
+  </div>
 </section>
 
 <script>
-    console.log('🔥 COMMUNITY SCRIPT IS RUNNING');
+  console.log('🔥 COMMUNITY SCRIPT IS RUNNING');
+
   import { supabase } from '../lib/supabase';
 
-  const community = document.querySelector('.community');
+  const community = document.querySelector<HTMLElement>('.community');
 
   if (community instanceof HTMLElement) {
     const postId = community.dataset.postId;
@@ -69,6 +71,10 @@ const { postId } = Astro.props;
       initializeCommunity(postId);
     }
   }
+
+  // ─────────────────────────────
+  // INITIALIZE COMMUNITY
+  // ─────────────────────────────
 
   async function initializeCommunity(postId: string) {
     // Check whether this browser already has an anonymous session
@@ -80,189 +86,631 @@ const { postId } = Astro.props;
 
     // No session yet → create an anonymous user
     if (!user) {
-      const { data, error } = await supabase.auth.signInAnonymously();
+      const { data, error } =
+        await supabase.auth.signInAnonymously();
 
       if (error) {
-        console.error('Anonymous sign-in failed:', error.message);
+        console.error(
+          'Anonymous sign-in failed:',
+          error.message
+        );
         return;
       }
 
+      // IMPORTANT: save the newly created user
       user = data.user;
     }
-    async function toggleLike(postId: string, userId: string) {
-    const { data: existingLike, error: checkError } = await supabase
+
+    console.log('RISE anonymous user:', user?.id);
+
+    if (!user) {
+      console.error('No anonymous user found.');
+      return;
+    }
+
+    // ─────────────────────────────
+    // LIKE SYSTEM
+    // ─────────────────────────────
+
+    async function toggleLike(
+      postId: string,
+      userId: string
+    ) {
+      const {
+        data: existingLike,
+        error: checkError,
+      } = await supabase
         .from('likes')
         .select('id')
         .eq('post_id', postId)
         .eq('user_id', userId)
         .maybeSingle();
 
-    if (checkError) {
-        console.error('Could not check like:', checkError.message);
+      if (checkError) {
+        console.error(
+          'Could not check like:',
+          checkError.message
+        );
         return;
-    }
+      }
 
-    if (existingLike) {
+      if (existingLike) {
         const { error } = await supabase
-        .from('likes')
-        .delete()
-        .eq('id', existingLike.id);
+          .from('likes')
+          .delete()
+          .eq('id', existingLike.id);
 
         if (error) {
-        console.error('Could not remove like:', error.message);
-        return;
+          console.error(
+            'Could not remove like:',
+            error.message
+          );
+          return;
         }
-    } else {
+      } else {
         const { error } = await supabase
-        .from('likes')
-        .insert({
+          .from('likes')
+          .insert({
             post_id: postId,
             user_id: userId,
-        });
+          });
 
         if (error) {
-        console.error('Could not add like:', error.message);
-        return;
+          console.error(
+            'Could not add like:',
+            error.message
+          );
+          return;
         }
+      }
+
+      await loadCommunity(postId, userId);
     }
 
-    await loadCommunity(postId, userId);
-    }
-    console.log('RISE anonymous user:', user?.id);
-
-    if (!user) {
-    console.error('No anonymous user found.');
-    return;
-    }
-
-    const likeButton = community?.querySelector('.like-button');
+    const likeButton =
+      community?.querySelector('.like-button');
 
     if (likeButton instanceof HTMLButtonElement) {
-    likeButton.addEventListener('click', async () => {
+      likeButton.addEventListener('click', async () => {
         await toggleLike(postId, user.id);
-    });
+      });
     }
 
-    const commentButton = community?.querySelector('.comment-submit');
-    const nameInput = community?.querySelector(`#display-name-${postId}`);
-    const commentInput = community?.querySelector(`#comment-${postId}`);
+    // ─────────────────────────────
+    // TOP-LEVEL COMMENT SYSTEM
+    // ─────────────────────────────
+
+    const commentButton =
+      community?.querySelector('.comment-submit');
+
+    const nameInput =
+      community?.querySelector(
+        `#display-name-${postId}`
+      );
+
+    const commentInput =
+      community?.querySelector(
+        `#comment-${postId}`
+      );
 
     if (
-    commentButton instanceof HTMLButtonElement &&
-    nameInput instanceof HTMLInputElement &&
-    commentInput instanceof HTMLTextAreaElement
+      commentButton instanceof HTMLButtonElement &&
+      nameInput instanceof HTMLInputElement &&
+      commentInput instanceof HTMLTextAreaElement
     ) {
-    commentButton.addEventListener('click', async () => {
-        const displayName = nameInput.value.trim() || 'Anonymous';
-        const body = commentInput.value.trim();
+      commentButton.addEventListener(
+        'click',
+        async () => {
+          const displayName =
+            nameInput.value.trim() || 'Anonymous';
 
-        if (!body) {
-        alert('Please write a comment first.');
-        return;
+          const body =
+            commentInput.value.trim();
+
+          if (!body) {
+            alert('Please write a comment first.');
+            return;
+          }
+
+          commentButton.disabled = true;
+          commentButton.textContent = 'Posting...';
+
+          const { error } = await supabase
+            .from('comments')
+            .insert({
+              post_id: postId,
+              user_id: user.id,
+              display_name: displayName,
+              body: body,
+              parent_id: null,
+            });
+
+          if (error) {
+            console.error(
+              'Could not post comment:',
+              error.message
+            );
+
+            alert(
+              'Could not post comment. Please try again.'
+            );
+
+            commentButton.disabled = false;
+            commentButton.textContent = 'Post Comment';
+
+            return;
+          }
+
+          commentInput.value = '';
+
+          await loadCommunity(postId, user.id);
+
+          commentButton.disabled = false;
+          commentButton.textContent = 'Post Comment';
         }
-
-        commentButton.disabled = true;
-        commentButton.textContent = 'Posting...';
-
-        const { error } = await supabase
-        .from('comments')
-        .insert({
-            post_id: postId,
-            user_id: user.id,
-            display_name: displayName,
-            body: body,
-        });
-
-        if (error) {
-        console.error('Could not post comment:', error.message);
-        alert('Could not post comment. Please try again.');
-        commentButton.disabled = false;
-        commentButton.textContent = 'Post Comment';
-        return;
-        }
-
-        commentInput.value = '';
-
-        await loadCommunity(postId, user.id);
-
-        commentButton.disabled = false;
-        commentButton.textContent = 'Post Comment';
-    });
+      );
     }
 
+    // Initial load
     await loadCommunity(postId, user.id);
   }
 
-  async function loadCommunity(postId: string, userId?: string) {
-    // Get comments
-    const { data: comments, error: commentsError } = await supabase
+  // ─────────────────────────────
+  // LOAD COMMUNITY
+  // ─────────────────────────────
+
+  async function loadCommunity(
+    postId: string,
+    userId?: string
+  ) {
+    const {
+      data: comments,
+      error: commentsError,
+    } = await supabase
       .from('comments')
       .select('*')
       .eq('post_id', postId)
-      .order('created_at', { ascending: true });
+      .order('created_at', {
+        ascending: true,
+      });
 
     if (commentsError) {
-      console.error('Could not load comments:', commentsError.message);
+      console.error(
+        'Could not load comments:',
+        commentsError.message
+      );
       return;
     }
 
-    // Get likes
-    const { count: likeCount, error: likesError } = await supabase
+    // ─────────────────────────────
+    // GET LIKES
+    // ─────────────────────────────
+
+    const {
+      count: likeCount,
+      error: likesError,
+    } = await supabase
       .from('likes')
-      .select('*', { count: 'exact', head: true })
+      .select('*', {
+        count: 'exact',
+        head: true,
+      })
       .eq('post_id', postId);
 
     if (likesError) {
-      console.error('Could not load likes:', likesError.message);
+      console.error(
+        'Could not load likes:',
+        likesError.message
+      );
       return;
     }
 
-    const likeElement = community?.querySelector('.like-count');
-    const commentElement = community?.querySelector('.comment-count');
-    const likeButton = community?.querySelector('.like-button');
+    const likeElement =
+      community?.querySelector('.like-count');
+
+    const commentElement =
+      community?.querySelector('.comment-count');
+
+    const likeButton =
+      community?.querySelector('.like-button');
 
     let userHasLiked = false;
 
     if (userId) {
-    const { data: userLike } = await supabase
-        .from('likes')
-        .select('id')
-        .eq('post_id', postId)
-        .eq('user_id', userId)
-        .maybeSingle();
+      const { data: userLike } =
+        await supabase
+          .from('likes')
+          .select('id')
+          .eq('post_id', postId)
+          .eq('user_id', userId)
+          .maybeSingle();
 
-    userHasLiked = !!userLike;
+      userHasLiked = !!userLike;
     }
-    const commentsList = community?.querySelector('.comments-list');
 
     if (likeElement) {
-      likeElement.textContent = String(likeCount ?? 0);
+      likeElement.textContent =
+        String(likeCount ?? 0);
     }
 
     if (commentElement) {
-      commentElement.textContent = String(comments?.length ?? 0);
+      commentElement.textContent =
+        String(comments?.length ?? 0);
     }
+
     if (likeButton instanceof HTMLButtonElement) {
-    likeButton.textContent = userHasLiked ? '❤️ Liked' : '❤️ Like';
+      likeButton.textContent =
+        userHasLiked
+          ? '❤️ Liked'
+          : '❤️ Like';
     }
 
-    if (commentsList) {
-      commentsList.innerHTML = '';
+    const commentsList =
+      community?.querySelector('.comments-list');
 
-      comments?.forEach((comment) => {
-        const item = document.createElement('div');
-        item.className = 'comment';
+    if (!commentsList) {
+      return;
+    }
 
-        const name = document.createElement('strong');
-        name.textContent = comment.display_name;
+    commentsList.innerHTML = '';
 
-        const body = document.createElement('p');
-        body.textContent = comment.body;
+    if (!comments || comments.length === 0) {
+      return;
+    }
 
-        item.append(name, body);
-        commentsList.appendChild(item);
+    // ─────────────────────────────
+    // BUILD COMMENT TREE
+    // ─────────────────────────────
+
+    const commentMap = new Map();
+
+    comments.forEach((comment) => {
+      commentMap.set(comment.id, {
+        ...comment,
+        replies: [],
       });
+    });
+
+    const rootComments: any[] = [];
+
+    comments.forEach((comment) => {
+      const currentComment =
+        commentMap.get(comment.id);
+
+      if (!comment.parent_id) {
+        rootComments.push(currentComment);
+      } else {
+        const parentComment =
+          commentMap.get(comment.parent_id);
+
+        if (parentComment) {
+          parentComment.replies.push(
+            currentComment
+          );
+        } else {
+          // If the parent no longer exists,
+          // display the comment as top-level.
+          rootComments.push(currentComment);
+        }
+      }
+    });
+
+    // ─────────────────────────────
+    // RENDER COMMENT TREE
+    // ─────────────────────────────
+
+    rootComments.forEach((comment) => {
+      commentsList.appendChild(
+        renderComment(
+          comment,
+          0,
+          postId,
+          userId
+        )
+      );
+    });
+  }
+
+  // ─────────────────────────────
+  // RENDER ONE COMMENT
+  // ─────────────────────────────
+
+  function renderComment(
+    comment: any,
+    depth = 0,
+    postId: string,
+    userId?: string
+  ): HTMLElement {
+    const wrapper =
+      document.createElement('div');
+
+    wrapper.className = 'comment-wrapper';
+
+    const item =
+      document.createElement('article');
+
+    item.className = 'comment';
+
+    // Limit visual nesting depth
+    if (depth > 0) {
+      item.classList.add('comment-reply');
+
+      const visualDepth =
+        Math.min(depth, 4);
+
+      item.style.marginLeft =
+        `${visualDepth * 1.25}rem`;
     }
+
+    const strong =
+      document.createElement('strong');
+
+    strong.textContent =
+      comment.display_name || 'Anonymous';
+
+    const p =
+      document.createElement('p');
+
+    p.textContent = comment.body;
+
+    item.appendChild(strong);
+    item.appendChild(p);
+
+    // ─────────────────────────────
+    // COMMENT ACTIONS
+    // ─────────────────────────────
+
+    const actions =
+      document.createElement('div');
+
+    actions.className =
+      'comment-actions';
+
+    const replyButton =
+      document.createElement('button');
+
+    replyButton.className =
+      'reply-button';
+
+    replyButton.type = 'button';
+
+    replyButton.textContent =
+      '↩ Reply';
+
+    actions.appendChild(replyButton);
+    item.appendChild(actions);
+
+    wrapper.appendChild(item);
+
+    // ─────────────────────────────
+    // REPLY FORM
+    // ─────────────────────────────
+
+    let replyForm: HTMLElement | null =
+      null;
+
+    replyButton.addEventListener(
+      'click',
+      () => {
+        if (replyForm) {
+          replyForm.remove();
+          replyForm = null;
+          return;
+        }
+
+        replyForm =
+          document.createElement('form');
+
+        replyForm.className =
+          'reply-form';
+
+        replyForm.innerHTML = `
+          <input
+            type="text"
+            placeholder="Your name"
+            value="Anonymous"
+            maxlength="40"
+            required
+          />
+
+          <textarea
+            placeholder="Write a reply..."
+            maxlength="1000"
+            required
+          ></textarea>
+
+          <div class="reply-form-actions">
+            <button
+              type="button"
+              class="reply-cancel"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              class="reply-submit"
+            >
+              Post Reply
+            </button>
+          </div>
+        `;
+
+        const cancelButton =
+          replyForm.querySelector(
+            '.reply-cancel'
+          ) as HTMLButtonElement;
+
+        cancelButton.addEventListener(
+          'click',
+          () => {
+            replyForm?.remove();
+            replyForm = null;
+          }
+        );
+
+        replyForm.addEventListener(
+          'submit',
+          async (event) => {
+            event.preventDefault();
+
+            const input =
+              replyForm!.querySelector(
+                'input'
+              ) as HTMLInputElement;
+
+            const textarea =
+              replyForm!.querySelector(
+                'textarea'
+              ) as HTMLTextAreaElement;
+
+            const submitButton =
+              replyForm!.querySelector(
+                '.reply-submit'
+              ) as HTMLButtonElement;
+
+            const displayName =
+              input.value.trim() ||
+              'Anonymous';
+
+            const body =
+              textarea.value.trim();
+
+            if (!body) {
+              return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.textContent =
+              'Posting...';
+
+            try {
+              const {
+                data: sessionData,
+              } = await supabase.auth.getSession();
+
+              const currentUserId =
+                sessionData.session?.user?.id;
+
+              if (!currentUserId) {
+                alert(
+                  'Please wait a moment and try again.'
+                );
+                return;
+              }
+
+              const { error } =
+                await supabase
+                  .from('comments')
+                  .insert({
+                    post_id: postId,
+                    user_id: currentUserId,
+                    display_name: displayName,
+                    body: body,
+                    parent_id: comment.id,
+                  });
+
+              if (error) {
+                throw error;
+              }
+
+              await loadCommunity(
+                postId,
+                currentUserId
+              );
+            } catch (error) {
+              console.error(
+                'Could not post reply:',
+                error
+              );
+
+              alert(
+                'Could not post reply. Please try again.'
+              );
+            } finally {
+              submitButton.disabled = false;
+              submitButton.textContent =
+                'Post Reply';
+            }
+          }
+        );
+
+        wrapper.appendChild(replyForm);
+      }
+    );
+
+    // ─────────────────────────────
+    // NESTED REPLIES
+    // ─────────────────────────────
+
+    if (
+      comment.replies &&
+      comment.replies.length > 0
+    ) {
+      const replies =
+        document.createElement('div');
+
+      replies.className = 'replies';
+
+      // Replies collapsed by default
+      replies.hidden = true;
+
+      const toggleButton =
+        document.createElement('button');
+
+      toggleButton.type = 'button';
+
+      toggleButton.className =
+        'reply-toggle';
+
+      const replyCount =
+        comment.replies.length;
+
+      toggleButton.textContent =
+        `${replyCount} ${
+          replyCount === 1
+            ? 'reply'
+            : 'replies'
+        } ▾`;
+
+      toggleButton.addEventListener(
+        'click',
+        () => {
+          replies.hidden =
+            !replies.hidden;
+
+          toggleButton.textContent =
+            replies.hidden
+              ? `${replyCount} ${
+                  replyCount === 1
+                    ? 'reply'
+                    : 'replies'
+                } ▾`
+              : `${replyCount} ${
+                  replyCount === 1
+                    ? 'reply'
+                    : 'replies'
+                } ▴`;
+        }
+      );
+
+      wrapper.appendChild(toggleButton);
+      wrapper.appendChild(replies);
+
+      // Render each nested reply recursively
+      for (const reply of comment.replies) {
+        replies.appendChild(
+          renderComment(
+            reply,
+            depth + 1,
+            postId,
+            userId
+          )
+        );
+      }
+    }
+
+    return wrapper;
   }
 </script>
 
@@ -492,12 +940,16 @@ const { postId } = Astro.props;
      COMMENT LIST
   ───────────────────────────── */
 
-    .comments-list {
+  .comments-list {
     display: grid;
     margin-top: 0;
-    }
+  }
 
-   :global(.comment) {
+  :global(.comment-wrapper) {
+    position: relative;
+  }
+
+  :global(.comment) {
     position: relative;
     z-index: 0;
     padding: 1.15rem 1.1rem;
@@ -505,21 +957,19 @@ const { postId } = Astro.props;
     border-radius: 12px;
     background: rgba(18, 14, 25, 0.48);
     box-shadow:
-        0 4px 18px rgba(0, 0, 0, 0.12),
-        inset 0 0 20px rgba(168, 85, 247, 0.015);
+      0 4px 18px rgba(0, 0, 0, 0.12),
+      inset 0 0 20px rgba(168, 85, 247, 0.015);
     transition:
-        border-color 0.2s ease,
-        background 0.2s ease,
-        transform 0.2s ease;
-    }
+      border-color 0.2s ease,
+      background 0.2s ease,
+      transform 0.2s ease;
+  }
 
-    /* Separation between comments */
-
-    :global(.comment) + :global(.comment) {
+  :global(.comment) + :global(.comment) {
     margin-top: 0.85rem;
-    }
+  }
 
-    :global(.comment + .comment::before) {
+  :global(.comment + .comment::before) {
     content: "";
     position: absolute;
     top: -0.45rem;
@@ -527,35 +977,216 @@ const { postId } = Astro.props;
     right: 8%;
     height: 1px;
     background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(168, 85, 247, 0.22),
-        transparent
+      90deg,
+      transparent,
+      rgba(168, 85, 247, 0.22),
+      transparent
     );
     z-index: 5;
     pointer-events: none;
-    }
+  }
 
-    :global(.comment):hover {
+  :global(.comment):hover {
     border-color: rgba(168, 85, 247, 0.24);
     background: rgba(22, 17, 30, 0.58);
     transform: translateY(-1px);
-    }
+  }
 
-    :global(.comment) strong {
+  :global(.comment) strong {
     display: block;
     margin-bottom: 0.3rem;
     color: rgb(var(--gray-dark));
     font-size: 0.95rem;
-    }
+  }
 
-    :global(.comment) p {
+  :global(.comment) p {
     margin: 0;
     color: rgb(var(--gray));
     font-size: 0.95rem;
     line-height: 1.6;
     overflow-wrap: anywhere;
-    }
+  }
+
+  /* ─────────────────────────────
+     NESTED REPLIES
+  ───────────────────────────── */
+
+  :global(.replies) {
+    position: relative;
+    margin-top: 0.85rem;
+  }
+
+  :global(.comment-reply) {
+    border-color: rgba(168, 85, 247, 0.09);
+    background: rgba(15, 11, 22, 0.42);
+  }
+
+  :global(.comment-reply)::before {
+    content: "";
+    position: absolute;
+    left: -0.7rem;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(
+      180deg,
+      rgba(168, 85, 247, 0.3),
+      rgba(168, 85, 247, 0.05)
+    );
+    pointer-events: none;
+  }
+
+  :global(.reply-toggle) {
+    display: block;
+    margin: 0.65rem 0 0.2rem 0.25rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: rgba(192, 132, 252, 0.78);
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      color 0.2s ease,
+      text-shadow 0.2s ease;
+  }
+
+  :global(.reply-toggle:hover) {
+    color: rgb(216, 180, 254);
+    text-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+  }
+
+  :global(.replies[hidden]) {
+    display: none;
+  }
+
+  /* ─────────────────────────────
+     COMMENT ACTIONS
+  ───────────────────────────── */
+
+  :global(.comment-actions) {
+    display: flex;
+    align-items: center;
+    margin-top: 0.75rem;
+  }
+
+  :global(.reply-button) {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: rgba(192, 132, 252, 0.8);
+    font: inherit;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition:
+      color 0.2s ease,
+      text-shadow 0.2s ease;
+  }
+
+  :global(.reply-button:hover) {
+    color: rgb(216, 180, 254);
+    text-shadow: 0 0 12px rgba(168, 85, 247, 0.45);
+  }
+
+  /* ─────────────────────────────
+     REPLY FORM
+  ───────────────────────────── */
+
+  :global(.reply-form) {
+    margin-top: 0.85rem;
+    padding: 1rem;
+    border: 1px solid rgba(168, 85, 247, 0.12);
+    border-radius: 12px;
+    background: rgba(8, 6, 14, 0.42);
+    box-shadow: inset 0 0 20px rgba(168, 85, 247, 0.015);
+  }
+
+  :global(.reply-form input),
+  :global(.reply-form textarea) {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid rgba(150, 150, 170, 0.18);
+    border-radius: 9px;
+    background: rgba(8, 6, 14, 0.72);
+    color: rgb(var(--gray-dark));
+    font: inherit;
+    outline: none;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  :global(.reply-form input) {
+    height: 42px;
+    padding: 0 0.8rem;
+  }
+
+  :global(.reply-form textarea) {
+    min-height: 90px;
+    margin-top: 0.7rem;
+    padding: 0.7rem 0.8rem;
+    resize: vertical;
+  }
+
+  :global(.reply-form input:focus),
+  :global(.reply-form textarea:focus) {
+    border-color: rgba(168, 85, 247, 0.55);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.06);
+  }
+
+  :global(.reply-form input::placeholder),
+  :global(.reply-form textarea::placeholder) {
+    color: rgba(150, 150, 170, 0.6);
+  }
+
+  :global(.reply-form-actions) {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.65rem;
+    margin-top: 0.75rem;
+  }
+
+  :global(.reply-cancel),
+  :global(.reply-submit) {
+    padding: 0.55rem 0.9rem;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  :global(.reply-cancel) {
+    border: 1px solid rgba(150, 150, 170, 0.18);
+    background: transparent;
+    color: rgb(var(--gray));
+  }
+
+  :global(.reply-cancel:hover) {
+    background: rgba(150, 150, 170, 0.06);
+  }
+
+  :global(.reply-submit) {
+    border: 1px solid rgba(168, 85, 247, 0.55);
+    background: rgba(168, 85, 247, 0.13);
+    color: rgb(var(--gray-dark));
+    font-weight: 700;
+  }
+
+  :global(.reply-submit:hover) {
+    background: rgba(168, 85, 247, 0.24);
+    border-color: rgba(192, 132, 252, 0.75);
+    box-shadow: 0 0 16px rgba(168, 85, 247, 0.16);
+  }
+
+  :global(.reply-submit:disabled) {
+    opacity: 0.55;
+    cursor: wait;
+  }
 
   /* ─────────────────────────────
      MOBILE
@@ -595,8 +1226,21 @@ const { postId } = Astro.props;
       border-radius: 14px;
     }
 
-    .comment {
+    :global(.comment) {
       padding: 0.9rem 1rem;
+    }
+
+    :global(.comment-reply) {
+      margin-left: 0.75rem !important;
+    }
+
+    :global(.reply-form-actions) {
+      flex-direction: column-reverse;
+    }
+
+    :global(.reply-cancel),
+    :global(.reply-submit) {
+      width: 100%;
     }
   }
 </style>
