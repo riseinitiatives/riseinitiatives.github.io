@@ -2,7 +2,7 @@
 title: 'Welcome to RISE'
 description: 'Documenting our progress and community projects.'
 pubDate: 'Jul 05 2026'
-heroImage: '../../assets/blog1-pic-1.png'
+heroImage: '../../assets/blog1-pic-1.jpg'
 ---
 <video controls width="100%">
   <source src="/videos/video1.mp4" type="video/mp4">
