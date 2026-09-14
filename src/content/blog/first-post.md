@@ -2,10 +2,10 @@
 title: 'Welcome to RISE'
 description: 'Documenting our progress and community projects.'
 pubDate: 'Jul 05 2026'
-heroImage: '../../assets/blog1-pic1.png'
+heroImage: '../../assets/blog1-pic-1.png'
 ---
 <video controls width="100%">
-  <source src="/videos/0120-0250.mp4" type="video/mp4">
+  <source src="/videos/video1.mp4" type="video/mp4">
   Your browser does not support video playback.
 </video>
 ![Riser prototype](../../assets/images/blog1-pic-2.jpg)
