@@ -7,6 +7,7 @@ heroImage: '../../assets/images/blog1-pic-1.jpg'
 <video controls width="100%">
   <source src="/videos/video1.mp4" type="video/mp4">
 </video>
+
 ![Riser prototype](../../assets/images/blog1-pic-2.jpg)
 
 Project RISE is a long-term emergency-response technology project focused on developing intelligent UGVs and UAVs to assist during fires and other hazardous situations.
