@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://riseinitiatives.github.io/sitemap-index.xml
