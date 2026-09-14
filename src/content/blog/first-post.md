@@ -1,7 +1,7 @@
 ---
 title: 'Welcome to RISE'
 description: 'Documenting our progress and community projects.'
-pubDate: 'Jul 05 2026'
+pubDate: 'Jun 29 2026'
 heroImage: '../../assets/images/blog1-pic-1.jpg'
 ---
 <video controls width="100%">
