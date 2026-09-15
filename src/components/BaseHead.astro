@@ -14,7 +14,7 @@ interface Props {
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
-const { title, description, image = FallbackImage } = Astro.props;
+const { title, description,} = Astro.props;
 ---
 
 <!-- Global Metadata -->
@@ -45,7 +45,7 @@ const { title, description, image = FallbackImage } = Astro.props;
 <meta property="og:url" content={Astro.url} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
-<meta property="og:image" content={new URL(image.src, Astro.url)} />
+<meta property="og:image" content={new URL(Astro.url)} />
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image" />
