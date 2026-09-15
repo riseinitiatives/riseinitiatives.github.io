@@ -1,18 +1,22 @@
 ---
-title: 'RISER V0.9 during the year 2022'
+title: 'RISER V1 UGV Design'
 description: 'Documenting our progress and community projects.'
-pubDate: 'Jul 01 2026'
-heroImage: '../../assets/images/blog2-pic-1.jpeg'
+pubDate: 'Jul 05 2026'
+heroImage: '../../assets/images/blog5-pic-1.png'
 ---
-RISER V0.9 
+RISER V1 
 
-✨THIS IS THE POINT WHERE IT ALL STARTED✨
+<video controls width="100%">
+  <source src="/videos/video3.mp4" type="video/mp4">
+</video>
 
-![Riser prototype](../../assets/images/blog2-pic-2.jpeg)
+<video controls width="100%">
+  <source src="/videos/video4.mp4" type="video/mp4">
+</video>
 
-![Riser prototype](../../assets/images/blog2-pic-3.jpeg)
+<video controls width="100%">
+  <source src="/videos/video5.mp4" type="video/mp4">
+</video>
 
-![Riser prototype](../../assets/images/blog2-pic-4.jpg)
 
-![Riser prototype](../../assets/images/blog2-pic-5.jpeg)
 
