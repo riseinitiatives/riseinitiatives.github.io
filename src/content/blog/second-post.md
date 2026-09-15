@@ -1,5 +1,5 @@
 ---
-title: 'My Work for project RISER V0.9 during the year 2022'
+title: 'RISER V0.9 during the year 2022'
 description: 'Documenting our progress and community projects.'
 pubDate: 'Jul 01 2026'
 heroImage: '../../assets/images/blog2-pic-1.jpeg'
