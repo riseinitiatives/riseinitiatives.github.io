@@ -13,3 +13,6 @@ RISER V1 UAV First Design
 
 ![Riser prototype](../../assets/images/blog4-pic-4.png)
 
+<video controls width="100%">
+  <source src="/videos/video2.mp4" type="video/mp4">
+</video>
