@@ -6,7 +6,7 @@ heroImage: '../../assets/images/blog8-pic-1.png'
 ---
 RISER V1 
 
-✨Detailed RISER V1✨
+Detailed RISER V1!
 
 ![Riser prototype](../../assets/images/blog8-pic-2.png)
 
