@@ -10,4 +10,4 @@ RISER V1
 
 ![Riser prototype](../../assets/images/blog7-pic-2.jpg)
 
-![Riser prototype](../../assets/images/blog7-pic-3.jpg)
+![Riser prototype](../../assets/images/blog7-pic-2.jpg)
