@@ -8,8 +8,6 @@ RISER V1
 
 Detailed RISER V1!
 
-![Riser prototype](../../assets/images/blog8-pic-2.png)
-
 ![Riser prototype](../../assets/images/blog8-pic-3.png)
 
 ![Riser prototype](../../assets/images/blog8-pic-4.png)
