@@ -16,3 +16,5 @@ RISER V1 UAV First Design
 <video controls width="100%">
   <source src="/videos/video2.mp4" type="video/mp4">
 </video>
+
+✨Make sure to follow rise.initiatives on instagram to get regular updates about RISER✨

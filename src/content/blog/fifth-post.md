@@ -18,5 +18,4 @@ RISER V1
   <source src="/videos/video5.mp4" type="video/mp4">
 </video>
 
-
-
+✨Make sure to follow rise.initiatives on instagram to get regular updates about RISER✨

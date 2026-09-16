@@ -32,4 +32,5 @@ RISER V1
 
 ![Riser prototype](../../assets/images/blog10-pic-14.png)
 
+✨Make sure to follow rise.initiatives on instagram to get regular updates about RISER✨
 

@@ -1,7 +1,7 @@
 ---
-title: 'New Updates!'
+title: 'Added Detailing!'
 description: 'Documenting our progress and community projects.'
-pubDate: 'Jul 18 2026'
+pubDate: 'Jul 20 2026'
 heroImage: '../../assets/images/blog8-pic-1.png'
 ---
 RISER V1 
@@ -27,3 +27,5 @@ RISER V1
 ![Riser prototype](../../assets/images/blog8-pic-10.png)
 
 ![Riser prototype](../../assets/images/blog8-pic-11.png)
+
+✨Make sure to follow rise.initiatives on instagram to get regular updates about RISER✨

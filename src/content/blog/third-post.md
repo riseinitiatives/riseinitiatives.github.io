@@ -12,3 +12,4 @@ RISER V0.9
 
 The empty space that you see in the software is to see Camera view from the UGV.
 
+✨Make sure to follow rise.initiatives on instagram to get regular updates about RISER✨

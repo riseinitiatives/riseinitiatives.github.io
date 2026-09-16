@@ -29,3 +29,5 @@ Built to explore. Built to protect. Built to RISE. 🚀
 ![Riser prototype](../../assets/images/blog1-pic-6.jpg)
 ![Riser prototype](../../assets/images/blog1-pic-7.jpg)
 ![Riser prototype](../../assets/images/blog1-pic-8.jpg)
+
+✨Make sure to follow rise.initiatives on instagram to get regular updates about RISER✨
