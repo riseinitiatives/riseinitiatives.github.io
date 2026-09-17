@@ -22,8 +22,5 @@ Detailed RISER V1!
 
 ![Riser prototype](../../assets/images/blog8-pic-9.png)
 
-![Riser prototype](../../assets/images/blog8-pic-10.png)
-
-![Riser prototype](../../assets/images/blog8-pic-11.png)
 
 ✨Make sure to follow rise.initiatives on instagram to get regular updates about RISER✨
