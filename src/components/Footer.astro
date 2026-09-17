@@ -52,10 +52,39 @@ const today = new Date();
 		margin-top: 1em;
 	}
 	.social-links a {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		padding: 0.35rem;
+		margin: 0;
+
+		color: #f5f3ffc5;
 		text-decoration: none;
-		color: rgb(var(--gray));
+
+		border: none;
+		background: transparent;
+		box-shadow: none;
+		border-radius: 50%;
 	}
+
 	.social-links a:hover {
-		color: rgb(var(--gray-dark));
+		border: none;
+		background: transparent;
+	}
+
+	.social-links a.instagram:hover {
+		color: #ff009d;
+		box-shadow: 0 0 10px rgba(255, 0, 105, 0.35);
+	}
+
+	.social-links a.youtube:hover {
+		color: #FF0000;
+		box-shadow: 0 0 10px rgba(255, 0, 0, 0.35);
+	}
+
+	.social-links a.github:hover {
+		color: #ffffff;
+		box-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
 	}
 </style>
