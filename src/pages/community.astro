@@ -1,0 +1,87 @@
+---
+import Community from '../components/Community.astro';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+
+const communityTitle = `Community | ${SITE_TITLE}`;
+const communityDescription =
+	'A place to discuss ideas, share projects, give feedback, and connect with RISE Initiatives.';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={communityTitle}
+			description={communityDescription}
+		/>
+	</head>
+
+	<body>
+		<Header />
+
+		<main>
+			<section class="community-intro">
+				<p class="eyebrow">RISE // COMMUNITY</p>
+
+				<h1>Community</h1>
+
+				<p class="intro">
+					A space to discuss ideas, share projects, give feedback,
+					and explore what technology can make possible.
+				</p>
+			</section>
+
+			<Community postId="community" />
+		</main>
+
+		<Footer />
+	</body>
+
+	<style>
+		.community-intro {
+			width: min(720px, calc(100% - 2rem));
+			margin: 4rem auto 0;
+			text-align: center;
+		}
+
+		.eyebrow {
+			margin: 0 0 0.8rem;
+			font-family: monospace;
+			font-size: 0.78rem;
+			letter-spacing: 0.16em;
+			color: #4cffed;
+		}
+
+		.community-intro h1 {
+			margin: 0;
+			font-size: 3rem;
+			line-height: 1.1;
+			letter-spacing: -0.03em;
+		}
+
+		.intro {
+			max-width: 620px;
+			margin: 1rem auto 0;
+			color: #aaa4b9;
+			font-size: 1rem;
+			line-height: 1.8;
+		}
+
+		@media (max-width: 600px) {
+			.community-intro {
+				margin-top: 3rem;
+			}
+
+			.community-intro h1 {
+				font-size: 2.3rem;
+			}
+
+			.intro {
+				font-size: 0.95rem;
+			}
+		}
+	</style>
+</html>
