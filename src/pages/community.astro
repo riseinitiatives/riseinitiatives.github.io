@@ -24,64 +24,207 @@ const communityDescription =
 
 		<main>
 			<section class="community-intro">
-				<p class="eyebrow">RISE // COMMUNITY</p>
+                <p class="eyebrow">RISE // COMMUNITY</p>
 
-				<h1>Community</h1>
+                <h1>Build. Discuss. <span>Inspire.</span></h1>
 
-				<p class="intro">
-					A space to discuss ideas, share projects, give feedback,
-					and explore what technology can make possible.
-				</p>
-			</section>
+                <p class="intro">
+                    A place for people who believe technology should do more than
+                    exist — it should solve problems, spark ideas, and create impact.
+                </p>
 
-			<Community postId="community" />
+                <div class="community-pills">
+                    <div class="community-pill">
+                        <span class="pill-icon">💡</span>
+                        <div>
+                            <strong>Ideas</strong>
+                            <small>Share your thoughts</small>
+                        </div>
+                    </div>
+
+                    <div class="community-pill">
+                        <span class="pill-icon">🚀</span>
+                        <div>
+                            <strong>Projects</strong>
+                            <small>Show what you're building</small>
+                        </div>
+                    </div>
+
+                    <div class="community-pill">
+                        <span class="pill-icon">🛠️</span>
+                        <div>
+                            <strong>Build & Tech</strong>
+                            <small>Learn and discuss</small>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="community-feed-heading">
+                <div>
+                    <p class="feed-eyebrow">COMMUNITY FEED</p>
+                    <h2>Join the conversation.</h2>
+                </div>
+
+                <p>
+                    Share ideas, give feedback, ask questions, or simply see
+                    what others are building.
+                </p>
+            </section>
+
+            <Community postId="community" />
 		</main>
 
 		<Footer />
 	</body>
 
 	<style>
-		.community-intro {
-			width: min(720px, calc(100% - 2rem));
-			margin: 4rem auto 0;
-			text-align: center;
-		}
+        .community-intro {
+            width: min(900px, calc(100% - 2rem));
+            margin: 5rem auto 0;
+            text-align: center;
+        }
 
-		.eyebrow {
-			margin: 0 0 0.8rem;
-			font-family: monospace;
-			font-size: 0.78rem;
-			letter-spacing: 0.16em;
-			color: #4cffed;
-		}
+        .eyebrow {
+            margin: 0 0 1rem;
+            font-family: monospace;
+            font-size: 0.78rem;
+            letter-spacing: 0.18em;
+            color: #4cffed;
+        }
 
-		.community-intro h1 {
-			margin: 0;
-			font-size: 3rem;
-			line-height: 1.1;
-			letter-spacing: -0.03em;
-		}
+        .community-intro h1 {
+            margin: 0;
+            font-size: clamp(2.8rem, 7vw, 5rem);
+            line-height: 1.05;
+            letter-spacing: -0.045em;
+        }
 
-		.intro {
-			max-width: 620px;
-			margin: 1rem auto 0;
-			color: #aaa4b9;
-			font-size: 1rem;
-			line-height: 1.8;
-		}
+        .community-intro h1 span {
+            color: #c084fc;
+        }
 
-		@media (max-width: 600px) {
-			.community-intro {
-				margin-top: 3rem;
-			}
+        .intro {
+            max-width: 680px;
+            margin: 1.5rem auto 0;
+            color: #aaa4b9;
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
 
-			.community-intro h1 {
-				font-size: 2.3rem;
-			}
+        .community-pills {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            max-width: 760px;
+            margin: 3rem auto 0;
+        }
 
-			.intro {
-				font-size: 0.95rem;
-			}
-		}
-	</style>
+        .community-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            padding: 1rem 1.1rem;
+            text-align: left;
+
+            border: 1px solid rgba(168, 85, 247, 0.18);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.025);
+
+            transition:
+                transform 0.25s ease,
+                border-color 0.25s ease,
+                background 0.25s ease;
+        }
+
+        .community-pill:hover {
+            transform: translateY(-3px);
+            border-color: rgba(192, 132, 252, 0.45);
+            background: rgba(168, 85, 247, 0.06);
+        }
+
+        .pill-icon {
+            font-size: 1.4rem;
+        }
+
+        .community-pill strong {
+            display: block;
+            font-size: 0.9rem;
+        }
+
+        .community-pill small {
+            display: block;
+            margin-top: 0.2rem;
+            color: #8e899b;
+            font-size: 0.72rem;
+        }
+
+        .community-feed-heading {
+            width: min(900px, calc(100% - 2rem));
+            margin: 5rem auto 1.5rem;
+
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 2rem;
+
+            padding-bottom: 1.2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .feed-eyebrow {
+            margin: 0 0 0.4rem;
+            font-family: monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.16em;
+            color: #4cffed;
+        }
+
+        .community-feed-heading h2 {
+            margin: 0;
+            font-size: 1.8rem;
+            letter-spacing: -0.02em;
+        }
+
+        .community-feed-heading > p {
+            max-width: 390px;
+            margin: 0;
+            color: #8e899b;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            text-align: right;
+        }
+
+        @media (max-width: 700px) {
+            .community-intro {
+                margin-top: 3.5rem;
+            }
+
+            .community-pills {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+            }
+
+            .community-feed-heading {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+                margin-top: 4rem;
+            }
+
+            .community-feed-heading > p {
+                text-align: left;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .community-intro h1 {
+                font-size: 2.7rem;
+            }
+
+            .intro {
+                font-size: 0.95rem;
+            }
+        }
+    </style>
 </html>
