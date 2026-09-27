@@ -100,6 +100,14 @@ const communityDescription =
 						from the RISE community.
 					</p>
 
+					<div class="feed-sort">
+						<label for="community-sort">Sort by</label>
+						<select id="community-sort">
+							<option value="top" selected>⬆ Top upvoted</option>
+							<option value="newest">🕒 Newest</option>
+						</select>
+					</div>
+
 				</div>
 
 
@@ -557,7 +565,7 @@ const communityDescription =
 
 		.community-header {
 			position: relative;
-			padding: 92px 24px 46px;
+			padding: 92px 0px 40px;
 			overflow: hidden;
 		}
 
@@ -565,17 +573,17 @@ const communityDescription =
 		.community-header::before {
 			content: '';
 			position: absolute;
-			top: -180px;
+			top: 10px;
 			left: 50%;
 			transform: translateX(-50%);
 
 			width: 700px;
-			height: 360px;
+			height: 500px;
 
 			background: radial-gradient(
 				ellipse,
-				rgba(168, 85, 247, 0.15),
-				transparent 70%
+				rgba(164, 90, 248, 0.15),
+				transparent 60%
 			);
 
 			pointer-events: none;
@@ -594,7 +602,7 @@ const communityDescription =
 			background: linear-gradient(
 				90deg,
 				transparent,
-				rgba(168, 85, 247, 0.25),
+				rgba(77, 0, 150, 0.25),
 				transparent
 			);
 		}
@@ -1371,51 +1379,368 @@ const communityDescription =
 		}
 
 
-			.post-title {
-				font-size: 1.05rem;
-			}
+		.post-title {
+			font-size: 1.05rem;
+		}
 
 
-			.start-card {
-				padding: 22px;
-			}
+		.start-card {
+			padding: 22px;
+		}
 
-			.community-post {
-				padding: 20px;
-				border-radius: 14px;
-			}
-			:global(.author-avatar) {
-				display: grid;
-				place-items: center;
-
-				width: 30px;
-				height: 30px;
-
-				flex-shrink: 0;
-
-				border: 1px solid rgba(168, 85, 247, 0.40);
-				border-radius: 50%;
-
-				overflow: hidden;
-
-				background: rgba(168, 85, 247, 0.10);
-
-				color: #c084fc;
-
-				font-size: 0.68rem;
-				font-weight: 800;
-			}
-
-			:global(.author-avatar img) {
-				display: block !important;
-
-				width: 100% !important;
-				height: 100% !important;
-
-				object-fit: cover !important;
-			}
-
+		.community-post {
+			padding: 20px;
+			border-radius: 14px;
+		}
 		
+		:global(.author-avatar) {
+			display: grid;
+			place-items: center;
+			width: 30px;
+			height: 30px;
+
+			flex-shrink: 0;
+
+			border: 1px solid rgba(168, 85, 247, 0.40);
+			border-radius: 50%;
+			overflow: hidden;
+
+			background: rgba(168, 85, 247, 0.10);
+
+			color: #c084fc;
+
+			font-size: 0.68rem;
+			font-weight: 800;
+		}
+
+		:global(.author-avatar img) {
+			display: block !important;
+
+			width: 100% !important;
+			height: 100% !important;
+
+			object-fit: cover !important;
+		}
+
+	/* =========================================================
+	TABLET RESPONSIVE
+	========================================================= */
+
+	@media (min-width: 501px) and (max-width: 900px) {
+		.community-header {
+			padding: 76px 28px 40px;
+		}
+
+		.community-title-row {
+			gap: 28px;
+		}
+
+		.community-navigation {
+			padding-left: 28px;
+			padding-right: 28px;
+		}
+
+		.community-feed {
+			padding: 58px 28px 0;
+		}
+
+		.feed-heading {
+			gap: 24px;
+		}
+
+		.start-section {
+			padding-left: 28px;
+			padding-right: 28px;
+		}
+
+		.start-card {
+			flex-wrap: wrap;
+		}
+
+		.start-button {
+			margin-left: auto;
+		}
+	}
+
+	/* =========================================================
+	MOBILE RESPONSIVE
+	========================================================= */
+
+	@media (max-width: 500px) {
+		.community-header {
+			padding: 54px 18px 34px;
+		}
+
+		.community-title-row {
+			gap: 22px;
+		}
+
+		.community-title-row > div {
+			min-width: 0;
+		}
+
+		.community-header h1 {
+			font-size: clamp(2.35rem, 11vw, 3.4rem);
+			line-height: 1.05;
+			overflow-wrap: anywhere;
+		}
+
+		.community-description {
+			margin-top: 16px;
+			font-size: 0.9rem;
+			line-height: 1.6;
+		}
+
+		.start-discussion {
+			align-self: stretch;
+			justify-content: center;
+			min-height: 44px;
+			box-sizing: border-box;
+		}
+
+		.community-navigation {
+			padding: 20px 18px 0;
+		}
+
+		.community-tabs {
+			gap: 7px;
+			margin-right: -18px;
+			padding-right: 18px;
+			padding-bottom: 8px;
+			-webkit-overflow-scrolling: touch;
+		}
+
+		.community-tab {
+			min-height: 40px;
+			padding: 9px 13px;
+			font-size: 0.78rem;
+		}
+
+		.community-feed {
+			padding: 42px 18px 0;
+		}
+
+		.feed-heading {
+			margin-bottom: 22px;
+		}
+
+		.feed-heading h2 {
+			font-size: clamp(1.65rem, 8vw, 2.2rem);
+			line-height: 1.15;
+		}
+
+		.feed-description {
+			font-size: 0.82rem;
+			line-height: 1.55;
+		}
+
+		:global(.community-feed-list) {
+			gap: 12px;
+		}
+
+		:global(.community-post) {
+			padding: 18px;
+			border-radius: 14px;
+		}
+
+		:global(.post-top) {
+			align-items: flex-start;
+			gap: 10px;
+		}
+
+		:global(.post-options) {
+			gap: 5px;
+		}
+
+		:global(.post-time) {
+			font-size: 0.76rem;
+		}
+
+		:global(.post-title) {
+			font-size: 1rem;
+			line-height: 1.4;
+			overflow-wrap: anywhere;
+		}
+
+		:global(.post-preview) {
+			margin: 8px 0 18px;
+			font-size: 0.82rem;
+			overflow-wrap: anywhere;
+		}
+
+		:global(.post-meta) {
+			align-items: flex-start;
+			flex-wrap: wrap;
+			gap: 12px;
+		}
+
+		:global(.post-author) {
+			min-width: 0;
+			gap: 8px;
+			font-size: 0.88rem;
+			overflow-wrap: anywhere;
+		}
+
+		:global(.post-stats) {
+			gap: 12px;
+			font-size: 0.95rem;
+		}
+
+		.start-section {
+			margin-top: 54px;
+			padding: 0 18px;
+		}
+
+		.start-card {
+			align-items: flex-start;
+			flex-direction: column;
+			gap: 16px;
+			padding: 20px;
+		}
+
+		.start-card > div:nth-child(2) {
+			min-width: 0;
+		}
+
+		.start-card h2 {
+			font-size: 1.2rem;
+		}
+
+		.start-card p:not(.start-label) {
+			font-size: 0.82rem;
+		}
+
+		.start-button {
+			width: 100%;
+			min-height: 44px;
+			justify-content: center;
+			margin-left: 0;
+			box-sizing: border-box;
+		}
+
+		/* Keep the discussion dialog usable on a phone */
+		:global(.discussion-modal) {
+			padding: 12px;
+			align-items: center;
+			overflow-y: auto;
+		}
+
+		:global(.discussion-dialog) {
+			width: 100%;
+			max-height: calc(100dvh - 24px);
+			display: flex;
+			flex-direction: column;
+			border-radius: 14px;
+		}
+
+		:global(.discussion-dialog-header) {
+			padding: 18px;
+			gap: 12px;
+		}
+
+		:global(.discussion-dialog h2) {
+			font-size: 1.2rem;
+		}
+
+		:global(.discussion-dialog-body) {
+			padding: 18px;
+			overflow-y: auto;
+			overscroll-behavior: contain;
+		}
+
+		:global(.discussion-dialog-body textarea) {
+			min-height: 120px;
+		}
+
+		:global(.discussion-dialog-footer) {
+			padding: 14px 18px;
+			gap: 8px;
+			flex-wrap: wrap;
+		}
+
+		:global(.discussion-cancel-button),
+		:global(.discussion-create-button) {
+			min-height: 42px;
+		}
+	}
+
+	/* Extra-small phones */
+
+	@media (max-width: 360px) {
+		.community-header,
+		.community-navigation,
+		.community-feed,
+		.start-section {
+			padding-left: 14px;
+			padding-right: 14px;
+		}
+
+		:global(.community-post) {
+			padding: 15px;
+		}
+
+		:global(.post-top) {
+			flex-wrap: wrap;
+		}
+
+		:global(.post-options) {
+			width: 100%;
+			justify-content: space-between;
+		}
+
+		:global(.discussion-dialog-footer) {
+			flex-direction: column-reverse;
+			align-items: stretch;
+		}
+
+		:global(.discussion-cancel-button),
+		:global(.discussion-create-button) {
+			width: 100%;
+		}
+	}
+
+	.feed-sort {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin-top: 18px;
+	}
+
+	.feed-sort label {
+		color: rgba(255, 255, 255, 0.5);
+		font-size: 0.78rem;
+		white-space: nowrap;
+	}
+
+	.feed-sort select {
+		padding: 9px 12px;
+		border: 1px solid rgba(168, 85, 247, 0.3);
+		border-radius: 9px;
+		background: #171020;
+		color: #fff;
+		font: inherit;
+		font-size: 0.8rem;
+		cursor: pointer;
+		color-scheme: dark;
+	}
+
+	.feed-sort select:focus {
+		outline: 1px solid rgba(11, 255, 232, 0.55);
+		border-color: rgba(11, 255, 232, 0.4);
+	}
+
+	@media (max-width: 500px) {
+		.feed-sort {
+			width: 100%;
+			justify-content: space-between;
+			margin-top: 8px;
+		}
+
+		.feed-sort select {
+			flex: 1;
+			max-width: 210px;
+		}
+	}
 
 	</style>
 
@@ -1432,8 +1757,12 @@ const communityDescription =
 
 	const emptyState =
 		document.querySelector<HTMLElement>('#community-empty');
+	
+	const sortSelect =
+    document.querySelector<HTMLSelectElement>('#community-sort');
 
-
+	let currentCategory = 'all';
+	let currentSort = 'top';		
 	let allPosts: any[] = [];
 	let currentUser: any = null;
 
@@ -1586,18 +1915,29 @@ const communityDescription =
 	   RENDER POSTS
 	========================================================= */
 
-	function renderPosts(category = 'all') {
+	function renderPosts() {
+    if (!feed) return;
 
-		if (!feed) return;
+    const posts = allPosts
+        .filter((post) =>
+            currentCategory === 'all' ||
+            post.category === currentCategory
+        )
+        .sort((a, b) => {
+            // Highest upvotes first; newest breaks ties
+            if (currentSort === 'top') {
+                const upvoteDifference =
+                    (b.upvote_count ?? 0) - (a.upvote_count ?? 0);
 
+                if (upvoteDifference !== 0) {
+                    return upvoteDifference;
+                }
+            }
 
-		const posts =
-			category === 'all'
-				? allPosts
-				: allPosts.filter(
-					(post) =>
-						post.category === category
-				);
+            // Newest first
+            return new Date(b.created_at).getTime()
+                - new Date(a.created_at).getTime();
+        });
 
 
 		if (posts.length === 0) {
@@ -2051,7 +2391,7 @@ const communityDescription =
         }));
 
 
-        renderPosts('all');
+        renderPosts();
 	}	
 
 
@@ -2060,101 +2400,31 @@ const communityDescription =
 
 
 	/* =========================================================
-	   CATEGORY FILTERS
+	CATEGORY FILTERS
 	========================================================= */
 
 	tabs.forEach((tab) => {
-
 		tab.addEventListener('click', () => {
-
-			const category =
-				tab.dataset.category || 'all';
-
+			currentCategory = tab.dataset.category || 'all';
 
 			tabs.forEach((item) => {
 				item.classList.remove('active');
 			});
 
-
 			tab.classList.add('active');
 
-
-			renderPosts(category);
-
+			renderPosts();
 		});
-
 	});
 
-	const createDiscussionButton =
-		document.querySelector<HTMLButtonElement>(
-			'#create-discussion'
-		);
+	/* =========================================================
+	POST SORTING
+	========================================================= */
 
-	const discussionTitleInput =
-		document.querySelector<HTMLInputElement>(
-			'#discussion-title-input'
-		);
-
-	const discussionCategoryInput =
-		document.querySelector<HTMLSelectElement>(
-			'#discussion-category-input'
-		);
-
-	const discussionBodyInput =
-		document.querySelector<HTMLTextAreaElement>(
-			'#discussion-body-input'
-		);
-
-	createDiscussionButton?.addEventListener('click', async () => {
-		const title = discussionTitleInput?.value.trim();
-		const category = discussionCategoryInput?.value;
-		const body = discussionBodyInput?.value.trim();
-
-		if (!title || !body) {
-			alert('Please enter a title and discussion.');
-			return;
-		}
-
-		const {
-			data: { user },
-			error: userError,
-		} = await supabase.auth.getUser();
-
-		if (userError || !user) {
-			alert('Please log in to publish a discussion.');
-			return;
-		}
-
-		createDiscussionButton.disabled = true;
-		createDiscussionButton.textContent = 'Publishing...';
-
-		const { error } = await supabase
-			.from('community_posts')
-			.insert({
-				user_id: user.id,
-				title,
-				category,
-				body,
-			});
-
-		if (error) {
-			console.error('Publish discussion error:', error);
-			alert(`Could not publish: ${error.message}`);
-			createDiscussionButton.disabled = false;
-			createDiscussionButton.textContent = 'Create Discussion';
-			return;
-		}
-
-		if (discussionTitleInput) discussionTitleInput.value = '';
-		if (discussionBodyInput) discussionBodyInput.value = '';
-
-		closeDiscussionModal();
-		await loadCommunityPosts();
-
-		createDiscussionButton.disabled = false;
-		createDiscussionButton.textContent = 'Create Discussion';
+	sortSelect?.addEventListener('change', () => {
+		currentSort = sortSelect.value;
+		renderPosts();
 	});
-
 
 	/* =========================================================
 	   START
