@@ -1351,7 +1351,77 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 		}
 
 		:global(#home-comments-list .home-comment-content[hidden]) {
-			display: none !important;
+			display: none !important;	
+		}
+
+		:global(#home-comments-list .home-comment-report),
+		:global(#home-comments-list .home-report-actions button) {
+			padding: 6px 10px;
+			border: 1px solid rgba(204, 57, 57, 0.3);
+			border-radius: 999px;
+			background: transparent;
+			color: #ff4949;
+			font: inherit;
+			font-size: 0.8rem;
+			cursor: pointer;
+			transition: background 0.2s ease, color 0.2s ease;
+		}
+
+		:global(#home-comments-list .home-comment-report:hover),
+		:global(#home-comments-list .home-report-actions button:hover) {
+			background: rgba(192, 49, 49, 0.14);
+			color: #ff0000;
+		}
+
+		:global(#home-comments-list .home-comment-report:disabled) {
+			opacity: 0.5;
+			cursor: default;
+		}
+
+		:global(#home-comments-list .home-report-form) {
+			display: grid;
+			gap: 10px;
+			margin: 12px 0 0 53px;
+			padding: 14px;
+			border: 1px solid rgba(168, 85, 247, 0.25);
+			border-radius: 12px;
+			background: rgba(168, 85, 247, 0.045);
+		}
+
+		:global(#home-comments-list .home-report-form strong) {
+			color: #8452b3;
+		}
+
+		:global(#home-comments-list .home-report-reason),
+		:global(#home-comments-list .home-report-details) {
+			box-sizing: border-box;
+			width: 100%;
+			padding: 10px;
+			border: 1px solid rgba(168, 85, 247, 0.25);
+			border-radius: 8px;
+			background: #17111f;
+			color: #8f8e91;
+			font: inherit;
+			font-size: 1rem;
+		}
+
+		:global(#home-comments-list .home-report-status) {
+			margin: 0;
+			color: #d61b1b;
+			font-size: 0.82rem;
+		}
+
+		:global(#home-comments-list .home-report-actions) {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: flex-end;
+			gap: 10px;
+		}
+
+		@media (max-width: 600px) {
+			:global(#home-comments-list .home-report-form) {
+				margin-left: 0;
+			}
 		}
 
 
@@ -1408,6 +1478,120 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 			list.textContent =
 				'No comments yet. Be the first to share a thought!';
 			return;
+		}
+
+		function addHomeReportForm(
+			comment: any,
+			wrapper: HTMLElement,
+			reportButton: HTMLButtonElement,
+			reporterId: string
+		) {
+			if (wrapper.querySelector('.home-report-form')) return;
+
+			const form = document.createElement('form');
+			form.className = 'home-report-form';
+
+			const heading = document.createElement('strong');
+			heading.textContent = 'Report this comment';
+
+			const reason = document.createElement('select');
+			reason.required = true;
+			reason.className = 'home-report-reason';
+
+			const placeholder = document.createElement('option');
+			placeholder.value = '';
+			placeholder.textContent = 'Choose a reason';
+			placeholder.disabled = true;
+			placeholder.selected = true;
+			reason.appendChild(placeholder);
+
+			const reasons = [
+				'Spam or unwanted promotion',
+				'Harassment or bullying',
+				'Inappropriate content',
+				'Misinformation',
+				'Other',
+			];
+
+			for (const value of reasons) {
+				const option = document.createElement('option');
+				option.value = value;
+				option.textContent = value;
+				reason.appendChild(option);
+			}
+
+			const details = document.createElement('textarea');
+			details.className = 'home-report-details';
+			details.maxLength = 1000;
+			details.rows = 3;
+			details.placeholder = 'Additional details (optional)';
+
+			const statusMessage = document.createElement('p');
+			statusMessage.className = 'home-report-status';
+			statusMessage.setAttribute('aria-live', 'polite');
+
+			const submit = document.createElement('button');
+			submit.type = 'submit';
+			submit.textContent = 'Submit report';
+
+			const cancel = document.createElement('button');
+			cancel.type = 'button';
+			cancel.textContent = 'Cancel';
+
+			cancel.addEventListener('click', () => {
+				form.remove();
+				reportButton.disabled = false;
+			});
+
+			form.addEventListener('submit', async (event) => {
+				event.preventDefault();
+
+				if (!reason.value) {
+					statusMessage.textContent = 'Please choose a reason.';
+					return;
+				}
+
+				submit.disabled = true;
+				statusMessage.textContent = 'Submitting report...';
+
+				try {
+					const { error } = await supabase
+						.from('comment_reports')
+						.insert({
+							comment_id: comment.id,
+							post_id: HOME_POST_ID,
+							reporter_id: reporterId,
+							reason: reason.value,
+							details: details.value.trim() || null,
+						});
+
+					if (error) {
+						if (error.code === '23505') {
+							throw new Error('You have already reported this comment.');
+						}
+						throw error;
+					}
+
+					statusMessage.textContent = 'Report submitted. Thank you.';
+					submit.remove();
+					cancel.textContent = 'Close';
+				} catch (error) {
+					console.error('Homepage report failed:', error);
+					statusMessage.textContent =
+						error instanceof Error
+							? error.message
+							: 'Could not submit the report.';
+					submit.disabled = false;
+				}
+			});
+
+			const controls = document.createElement('div');
+			controls.className = 'home-report-actions';
+			controls.append(cancel, submit);
+
+			form.append(heading, reason, details, statusMessage, controls);
+			wrapper.appendChild(form);
+			reportButton.disabled = true;
 		}
 
 		
@@ -1523,7 +1707,17 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 								data-parent-id="${escapeHTML(comment.id)}"
 								aria-expanded="false"
 							>↳ Reply</button>
+
+							${user && user.id !== comment.user_id ? `
+								<button
+									class="home-comment-report"
+									type="button"
+									data-comment-id="${escapeHTML(comment.id)}"
+								>⚑ Report</button>
+							` : ''}
 						</div>
+
+						
 
 						<form
 							class="home-reply-form"
@@ -1562,9 +1756,44 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 			`;
 		};
 
+			
+
 		list.innerHTML = (commentsByParent.get(null) || [])
 			.map((comment) => renderComment(comment))
 			.join('');
+		
+		list.querySelectorAll<HTMLButtonElement>('.home-comment-report')
+		.forEach((reportButton) => {
+			reportButton.addEventListener('click', () => {
+			const commentId = reportButton.dataset.commentId;
+
+			const comment = allComments.find(
+				(item) => item.id === commentId
+			);
+
+			const wrapper = reportButton.closest<HTMLElement>('.home-comment');
+
+			if (
+				!comment ||
+				!wrapper ||
+				!user ||
+				comment.user_id === user.id
+			) {
+				return;
+			}
+
+			addHomeReportForm(
+				comment,
+				wrapper,
+				reportButton,
+				user.id
+			);
+			});
+		});	
+
+		
+
+		
 	}
 
 	list?.addEventListener('click', async (event) => {
@@ -1670,7 +1899,7 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 			await loadHomeComments();
 		}
 
-				// Open or close a reply form
+		// Open or close a reply form
 		const replyButton = target.closest<HTMLButtonElement>(
 			'.home-comment-reply-button'
 		);
@@ -1735,6 +1964,8 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 
 			return;
 		}
+
+		
 
 		
 	});

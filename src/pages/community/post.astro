@@ -733,7 +733,7 @@ const pageDescription = 'RISE Community discussion';
             color: #ff8b8b;
 
             font: inherit;
-            font-size: 0.78rem;
+            font-size: 0.37rem;
             text-align: left;
 
             cursor: pointer;
@@ -752,7 +752,7 @@ const pageDescription = 'RISE Community discussion';
             background: transparent;
             color: #ff8b8b;
             font: inherit;
-            font-size: 0.78rem;
+            font-size: 1rem;
             text-align: left;
             cursor: pointer;
         }
@@ -770,7 +770,7 @@ const pageDescription = 'RISE Community discussion';
             border: 1px solid rgba(168, 85, 247, 0.25);
             border-radius: 10px;
             background: rgba(168, 85, 247, 0.05);
-            color: #fff;
+            color: #7c43d8;
         }
 
         :global(.report-form textarea),
@@ -781,7 +781,7 @@ const pageDescription = 'RISE Community discussion';
             border: 1px solid rgba(168, 85, 247, 0.25);
             border-radius: 8px;
             background: #171020;
-            color: #fff;
+            color: #929192;
             font: inherit;
         }
 
@@ -796,7 +796,7 @@ const pageDescription = 'RISE Community discussion';
             border: 1px solid rgba(168, 85, 247, 0.3);
             border-radius: 8px;
             background: rgba(168, 85, 247, 0.1);
-            color: #c084fc;
+            color: #e95959;
             cursor: pointer;
         }
 
@@ -1330,8 +1330,135 @@ const pageDescription = 'RISE Community discussion';
                 wrapper: HTMLElement,
                 reportButton: HTMLButtonElement
             ) {
+                // Avoid opening multiple report forms
+                if (wrapper.querySelector('.report-form')) return;
+
+                const form = document.createElement('form');
+                form.className = 'report-form';
+
+                form.innerHTML = `
+                    <label>
+                        Reason for reporting
+                        <select class="report-reason" name="reason" required>
+                        <option value="">Select a reason</option>
+                        <option value="Spam or unwanted promotion">
+                            Spam or unwanted promotion
+                        </option>
+                        <option value="Harassment or bullying">
+                            Harassment or bullying
+                        </option>
+                        <option value="Inappropriate content">
+                            Inappropriate content   
+                        </option>
+                        <option value="Misinformation">
+                            Misinformation
+                        </option>
+                        <option value="Other">Other</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Additional details (optional)
+                        <textarea
+                            class="report-details"
+                            rows="3"
+                            maxlength="1000"
+                            placeholder="Provide more context..."
+                        ></textarea>
+                    </label>
+
+                    <div class="report-form-actions">
+                        <button class="report-submit" type="submit">
+                            Submit report
+                        </button>
+                        <button class="report-cancel" type="button">
+                            Cancel
+                        </button>
+                    </div>
+
+                    <p class="report-message" role="status" aria-live="polite"></p>
+                `;
+
+                wrapper.appendChild(form);
+
+                const reasonInput =
+                    form.querySelector<HTMLSelectElement>('.report-reason');
+                const detailsInput =
+                    form.querySelector<HTMLTextAreaElement>('.report-details');
+                const submitButton =
+                    form.querySelector<HTMLButtonElement>('.report-submit');
+                const cancelButton =
+                    form.querySelector<HTMLButtonElement>('.report-cancel');
+                const message =
+                    form.querySelector<HTMLElement>('.report-message');
+
+                cancelButton?.addEventListener('click', () => {
+                    form.remove();
+                    reportButton.focus();
+                });
+
+                form.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+
+                    if (!user) {
+                        window.location.href = '/login';
+                        return;
+                    }
+
+                    const reason = reasonInput?.value;
+                    const details = detailsInput?.value.trim() || '';
+
+                    if (!reason) {
+                        if (message) message.textContent = 'Please select a reason.';
+                        return;
+                    }
+
+                    if (submitButton) {
+                        submitButton.disabled = true;
+                        submitButton.textContent = 'Submitting...';
+                    }
+
+                    const { error } = await supabase
+                        .from('comment_reports')
+                        .insert({
+                            comment_id: comment.id,
+                            post_id: postId,
+                            reporter_id: user.id,
+                            reason,
+                            details
+                        });
+
+                    if (error) {
+                        console.error('Comment report error:', error);
+
+                        if (message) {
+                            message.textContent =
+                                error.code === '23505'
+                                    ? 'You have already reported this comment.'
+                                    : 'Could not submit the report. Please try again.';
+                        }
+
+                        if (submitButton) {
+                            submitButton.disabled = false;
+                            submitButton.textContent = 'Submit report';
+                        }
+
+                        return;
+                    }
+
+                    if (message) {
+                        message.textContent = 'Report submitted. Thank you.';
+                    }
+
+                    form.querySelectorAll('button, select, textarea').forEach((element) => {
+                        (element as HTMLButtonElement).disabled = true;
+                    });
+                });
+
+                reasonInput?.focus();
+            }
         }
-    }
+    
 
         loadComments();   
 
