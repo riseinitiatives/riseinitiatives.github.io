@@ -159,6 +159,147 @@ const { postId } = Astro.props;
       return button;
     }
 
+
+	function addReportForm(
+		comment: CommentRecord,
+		wrapper: HTMLElement,
+		reportButton: HTMLButtonElement
+		) {
+		if (!currentUserId || !currentProfile) {
+			setStatus('Sign in with your RISE account to report a comment.', true);
+			return;
+		}
+
+		if (comment.user_id === currentUserId) return;
+
+		// Avoid opening multiple report forms for the same comment.
+		if (wrapper.querySelector('.report-form')) return;
+
+		const form = document.createElement('form');
+		form.className = 'report-form';
+
+		const heading = document.createElement('strong');
+		heading.className = 'report-heading';
+		heading.textContent = 'Report this comment';
+
+		const reasonLabel = document.createElement('label');
+		reasonLabel.textContent = 'Why are you reporting it?';
+
+		const reason = document.createElement('select');
+		reason.required = true;
+		reason.className = 'report-reason';
+
+		const placeholder = document.createElement('option');
+		placeholder.value = '';
+		placeholder.textContent = 'Choose a reason';
+		placeholder.disabled = true;
+		placeholder.selected = true;
+		reason.appendChild(placeholder);
+
+		const reasons = [
+			'Spam or unwanted promotion',
+			'Harassment or bullying',
+			'Inappropriate content',
+			'Misinformation',
+			'Other',
+		];
+
+		for (const value of reasons) {
+			const option = document.createElement('option');
+			option.value = value;
+			option.textContent = value;
+			reason.appendChild(option);
+		}
+
+		const detailsLabel = document.createElement('label');
+		detailsLabel.textContent = 'Additional details (optional)';
+
+		const details = document.createElement('textarea');
+		details.className = 'report-details';
+		details.maxLength = 1000;
+		details.rows = 3;
+		details.placeholder = 'Add context for the moderators…';
+
+		const controls = document.createElement('div');
+		controls.className = 'report-form-actions';
+
+		const cancel = makeButton('Cancel', 'report-cancel');
+
+		const submit = document.createElement('button');
+		submit.type = 'submit';
+		submit.className = 'report-submit';
+		submit.textContent = 'Submit report';
+
+		let submitting = false;
+
+		cancel.addEventListener('click', () => {
+			form.remove();
+		});
+
+		form.addEventListener('submit', async (event) => {
+			event.preventDefault();
+
+			if (submitting || !currentUserId || !reason.value) return;
+
+			submitting = true;
+			submit.disabled = true;
+			cancel.disabled = true;
+			submit.textContent = 'Submitting…';
+
+			try {
+			const { error } = await supabase
+				.from('comment_reports')
+				.insert({
+				comment_id: comment.id,
+				post_id: postId,
+				reporter_id: currentUserId,
+				reason: reason.value,
+				details: details.value.trim() || null,
+				});
+
+			if (error) {
+				if (error.code === '23505') {
+				throw new Error('You have already reported this comment.');
+				}
+				throw error;
+			}
+
+			form.remove();
+			reportButton.disabled = true;
+			reportButton.textContent = '⚑ Reported';
+			setStatus('Thanks. Your report has been submitted.');
+			} catch (error) {
+			console.error('Comment report failed:', error);
+			setStatus(
+				error instanceof Error
+				? error.message
+				: 'Could not submit your report. Please try again.',
+				true
+			);
+
+			submitting = false;
+			submit.disabled = false;
+			cancel.disabled = false;
+			submit.textContent = 'Submit report';
+			}
+		});
+
+		controls.append(cancel, submit);
+		form.append(
+			heading,
+			reasonLabel,
+			reason,
+			detailsLabel,
+			details,
+			controls
+		);
+
+		wrapper.appendChild(form);
+		reason.focus();
+	}
+
+
+
     function renderComment(comment: CommentRecord, depth = 0): HTMLElement {
       const wrapper = document.createElement('div');
       wrapper.className = 'comment-wrapper';
@@ -214,11 +355,22 @@ const { postId } = Astro.props;
       body.className = 'comment-body';
       body.textContent = comment.body;
 
-      const actions = document.createElement('div');
-      actions.className = 'comment-actions';
+	    const actions = document.createElement('div');
+		actions.className = 'comment-actions';
 
-      const replyButton = makeButton('↩ Reply', 'reply-button');
-	  actions.appendChild(replyButton);
+		const replyButton = makeButton('↩ Reply', 'reply-button');
+		actions.appendChild(replyButton);
+
+		// Show Report for another user's comment.
+		if (currentUserId && comment.user_id !== currentUserId) {
+		const reportButton = makeButton('⚑ Report', 'report-button');
+
+		reportButton.addEventListener('click', () => {
+			addReportForm(comment, wrapper, reportButton);
+		});
+
+		actions.appendChild(reportButton);
+		}
 
       if (currentUserId && comment.user_id === currentUserId) {
         const deleteButton = makeButton('Delete', 'delete-button');
@@ -417,6 +569,8 @@ const { postId } = Astro.props;
         
 		}
 
+
+		
 		return wrapper;
     
     } 
@@ -1450,6 +1604,115 @@ const { postId } = Astro.props;
 
 	:global(.reply-form button:hover) {
 	background: #c084fc;
+	}
+
+	:global(.report-form) {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin: 12px 0 8px;
+	padding: 16px;
+	border: 1px solid rgba(168, 85, 247, 0.3);
+	border-radius: 14px;
+	background: rgba(18, 13, 30, 0.96);
+	}
+
+	:global(.report-heading) {
+	color: #c084fc;
+	font-size: 0.95rem;
+	}
+
+	:global(.report-form label) {
+	color: rgb(var(--gray));
+	font-size: 0.8rem;
+	font-weight: 600;
+	}
+
+	:global(.report-form select),
+	:global(.report-form textarea) {
+	box-sizing: border-box;
+	width: 100%;
+	padding: 11px 12px;
+	border: 1px solid rgba(168, 85, 247, 0.3);
+	border-radius: 9px;
+	background: #100c1b;
+	color: #f5f3ff;
+	font: inherit;
+	font-size: 0.88rem;
+	}
+
+	:global(.report-form textarea) {
+	min-height: 75px;
+	resize: vertical;
+	}
+
+	:global(.report-form select:focus),
+	:global(.report-form textarea:focus) {
+	outline: none;
+	border-color: #a855f7;
+	box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.13);
+	}
+
+	:global(.report-form-actions) {
+	display: flex;
+	justify-content: flex-end;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 4px;
+	}
+
+	:global(.report-button) {
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: #f0a0a0;
+	font: inherit;
+	font-size: 0.8rem;
+	font-weight: 600;
+	cursor: pointer;
+	}
+
+	:global(.report-button:hover) {
+	color: #fecaca;
+	text-decoration: underline;
+	}
+
+	:global(.report-button:disabled) {
+	opacity: 0.6;
+	cursor: default;
+	text-decoration: none;
+	}
+
+	:global(.report-cancel),
+	:global(.report-submit) {
+	padding: 8px 13px;
+	border-radius: 9px;
+	font: inherit;
+	font-size: 0.82rem;
+	font-weight: 600;
+	cursor: pointer;
+	}
+
+	:global(.report-cancel) {
+	border: 1px solid rgba(150, 150, 170, 0.25);
+	background: transparent;
+	color: rgb(var(--gray));
+	}
+
+	:global(.report-submit) {
+	border: 1px solid rgba(168, 85, 247, 0.55);
+	background: #7e22ce;
+	color: #fff;
+	}
+
+	:global(.report-submit:hover:not(:disabled)) {
+	background: #9333ea;
+	}
+
+	:global(.report-submit:disabled),
+	:global(.report-cancel:disabled) {
+	opacity: 0.55;
+	cursor: wait;
 	}
 </style>
 

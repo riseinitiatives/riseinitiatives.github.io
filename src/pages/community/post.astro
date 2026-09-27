@@ -76,6 +76,8 @@ const pageDescription = 'RISE Community discussion';
                         Loading comments...
                     </div>
 
+                    <p id="comment-status" role="status" aria-live="polite"></p>
+
                     <div id="comment-form" class="comment-form">
                         <textarea
                             id="comment-input"
@@ -719,6 +721,88 @@ const pageDescription = 'RISE Community discussion';
         :global(.comment-menu .comment-delete:hover) {
             background: rgba(255, 100, 100, 0.08);
         }
+        :global(.comment-menu .comment-report) {
+            width: 100%;
+            margin: 0;
+            padding: 7px 9px;
+
+            border: none;
+            border-radius: 6px;
+
+            background: transparent;
+            color: #ff8b8b;
+
+            font: inherit;
+            font-size: 0.78rem;
+            text-align: left;
+
+            cursor: pointer;
+        }
+
+        :global(.comment-menu .comment-report:hover) {
+            background: rgba(255, 100, 100, 0.08);
+        }
+
+        :global(.comment-menu .comment-report) {
+            width: 100%;
+            margin: 0;
+            padding: 7px 9px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: #ff8b8b;
+            font: inherit;
+            font-size: 0.78rem;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        :global(.comment-menu .comment-report:hover) {
+            background: rgba(255, 100, 100, 0.08);
+        }
+
+        :global(.report-form) {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 12px 0 8px 40px;
+            padding: 14px;
+            border: 1px solid rgba(168, 85, 247, 0.25);
+            border-radius: 10px;
+            background: rgba(168, 85, 247, 0.05);
+            color: #fff;
+        }
+
+        :global(.report-form textarea),
+        :global(.report-form select) {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 9px 10px;
+            border: 1px solid rgba(168, 85, 247, 0.25);
+            border-radius: 8px;
+            background: #171020;
+            color: #fff;
+            font: inherit;
+        }
+
+        :global(.report-form-actions) {
+            display: flex;
+            gap: 8px;
+        }
+
+        :global(.report-submit),
+        :global(.report-cancel) {
+            padding: 7px 11px;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 8px;
+            background: rgba(168, 85, 247, 0.1);
+            color: #c084fc;
+            cursor: pointer;
+        }
+
+        :global(#comment-status.is-error) {
+            color: #ff8b8b;
+        }
 	</style>
 
 	<script>
@@ -920,30 +1004,42 @@ const pageDescription = 'RISE Community discussion';
                         ? `<img src="${safeAvatarUrl}" alt="@${safeUsername}" />`
                         : escapeHTML(username.charAt(0).toUpperCase());
 
-                    const menu = user?.id === comment.user_id
-                        ? `
-                            <div class="comment-menu-container">
-                                <button
-                                    class="comment-menu-button"
-                                    data-comment-id="${comment.id}"
-                                    type="button"
-                                    aria-label="Comment options"
-                                >⋮</button>
+                    const menu = user
+                    ? `
+                        <div class="comment-menu-container">
+                            <button
+                                class="comment-menu-button"
+                                data-comment-id="${comment.id}"
+                                type="button"
+                                aria-label="Comment options"
+                            >⋮</button>
 
-                                <div
-                                    class="comment-menu"
-                                    data-menu-id="${comment.id}"
-                                    hidden
-                                >
-                                    <button
-                                        class="comment-delete"
-                                        data-comment-id="${comment.id}"
-                                        type="button"
-                                    >Delete</button>
-                                </div>
+                            <div
+                                class="comment-menu"
+                                data-menu-id="${comment.id}"
+                                hidden
+                            >
+                                ${
+                                    user.id === comment.user_id
+                                        ? `
+                                            <button
+                                                class="comment-delete"
+                                                data-comment-id="${comment.id}"
+                                                type="button"
+                                            >Delete</button>
+                                        `
+                                        : `
+                                            <button
+                                                class="comment-report"
+                                                data-comment-id="${comment.id}"
+                                                type="button"
+                                            >⚑ Report</button>
+                                        `
+                                }
                             </div>
-                        `
-                        : '';
+                        </div>
+                    `
+                    : '';
 
                     return `
                         <article class="comment">
@@ -1165,6 +1261,25 @@ const pageDescription = 'RISE Community discussion';
                     });
                 });
 
+                commentsList
+                .querySelectorAll<HTMLButtonElement>('.comment-report')
+                .forEach((button) => {
+                    button.addEventListener('click', () => {
+                        const commentId = button.dataset.commentId;
+                        if (!commentId) return;
+
+                        const comment = comments.find(
+                            (item) => item.id === commentId
+                        );
+
+                        const wrapper = button.closest<HTMLElement>('.comment');
+
+                        if (!comment || !wrapper) return;
+
+                        addReportForm(comment, wrapper, button);
+                    });
+                });
+
                 document
                 .querySelectorAll<HTMLButtonElement>(
                     '.comment-menu-button'
@@ -1209,7 +1324,14 @@ const pageDescription = 'RISE Community discussion';
 
 
             }
+
+            function addReportForm(
+                comment: (typeof comments)[number],
+                wrapper: HTMLElement,
+                reportButton: HTMLButtonElement
+            ) {
         }
+    }
 
         loadComments();   
 
@@ -1531,6 +1653,20 @@ const pageDescription = 'RISE Community discussion';
 			content?.removeAttribute('hidden');
 		}
 
+        function setCommentStatus(message: string, isError = false) {
+            const status = document.querySelector<HTMLElement>(
+                '#comment-status'
+            );
+
+            if (!status) return;
+
+            status.textContent = message;
+            status.classList.toggle('is-error', isError);
+        }
+
+        
+
 		loadDiscussion();
+        
 	</script>
 </html>
