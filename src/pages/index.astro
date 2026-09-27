@@ -143,6 +143,34 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 
 			</div>
 			</section>
+
+			<section class="home-comments">
+				<p class="comments-eyebrow">RISE // COMMUNITY</p>
+				<h2>Share Your Thoughts</h2>
+				<p class="comments-intro">
+					Have an idea, question, or thought about RISE?
+					Join the conversation.
+				</p>
+
+				<div id="home-comments-list">
+					Loading comments...
+				</div>
+
+				<div class="home-comment-form">
+					<textarea
+						id="home-comment-input"
+						placeholder="Write a comment..."
+						rows="4"
+						maxlength="2000"
+					></textarea>
+
+					<button id="home-post-comment" type="button">
+						Post Comment
+					</button>
+					<p id="home-comment-status" aria-live="polite"></p>
+				</div>
+			</section>
+
 			<div class="share-link">
 				<button id="copy-link" type="button">🔗 Copy Link</button>
 			</div>
@@ -465,10 +493,1385 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 			letter-spacing: 0.08em;
 			color: rgba(192, 132, 252, 0.9);
 		}
+
+		.home-comments {
+			max-width: 850px;
+			margin: 5rem auto 3rem;
+			padding: 30px;
+			border: 1px solid rgba(168, 85, 247, 0.2);
+			border-radius: 18px;
+			background: linear-gradient(
+				135deg,
+				rgba(168, 85, 247, 0.055),
+				rgba(255, 255, 255, 0.012)
+			);
+		}
+
+		.comments-eyebrow {
+			margin: 0 0 12px;
+			color: #0bffe8;
+			font: 800 0.7rem monospace;
+			letter-spacing: 0.16em;
+		}
+
+		.home-comments h2 {
+			margin: 0 0 10px;
+			color: #fff;
+			font-size: 1.8rem;
+		}
+
+		.comments-intro {
+			margin-bottom: 24px;
+			color: rgba(255, 255, 255, 0.6);
+			line-height: 1.7;
+		}
+
+		.home-comment {
+			padding: 15px 5px;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+		}
+
+		.home-comment-author {
+			margin-bottom: 8px;
+			color: #c084fc;
+			font-weight: 700;
+		}
+
+		.home-comment-time {
+			margin-left: 8px;
+			color: rgba(255, 255, 255, 0.35);
+			font-size: 0.8rem;
+			font-weight: 400;
+		}
+
+		.home-comment-body {
+			color: rgba(255, 255, 255, 0.75);
+			line-height: 1.6;
+			white-space: pre-wrap;
+			overflow-wrap: anywhere;
+		}
+
+		.home-comment-form {
+			margin-top: 25px;
+		}
+
+		#home-comment-input {
+			box-sizing: border-box;
+			width: 100%;
+			padding: 14px 16px;
+			border: 1px solid rgba(168, 85, 247, 0.2);
+			border-radius: 12px;
+			background: rgba(255, 255, 255, 0.025);
+			color: #fff;
+			font: inherit;
+			line-height: 1.6;
+			resize: vertical;
+			outline: none;
+		}
+
+		#home-comment-input::placeholder {
+			color: rgba(255, 255, 255, 0.35);
+		}
+
+		#home-comment-input:focus {
+			border-color: rgba(192, 132, 252, 0.55);
+			box-shadow: 0 0 18px rgba(168, 85, 247, 0.08);
+		}
+
+		#home-post-comment {
+			margin-top: 10px;
+			padding: 9px 16px;
+			border: 1px solid rgba(168, 85, 247, 0.35);
+			border-radius: 10px;
+			background: rgba(168, 85, 247, 0.1);
+			color: #c084fc;
+			font: inherit;
+			font-weight: 700;
+			cursor: pointer;
+			transition: 0.2s ease;
+		}
+
+		#home-post-comment:hover {
+			background: rgba(168, 85, 247, 0.18);
+			border-color: rgba(192, 132, 252, 0.65);
+			color: #fff;
+			transform: translateY(-1px);
+		}
+
+		#home-comment-status {
+			min-height: 1.3em;
+			color: #0bffe8;
+			font-size: 0.85rem;
+		}
+
+		@media (max-width: 600px) {
+			.home-comments {
+				padding: 22px;
+				margin-top: 3rem;
+			}
+		}
+
+
+		/* HOMEPAGE COMMENTS SECTION */
+		.home-comments {
+			max-width: 850px;
+			margin: 7rem auto 5rem;
+			padding: 2.5rem;
+			position: relative;
+
+			border: 1px solid rgba(168, 85, 247, 0.25);
+			border-radius: 20px;
+
+			background:
+				linear-gradient(
+					145deg,
+					rgba(168, 85, 247, 0.09),
+					rgba(11, 8, 16, 0.96) 55%,
+					rgba(11, 255, 232, 0.025)
+				);
+
+			box-shadow:
+				0 0 35px rgba(168, 85, 247, 0.07),
+				inset 0 0 25px rgba(168, 85, 247, 0.025);
+		}
+
+		.home-comments::before {
+			content: "";
+			position: absolute;
+			top: 0;
+			left: 2.5rem;
+			right: 2.5rem;
+			height: 1px;
+			background: linear-gradient(
+				90deg,
+				transparent,
+				#a855f7,
+				#0bffe8,
+				transparent
+			);
+		}
+
+		.home-comments .comments-eyebrow {
+			color: #0bffe8;
+			font: 800 0.72rem monospace;
+			letter-spacing: 0.18em;
+			margin-bottom: 0.8rem;
+		}
+
+		.home-comments h2 {
+			color: #fff;
+			font-size: clamp(1.7rem, 4vw, 2.3rem);
+			margin: 0 0 0.7rem;
+		}
+
+		.home-comments .comments-intro {
+			color: rgba(255, 255, 255, 0.58);
+			line-height: 1.7;
+			margin-bottom: 2rem;
+		}
+
+		/* COMMENT LIST */
+		#home-comments-list {
+			display: flex;
+			flex-direction: column;
+			gap: 0.8rem;
+		}
+
+		.home-comment {
+			padding: 1.1rem 1.2rem;
+			border: 1px solid rgba(168, 85, 247, 0.12);
+			border-radius: 12px;
+			background: rgba(255, 255, 255, 0.025);
+			transition:
+				border-color 0.2s ease,
+				background 0.2s ease,
+				transform 0.2s ease;
+		}
+
+		.home-comment:hover {
+			border-color: rgba(168, 85, 247, 0.35);
+			background: rgba(168, 85, 247, 0.045);
+			transform: translateY(-2px);
+		}
+
+		.home-comment-author {
+			color: #c084fc;
+			font-size: 0.95rem;
+			font-weight: 700;
+			margin-bottom: 0.65rem;
+		}
+
+		.home-comment-time {
+			color: rgba(255, 255, 255, 0.35);
+			font-size: 0.78rem;
+			font-weight: 400;
+		}
+
+		.home-comment-body {
+			color: rgba(255, 255, 255, 0.78);
+			line-height: 1.7;
+			white-space: pre-wrap;
+			overflow-wrap: anywhere;
+		}
+
+		/* COMMENT FORM */
+		.home-comment-form {
+			margin-top: 2rem;
+			padding-top: 1.5rem;
+			border-top: 1px solid rgba(168, 85, 247, 0.16);
+		}
+
+		#home-comment-input {
+			width: 100%;
+			box-sizing: border-box;
+			padding: 1rem 1.1rem;
+			border: 1px solid rgba(168, 85, 247, 0.25);
+			border-radius: 12px;
+			background: rgba(0, 0, 0, 0.22);
+			color: #fff;
+			font: inherit;
+			line-height: 1.6;
+			resize: vertical;
+			outline: none;
+			transition:
+				border-color 0.2s ease,
+				box-shadow 0.2s ease;
+		}
+
+		#home-comment-input::placeholder {
+			color: rgba(255, 255, 255, 0.35);
+		}
+
+		#home-comment-input:focus {
+			border-color: #a855f7;
+			box-shadow: 0 0 18px rgba(168, 85, 247, 0.13);
+		}
+
+		#home-post-comment {
+			margin-top: 1rem;
+			padding: 0.75rem 1.3rem;
+			border: 1px solid rgba(168, 85, 247, 0.5);
+			border-radius: 999px;
+			background: rgba(168, 85, 247, 0.12);
+			color: #c084fc;
+			font: inherit;
+			font-weight: 700;
+			cursor: pointer;
+			transition: all 0.2s ease;
+		}
+
+		#home-post-comment:hover {
+			border-color: #0bffe8;
+			background: rgba(168, 85, 247, 0.2);
+			color: #fff;
+			box-shadow: 0 0 18px rgba(168, 85, 247, 0.15);
+			transform: translateY(-2px);
+		}
+
+		#home-post-comment:disabled {
+			opacity: 0.5;
+			cursor: wait;
+			transform: none;
+		}
+
+		#home-comment-status {
+			min-height: 1.3em;
+			margin-top: 0.8rem;
+			color: #0bffe8;
+			font-size: 0.85rem;
+		}
+
+		/* MOBILE */
+		@media (max-width: 600px) {
+			.home-comments {
+				margin: 4rem 0 3rem;
+				padding: 1.4rem;
+				border-radius: 15px;
+			}
+
+			.home-comments::before {
+				left: 1.4rem;
+				right: 1.4rem;
+			}
+
+			.home-comment {
+				padding: 1rem;
+			}
+		}
+
+				/* COMMENT CARD HEADER */
+		.home-comment-header {
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
+			gap: 1rem;
+			margin-bottom: 0.9rem;
+		}
+
+		.home-comment-user {
+			display: flex;
+			align-items: center;
+			gap: 0.8rem;
+			min-width: 0;
+		}
+
+		.home-comment-avatar {
+			width: 42px;
+			height: 42px;
+			flex: 0 0 42px;
+			border-radius: 50%;
+			object-fit: cover;
+			border: 1px solid rgba(168, 85, 247, 0.45);
+			background: rgba(168, 85, 247, 0.12);
+		}
+
+		.home-comment-avatar-fallback {
+			display: grid;
+			place-items: center;
+			font-size: 1.2rem;
+		}
+
+		.home-comment-author {
+			display: flex;
+			flex-direction: column;
+			gap: 0.25rem;
+			margin: 0;
+			min-width: 0;
+		}
+
+		.home-comment-author strong {
+			color: #c084fc;
+			font-size: 0.92rem;
+			overflow-wrap: anywhere;
+		}
+
+		.home-comment-time {
+			margin: 0;
+			font-size: 0.75rem;
+		}
+
+		/* DISTINCT COMMENT CARDS */
+		#home-comments-list {
+			display: flex;
+			flex-direction: column;
+			gap: 0.9rem;
+		}
+
+		.home-comment {
+			padding: 1.1rem;
+			border: 1px solid rgba(168, 85, 247, 0.2);
+			border-radius: 14px;
+			background: rgba(255, 255, 255, 0.035);
+			transition: border-color 0.2s ease, background 0.2s ease;
+		}
+
+		.home-comment:hover {
+			border-color: rgba(168, 85, 247, 0.45);
+			background: rgba(168, 85, 247, 0.055);
+			transform: none;
+		}
+
+		.home-comment-body {
+			padding-left: calc(42px + 0.8rem);
+			color: rgba(255, 255, 255, 0.8);
+			line-height: 1.7;
+			white-space: pre-wrap;
+			overflow-wrap: anywhere;
+		}
+
+		/* THREE-DOT MENU */
+		.home-comment-menu-wrap {
+			position: relative;
+			flex: 0 0 auto;
+		}
+
+		.home-comment-menu-button {
+			display: grid;
+			place-items: center;
+			width: 34px;
+			height: 34px;
+			border: 1px solid transparent;
+			border-radius: 50%;
+			background: transparent;
+			color: rgba(255, 255, 255, 0.65);
+			font-size: 1.5rem;
+			line-height: 1;
+			cursor: pointer;
+			transition: background 0.2s ease, color 0.2s ease;
+		}
+
+		.home-comment-menu-button:hover,
+		.home-comment-menu-button[aria-expanded="true"] {
+			color: #0bffe8;
+			background: rgba(168, 85, 247, 0.14);
+			border-color: rgba(168, 85, 247, 0.25);
+		}
+
+		.home-comment-menu {
+			position: absolute;
+			z-index: 5;
+			top: calc(100% + 5px);
+			right: 0;
+			min-width: 150px;
+			padding: 5px;
+			border: 1px solid rgba(168, 85, 247, 0.3);
+			border-radius: 10px;
+			background: #17111f;
+			box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+		}
+
+		.home-comment-menu[hidden] {
+			display: none;
+		}
+
+		.home-comment-delete {
+			width: 100%;
+			padding: 0.65rem 0.8rem;
+			border: 0;
+			border-radius: 7px;
+			background: transparent;
+			color: #ff8b9a;
+			text-align: left;
+			font: inherit;
+			font-size: 0.85rem;
+			cursor: pointer;
+		}
+
+		.home-comment-delete:hover {
+			background: rgba(255, 70, 100, 0.12);
+			color: #ffb3bd;
+		}
+
+		.home-comment-delete:disabled {
+			opacity: 0.5;
+			cursor: wait;
+		}
+
+		/* SMALL SCREENS */
+		@media (max-width: 600px) {
+			.home-comment {
+				padding: 0.9rem;
+			}
+
+			.home-comment-body {
+				padding-left: 0;
+			}
+
+			.home-comment-avatar {
+				width: 38px;
+				height: 38px;
+				flex-basis: 38px;
+			}
+		}
+
+
+		/* ASTRO: STYLES FOR DYNAMICALLY RENDERED COMMENTS */
+
+		:global(#home-comments-list) {
+			display: flex;
+			flex-direction: column;
+			gap: 14px;
+		}
+
+		/* Individual comment card */
+		:global(#home-comments-list .home-comment) {
+			display: block;
+			position: relative;
+			box-sizing: border-box;
+			width: 100%;
+			padding: 16px;
+			border: 1px solid rgba(168, 85, 247, 0.22);
+			border-radius: 14px;
+			background: rgba(255, 255, 255, 0.035);
+			transition: border-color 0.2s ease, background 0.2s ease;
+		}
+
+		:global(#home-comments-list .home-comment:hover) {
+			border-color: rgba(168, 85, 247, 0.5);
+			background: rgba(168, 85, 247, 0.055);
+		}
+
+		/* Header: avatar and name on left, menu on right */
+		:global(#home-comments-list .home-comment-header) {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			width: 100%;
+			margin: 0 0 12px;
+		}
+
+		:global(#home-comments-list .home-comment-user) {
+			display: flex;
+			align-items: center;
+			gap: 11px;
+			min-width: 0;
+			flex: 1;
+		}
+
+		/* Prevent the site's general img rules from enlarging avatars */
+		:global(#home-comments-list img.home-comment-avatar) {
+			display: block;
+			box-sizing: border-box;
+			width: 42px !important;
+			height: 42px !important;
+			min-width: 42px;
+			max-width: 42px !important;
+			min-height: 42px;
+			max-height: 42px !important;
+			flex: 0 0 42px;
+			aspect-ratio: 1 / 1;
+			object-fit: cover;
+			border: 1px solid rgba(168, 85, 247, 0.5);
+			border-radius: 50%;
+			margin: 0;
+		}
+
+		/* Fallback avatar */
+		:global(#home-comments-list .home-comment-avatar-fallback) {
+			display: grid;
+			place-items: center;
+			box-sizing: border-box;
+			width: 42px;
+			height: 42px;
+			min-width: 42px;
+			flex: 0 0 42px;
+			border: 1px solid rgba(168, 85, 247, 0.5);
+			border-radius: 50%;
+			background: rgba(168, 85, 247, 0.12);
+			font-size: 19px;
+		}
+
+		/* Username and timestamp */
+		:global(#home-comments-list .home-comment-author) {
+			display: flex;
+			flex-direction: column;
+			gap: 3px;
+			min-width: 0;
+			margin: 0;
+			color: #c084fc;
+			font-size: 0.92rem;
+			font-weight: 700;
+		}
+
+		:global(#home-comments-list .home-comment-author strong) {
+			color: #c084fc;
+			font-size: 0.92rem;
+			overflow-wrap: anywhere;
+		}
+
+		:global(#home-comments-list .home-comment-time) {
+			margin: 0;
+			color: rgba(255, 255, 255, 0.4);
+			font-size: 0.75rem;
+			font-weight: 400;
+		}
+
+		/* Comment text */
+		:global(#home-comments-list .home-comment-body) {
+			display: block;
+			box-sizing: border-box;
+			width: 100%;
+			padding: 0 0 0 53px;
+			color: rgba(255, 255, 255, 0.82);
+			font-size: 0.95rem;
+			line-height: 1.7;
+			white-space: pre-wrap;
+			overflow-wrap: anywhere;
+		}
+
+		/* Three-dot menu container */
+		:global(#home-comments-list .home-comment-menu-wrap) {
+			position: relative;
+			display: block;
+			flex: 0 0 auto;
+			margin-left: auto;
+		}
+
+		/* Three-dot button */
+		:global(#home-comments-list .home-comment-menu-button) {
+			display: grid;
+			place-items: center;
+			box-sizing: border-box;
+			width: 34px;
+			height: 34px;
+			padding: 0;
+			border: 1px solid transparent;
+			border-radius: 50%;
+			background: transparent;
+			color: rgba(255, 255, 255, 0.7);
+			font: inherit;
+			font-size: 23px;
+			line-height: 1;
+			cursor: pointer;
+			transition: background 0.2s ease, color 0.2s ease;
+		}
+
+		:global(#home-comments-list .home-comment-menu-button:hover),
+		:global(#home-comments-list .home-comment-menu-button[aria-expanded="true"]) {
+			border-color: rgba(168, 85, 247, 0.3);
+			background: rgba(168, 85, 247, 0.15);
+			color: #0bffe8;
+		}
+
+		/* Dropdown menu */
+		:global(#home-comments-list .home-comment-menu) {
+			position: absolute;
+			z-index: 20;
+			top: calc(100% + 5px);
+			right: 0;
+			display: block;
+			box-sizing: border-box;
+			min-width: 155px;
+			padding: 5px;
+			border: 1px solid rgba(168, 85, 247, 0.35);
+			border-radius: 10px;
+			background: #17111f;
+			box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+		}
+
+		/* Respect the hidden attribute despite the display rule above */
+		:global(#home-comments-list .home-comment-menu[hidden]) {
+			display: none !important;
+		}
+
+		/* Delete option */
+		:global(#home-comments-list .home-comment-delete) {
+			display: block;
+			box-sizing: border-box;
+			width: 100%;
+			padding: 10px 12px;
+			border: 0;
+			border-radius: 7px;
+			background: transparent;
+			color: #ff8b9a;
+			text-align: left;
+			font: inherit;
+			font-size: 0.85rem;
+			cursor: pointer;
+		}
+
+		:global(#home-comments-list .home-comment-delete:hover) {
+			background: rgba(255, 70, 100, 0.13);
+			color: #ffb3bd;
+		}
+
+		:global(#home-comments-list .home-comment-delete:disabled) {
+			opacity: 0.5;
+			cursor: wait;
+		}
+
+		/* Mobile layout */
+		@media (max-width: 600px) {
+			:global(#home-comments-list .home-comment) {
+				padding: 12px;
+			}
+
+			:global(#home-comments-list img.home-comment-avatar),
+			:global(#home-comments-list .home-comment-avatar-fallback) {
+				width: 38px !important;
+				height: 38px !important;
+				min-width: 38px;
+				max-width: 38px !important;
+				min-height: 38px;
+				max-height: 38px !important;
+				flex-basis: 38px;
+			}
+
+			:global(#home-comments-list .home-comment-body) {
+				padding-left: 0;
+			}
+		}
+
+		/* Reply controls */
+		:global(#home-comments-list .home-comment-actions) {
+			margin: 10px 0 0 53px;
+		}
+
+		:global(#home-comments-list .home-comment-reply-button) {
+			padding: 5px 9px;
+			border: 1px solid rgba(168, 85, 247, 0.25);
+			border-radius: 999px;
+			background: transparent;
+			color: #c084fc;
+			font: inherit;
+			font-size: 0.8rem;
+			cursor: pointer;
+			transition: background 0.2s ease, color 0.2s ease;
+		}
+
+		:global(#home-comments-list .home-comment-reply-button:hover),
+		:global(#home-comments-list .home-comment-reply-button[aria-expanded="true"]) {
+			background: rgba(168, 85, 247, 0.14);
+			color: #0bffe8;
+		}
+
+		/* Inline reply form */
+		:global(#home-comments-list .home-reply-form) {
+			margin: 12px 0 12px 53px;
+		}
+
+		:global(#home-comments-list .home-reply-form[hidden]) {
+			display: none !important;
+		}
+
+		:global(#home-comments-list .home-reply-input) {
+			display: block;
+			box-sizing: border-box;
+			width: 100%;
+			min-height: 65px;
+			padding: 10px 12px;
+			border: 1px solid rgba(168, 85, 247, 0.25);
+			border-radius: 10px;
+			background: rgba(0, 0, 0, 0.22);
+			color: #fff;
+			font: inherit;
+			font-size: 0.9rem;
+			line-height: 1.5;
+			resize: vertical;
+			outline: none;
+		}
+
+		:global(#home-comments-list .home-reply-input:focus) {
+			border-color: #a855f7;
+			box-shadow: 0 0 14px rgba(168, 85, 247, 0.12);
+		}
+
+		:global(#home-comments-list .home-reply-form-actions) {
+			display: flex;
+			justify-content: flex-end;
+			gap: 8px;
+			margin-top: 8px;
+		}
+
+		:global(#home-comments-list .home-reply-cancel),
+		:global(#home-comments-list .home-reply-submit) {
+			padding: 7px 12px;
+			border: 1px solid rgba(168, 85, 247, 0.3);
+			border-radius: 999px;
+			font: inherit;
+			font-size: 0.8rem;
+			cursor: pointer;
+		}
+
+		:global(#home-comments-list .home-reply-cancel) {
+			background: transparent;
+			color: rgba(255, 255, 255, 0.65);
+		}
+
+		:global(#home-comments-list .home-reply-submit) {
+			background: rgba(168, 85, 247, 0.14);
+			color: #c084fc;
+		}
+
+		:global(#home-comments-list .home-reply-submit:hover) {
+			background: rgba(168, 85, 247, 0.25);
+			color: #fff;
+		}
+
+		:global(#home-comments-list .home-reply-submit:disabled) {
+			opacity: 0.5;
+			cursor: wait;
+		}
+
+		:global(#home-comments-list .home-reply-status) {
+			min-height: 1em;
+			margin: 6px 0 0;
+			color: #0bffe8;
+			font-size: 0.78rem;
+		}
+
+		/* Nested replies */
+		:global(#home-comments-list .home-comment-replies) {
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+			margin: 14px 0 0 53px;
+			padding-left: 13px;
+			border-left: 2px solid rgba(168, 85, 247, 0.3);
+		}
+
+		:global(#home-comments-list .home-comment-reply) {
+			padding: 10px;
+			border: 1px solid rgba(168, 85, 247, 0.12);
+			border-radius: 10px;
+			background: rgba(168, 85, 247, 0.035);
+		}
+
+		:global(#home-comments-list .home-comment-reply .home-comment-avatar),
+		:global(#home-comments-list .home-comment-reply .home-comment-avatar-fallback) {
+			width: 32px !important;
+			height: 32px !important;
+			min-width: 32px;
+			max-width: 32px !important;
+			min-height: 32px;
+			max-height: 32px !important;
+			flex-basis: 32px;
+		}
+
+		:global(#home-comments-list .home-comment-reply .home-comment-body) {
+			padding-left: 43px;
+			font-size: 0.9rem;
+		}
+
+		@media (max-width: 600px) {
+			:global(#home-comments-list .home-comment-actions),
+			:global(#home-comments-list .home-reply-form) {
+				margin-left: 0;
+			}
+
+			:global(#home-comments-list .home-comment-replies) {
+				margin-left: 8px;
+				padding-left: 9px;
+			}
+
+			:global(#home-comments-list .home-comment-reply .home-comment-body) {
+				padding-left: 0;
+			}
+		}
+
+		:global(#home-comments-list .home-comment-header) {
+			flex-wrap: wrap;
+		}
+
+		:global(#home-comments-list .home-comment-hide-button) {
+			padding: 5px 9px;
+			border: 1px solid rgba(168, 85, 247, 0.25);
+			border-radius: 999px;
+			background: transparent;
+			color: #c084fc;
+			font: inherit;
+			font-size: 0.78rem;
+			cursor: pointer;
+		}
+
+		:global(#home-comments-list .home-comment-hide-button:hover) {
+			background: rgba(168, 85, 247, 0.14);
+			color: #0bffe8;
+		}
+
+		:global(#home-comments-list .home-comment-content[hidden]) {
+			display: none !important;
+		}
+
+
 	</style>
 </html>
 
 <script>
+    import { supabase } from '../lib/supabase';
+
+    // Replace this with the UUID of the dedicated homepage anchor post.
+    const HOME_POST_ID = '082b06f6-c759-4f81-ab05-3e7e5e7253cf';
+
+    const list = document.querySelector<HTMLElement>(
+        '#home-comments-list'
+    );
+    const input = document.querySelector<HTMLTextAreaElement>(
+        '#home-comment-input'
+    );
+    const postButton = document.querySelector<HTMLButtonElement>(
+        '#home-post-comment'
+    );
+    const status = document.querySelector<HTMLElement>(
+        '#home-comment-status'
+    );
+
+    const escapeHTML = (value: string) =>
+        value.replace(/[&<>"']/g, (char) => {
+            const entities: Record<string, string> = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;',
+            };
+            return entities[char];
+        });
+
+    async function loadHomeComments() {
+		if (!list) return;
+
+		const { data: comments, error } = await supabase
+			.from('comments')
+			.select('id, parent_id, user_id, display_name, body, created_at')
+			.eq('post_id', HOME_POST_ID)
+			.order('created_at', { ascending: true });
+
+		if (error) {
+			console.error('Homepage comments error:', error);
+			list.textContent = 'Unable to load comments.';
+			return;
+		}
+
+		if (!comments?.length) {
+			list.textContent =
+				'No comments yet. Be the first to share a thought!';
+			return;
+		}
+
+		
+
+		const allComments = comments || []; 	
+		const userIds = [...new Set(allComments.map((comment) => comment.user_id))];
+
+		const [
+			{ data: profiles, error: profilesError },
+			{ data: { user } }
+		] = await Promise.all([
+			supabase
+				.from('profiles')
+				.select('id, username, avatar_url')
+				.in('id', userIds),
+			supabase.auth.getUser()
+		]);
+
+		if (profilesError) {
+			console.error('Homepage profile loading error:', profilesError);
+		}
+
+		const profileMap = new Map(
+			(profiles || []).map((profile) => [profile.id, profile])
+		);
+
+		const formatDate = (createdAt: string) =>
+			new Date(createdAt).toLocaleDateString('en-IN', {
+				day: 'numeric',
+				month: 'short',
+				year: 'numeric'
+			});
+
+		const commentsByParent = new Map<string | null, any[]>();
+
+		for (const comment of allComments) {
+			const parentId = comment.parent_id ?? null;
+			const siblings = commentsByParent.get(parentId) || [];
+
+			siblings.push(comment);
+			commentsByParent.set(parentId, siblings);
+		}	
+
+		const renderComment = (comment: any, isReply = false) => {
+			const profile = profileMap.get(comment.user_id);
+			const username =
+				profile?.username || comment.display_name || 'RISE User';
+			const isOwner = user?.id === comment.user_id;
+
+			const avatar = profile?.avatar_url
+				? `<img
+					class="home-comment-avatar"
+					src="${escapeHTML(profile.avatar_url)}"
+					alt=""
+					loading="lazy"
+				/>`
+				: `<div class="home-comment-avatar home-comment-avatar-fallback"
+						aria-hidden="true">👤</div>`;
+
+			return `
+				<article class="home-comment ${isReply ? 'home-comment-reply' : ''}">
+					<div class="home-comment-header">
+						<div class="home-comment-user">
+							${avatar}
+							<div class="home-comment-author">
+								<strong>@${escapeHTML(username)}</strong>
+								<span class="home-comment-time">
+									${escapeHTML(formatDate(comment.created_at))}
+								</span>
+							</div>
+						</div>
+
+						<button
+							class="home-comment-hide-button"
+							type="button"
+							aria-expanded="true"
+						>
+							Hide
+						</button>
+
+						${isOwner ? `
+							<div class="home-comment-menu-wrap">
+								<button
+									class="home-comment-menu-button"
+									type="button"
+									aria-label="Comment options"
+									aria-expanded="false"
+									aria-haspopup="true"
+								>⋮</button>
+
+								<div class="home-comment-menu" hidden>
+									<button
+										class="home-comment-delete"
+										type="button"
+										data-comment-id="${escapeHTML(comment.id)}"
+									>Delete ${isReply ? 'reply' : 'comment'}</button>
+								</div>
+							</div>
+						` : ''}
+					</div>
+
+				<div class="home-comment-content">
+
+					<div class="home-comment-body">${escapeHTML(comment.body)}</div>
+
+					
+
+					${`
+						<div class="home-comment-actions">
+							<button
+								class="home-comment-reply-button"
+								type="button"
+								data-parent-id="${escapeHTML(comment.id)}"
+								aria-expanded="false"
+							>↳ Reply</button>
+						</div>
+
+						<form
+							class="home-reply-form"
+							data-parent-id="${escapeHTML(comment.id)}"
+							hidden
+						>
+							<textarea
+								class="home-reply-input"
+								rows="2"
+								maxlength="2000"
+								placeholder="Write a reply..."
+								aria-label="Write a reply"
+								required
+							></textarea>
+							<div class="home-reply-form-actions">
+								<button class="home-reply-cancel" type="button">Cancel</button>
+								<button class="home-reply-submit" type="submit">Post Reply</button>
+							</div>
+							<p class="home-reply-status" aria-live="polite"></p>
+						</form>
+
+						${
+							(commentsByParent.get(comment.id) || []).length
+								? `
+									<div class="home-comment-replies">
+										${(commentsByParent.get(comment.id) || [])
+											.map((reply) => renderComment(reply, true))
+											.join('')}
+									</div>
+								`
+								: ''
+						}
+					`}
+				</div>	
+				</article>
+			`;
+		};
+
+		list.innerHTML = (commentsByParent.get(null) || [])
+			.map((comment) => renderComment(comment))
+			.join('');
+	}
+
+	list?.addEventListener('click', async (event) => {
+		const target = event.target;
+
+		if (!(target instanceof HTMLElement)) return;
+
+		// Hide or show an individual comment and its replies
+		const hideButton = target.closest<HTMLButtonElement>(
+			'.home-comment-hide-button'
+		);
+
+		if (hideButton) {
+			const comment = hideButton.closest<HTMLElement>('.home-comment');
+			const content = comment?.querySelector<HTMLElement>(
+				':scope > .home-comment-content'
+			);
+
+			if (!content) return;
+
+			const isExpanded = hideButton.getAttribute('aria-expanded') === 'true';
+
+			content.hidden = isExpanded;
+			hideButton.setAttribute('aria-expanded', String(!isExpanded));
+			hideButton.textContent = isExpanded ? 'Show' : 'Hide';
+
+			return;
+		}
+
+		// Toggle the three-dot menu
+		const menuButton = target.closest<HTMLButtonElement>(
+			'.home-comment-menu-button'
+		);
+
+		if (menuButton) {
+			const wrapper = menuButton.closest('.home-comment-menu-wrap');
+			const menu = wrapper?.querySelector<HTMLElement>(
+				'.home-comment-menu'
+			);
+
+			if (!menu) return;
+
+			const isOpening = menu.hidden;
+
+			// Close any other open comment menus
+			list.querySelectorAll<HTMLElement>('.home-comment-menu').forEach(
+				(otherMenu) => {
+					otherMenu.hidden = true;
+				}
+			);
+
+			list.querySelectorAll<HTMLButtonElement>(
+				'.home-comment-menu-button'
+			).forEach((button) => {
+				button.setAttribute('aria-expanded', 'false');
+			});
+
+			menu.hidden = !isOpening;
+			menuButton.setAttribute('aria-expanded', String(isOpening));
+			return;
+		}
+
+		// Delete an owned comment
+		const deleteButton = target.closest<HTMLButtonElement>(
+			'.home-comment-delete'
+		);
+
+		if (deleteButton) {
+			const commentId = deleteButton.dataset.commentId;
+			if (!commentId || !status) return;
+
+			const confirmed = window.confirm(
+				'Are you sure you want to delete this comment?'
+			);
+
+			if (!confirmed) return;
+
+			deleteButton.disabled = true;
+			status.textContent = 'Deleting comment...';
+
+			const { data: { user } } = await supabase.auth.getUser();
+
+			if (!user) {
+				status.textContent = 'Please log in to delete your comment.';
+				return;
+			}
+
+			const { error } = await supabase
+				.from('comments')
+				.delete()
+				.eq('id', commentId)
+				.eq('user_id', user.id)
+				.eq('post_id', HOME_POST_ID);
+
+			if (error) {
+				console.error('Comment deletion error:', error);
+				status.textContent = 'Could not delete the comment.';
+				deleteButton.disabled = false;
+				return;
+			}
+
+			status.textContent = 'Comment deleted.';
+			await loadHomeComments();
+		}
+
+				// Open or close a reply form
+		const replyButton = target.closest<HTMLButtonElement>(
+			'.home-comment-reply-button'
+		);
+
+		if (replyButton) {
+			const comment = replyButton.closest('.home-comment');
+			const form = comment?.querySelector<HTMLFormElement>(
+				'.home-reply-form'
+			);
+
+			if (!form) return;
+
+			const isOpening = form.hidden;
+
+			// Close other reply forms
+			list.querySelectorAll<HTMLFormElement>('.home-reply-form').forEach(
+				(otherForm) => {
+					otherForm.hidden = true;
+				}
+			);
+
+			list.querySelectorAll<HTMLButtonElement>(
+				'.home-comment-reply-button'
+			).forEach((button) => {
+				button.setAttribute('aria-expanded', 'false');
+			});
+
+			form.hidden = !isOpening;
+			replyButton.setAttribute('aria-expanded', String(isOpening));
+
+			if (isOpening) {
+				form.querySelector<HTMLTextAreaElement>(
+					'.home-reply-input'
+				)?.focus();
+			}
+
+			return;
+		}
+
+		// Cancel a reply
+		const cancelButton = target.closest<HTMLButtonElement>(
+			'.home-reply-cancel'
+		);
+
+		if (cancelButton) {
+			const form = cancelButton.closest<HTMLFormElement>(
+				'.home-reply-form'
+			);
+
+			if (form) {
+				form.hidden = true;
+				form.reset();
+
+				const replyButton = form
+					.closest('.home-comment')
+					?.querySelector<HTMLButtonElement>(
+						'.home-comment-reply-button'
+					);
+
+				replyButton?.setAttribute('aria-expanded', 'false');
+			}
+
+			return;
+		}
+
+		
+	});
+
+	list?.addEventListener('submit', async (event) => {
+			const form = event.target;
+
+			if (!(form instanceof HTMLFormElement)) return;
+			if (!form.matches('.home-reply-form')) return;
+
+			event.preventDefault();
+
+			const parentId = form.dataset.parentId;
+			const replyInput = form.querySelector<HTMLTextAreaElement>(
+				'.home-reply-input'
+			);
+			const submitButton = form.querySelector<HTMLButtonElement>(
+				'.home-reply-submit'
+			);
+			const replyStatus = form.querySelector<HTMLElement>(
+				'.home-reply-status'
+			);
+
+			if (!parentId || !replyInput || !submitButton || !replyStatus) return;
+
+			const body = replyInput.value.trim();
+
+			if (!body) {
+				replyStatus.textContent = 'Please write a reply first.';
+				return;
+			}
+
+			const { data: { user } } = await supabase.auth.getUser();
+
+			if (!user) {
+				window.location.href = '/login';
+				return;
+			}
+
+			submitButton.disabled = true;
+			replyStatus.textContent = 'Posting reply...';
+
+			const { data: profile, error: profileError } = await supabase
+				.from('profiles')
+				.select('username')
+				.eq('id', user.id)
+				.maybeSingle();
+
+			if (profileError || !profile) {
+				console.error('Reply profile error:', profileError);
+				replyStatus.textContent = 'Could not load your profile.';
+				submitButton.disabled = false;
+				return;
+			}
+
+			const { error } = await supabase
+				.from('comments')
+				.insert({
+					post_id: HOME_POST_ID,
+					parent_id: parentId,
+					user_id: user.id,
+					display_name: profile.username,
+					body
+				});
+
+			if (error) {
+				console.error('Reply posting error:', error);
+				replyStatus.textContent = 'Could not post your reply.';
+				submitButton.disabled = false;
+				return;
+			}
+
+			await loadHomeComments();
+			if (status) status.textContent = 'Reply posted!';
+		});
+
+    postButton?.addEventListener('click', async () => {
+        if (!input || !status || !postButton) return;
+
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            window.location.href = '/login';
+            return;
+        }
+
+        const body = input.value.trim();
+
+        if (!body) {
+            status.textContent = 'Please write a comment first.';
+            return;
+        }
+
+        postButton.disabled = true;
+        status.textContent = 'Posting...';
+
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (profileError || !profile) {
+            console.error('Profile error:', profileError);
+            status.textContent = 'Could not load your profile.';
+            postButton.disabled = false;
+            return;
+        }
+
+        const { error } = await supabase
+            .from('comments')
+            .insert({
+                post_id: HOME_POST_ID,
+                user_id: user.id,
+                display_name: profile.username,
+                body,
+                parent_id: null,
+            });
+
+        if (error) {
+            console.error('Homepage comment post error:', error);
+            status.textContent = 'Could not post your comment.';
+            postButton.disabled = false;
+            return;
+        }
+
+        input.value = '';
+        status.textContent = 'Comment posted!';
+        postButton.disabled = false;
+
+        await loadHomeComments();
+
+		
+    });
+
+    loadHomeComments();
+
 	const copyButton = document.querySelector('#copy-link');
 
 	if (copyButton instanceof HTMLButtonElement) {
