@@ -1,0 +1,244 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title="Create your RISE ID | RISE Initiatives"
+			description="Create your unique RISE User ID."
+		/>
+	</head>
+
+	<body>
+		<Header />
+
+		<main>
+			<section class="profile-setup">
+				<p class="eyebrow">RISE // ACCOUNT SETUP</p>
+
+				<h1>Create your RISE ID.</h1>
+
+				<p class="intro">
+					Choose a unique username that will represent you across
+					the RISE community.
+				</p>
+
+				<form id="profile-form">
+					<label for="username">RISE User ID</label>
+
+					<div class="username-input">
+						<span>@</span>
+						<input
+							id="username"
+							name="username"
+							type="text"
+							placeholder="yourusername"
+							minlength="3"
+							maxlength="20"
+							autocomplete="off"
+							required
+						/>
+					</div>
+
+					<button type="submit">Create RISE ID</button>
+
+					<p id="message"></p>
+				</form>
+			</section>
+		</main>
+
+		<Footer />
+	</body>
+
+    <script>
+        import { supabase } from '../lib/supabase';
+
+        const form = document.querySelector('#profile-form');
+        const usernameInput = document.querySelector('#username');
+        const message = document.querySelector('#message');
+
+        async function setupProfile() {
+            const {
+                data: { user },
+            } = await supabase.auth.getUser();
+
+            if (!user) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const { data: existingProfile } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('id', user.id)
+                .maybeSingle();
+
+            if (existingProfile) {
+                window.location.href = '/community';
+            }
+        }
+
+        setupProfile();
+
+        form?.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const username = usernameInput?.value.trim();
+
+			if (!username) {
+				message.textContent = 'Please enter a RISE ID.';
+				return;
+			}
+
+			const usernamePattern = /^[A-Za-z][A-Za-z0-9_]{2,19}$/;
+
+			if (!usernamePattern.test(username)) {
+				message.textContent =
+					'Use 3–20 characters: letters, numbers, and _ only. Start with a letter.';
+				return;
+			}
+
+			message.textContent = 'Creating your RISE ID...';
+
+            const {
+                data: { user },
+            } = await supabase.auth.getUser();
+
+            if (!user) {
+                window.location.href = '/login';
+                return;
+            }
+
+			const avatarUrl =
+			user.user_metadata?.avatar_url ??
+			user.user_metadata?.picture ??
+			null;
+
+            const { error } = await supabase
+                .from('profiles')
+                .insert({
+                    id: user.id,
+                    username,
+					avatar_url: avatarUrl,
+                });
+
+            if (error) {
+				console.error(error);
+
+				if (error.code === '23505') {
+					message.textContent = 'That RISE ID is already taken.';
+				} else if (error.message?.includes('reserved_username')) {
+					if (error) {
+					console.error('PROFILE INSERT ERROR:', error);
+
+					message.textContent =
+						`${error.code ?? 'NO_CODE'} — ${error.message ?? 'No message'}`;
+
+					return;
+				}
+				} else if (error.message?.includes('invalid_username')) {
+					message.textContent =
+						'Use 3–20 characters: letters, numbers, and _ only. Start with a letter.';
+				} else {
+					message.textContent =
+						'Something went wrong. Please try again.';
+				}
+
+				return;
+			}
+
+            message.textContent = 'RISE ID created!';
+
+            window.location.href = '/community';
+        });
+    </script>
+
+	<style>
+		.profile-setup {
+			width: min(560px, calc(100% - 2rem));
+			margin: 6rem auto;
+			text-align: center;
+		}
+
+		.eyebrow {
+			margin: 0 0 1rem;
+			font-family: monospace;
+			font-size: 0.75rem;
+			letter-spacing: 0.16em;
+			color: #4cffed;
+		}
+
+		h1 {
+			margin: 0;
+			font-size: clamp(2.4rem, 6vw, 4rem);
+			letter-spacing: -0.04em;
+		}
+
+		.intro {
+			margin: 1rem auto 2.5rem;
+			color: #aaa4b9;
+			line-height: 1.7;
+		}
+
+		form {
+			text-align: left;
+		}
+
+		label {
+			display: block;
+			margin-bottom: 0.6rem;
+			font-size: 0.85rem;
+		}
+
+		.username-input {
+			display: flex;
+			align-items: center;
+			border: 1px solid rgba(255, 255, 255, 0.12);
+			border-radius: 10px;
+			background: rgba(255, 255, 255, 0.04);
+			overflow: hidden;
+		}
+
+		.username-input span {
+			padding-left: 1rem;
+			color: #8e899b;
+		}
+
+		input {
+			width: 100%;
+			padding: 0.9rem;
+			border: 0;
+			outline: 0;
+			background: transparent;
+			color: white;
+			font: inherit;
+		}
+
+		button {
+			width: 100%;
+			margin-top: 1rem;
+			padding: 0.9rem;
+			border: 0;
+			border-radius: 10px;
+			background: #a855f7;
+			color: white;
+			font: inherit;
+			cursor: pointer;
+		}
+
+		button:hover {
+			background: #c084fc;
+		}
+
+		#message {
+			margin-top: 1rem;
+			font-size: 0.85rem;
+			color: #aaa4b9;
+			text-align: center;
+		}
+	</style>
+</html>

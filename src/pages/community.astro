@@ -1,13 +1,14 @@
 ---
-import Community from '../components/Community.astro';
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { supabase } from '../lib/supabase';
+import { SITE_TITLE } from '../consts';
 
 const communityTitle = `Community | ${SITE_TITLE}`;
+
 const communityDescription =
-	'A place to discuss ideas, share projects, give feedback, and connect with RISE Initiatives.';
+	'A place for builders, creators, and curious minds to share ideas, projects, questions, and knowledge.';
 ---
 
 <!doctype html>
@@ -22,209 +23,2147 @@ const communityDescription =
 	<body>
 		<Header />
 
-		<main>
-			<section class="community-intro">
-                <p class="eyebrow">RISE // COMMUNITY</p>
+		<main class="community-page">
 
-                <h1>Build. Discuss. <span>Inspire.</span></h1>
+			<!-- COMMUNITY HEADER -->
+			<section class="community-header">
+				<div class="community-header-content">
 
-                <p class="intro">
-                    A place for people who believe technology should do more than
-                    exist — it should solve problems, spark ideas, and create impact.
-                </p>
+					<div class="community-title-row">
+						<div>
+							<p class="eyebrow">RISE // COMMUNITY</p>
 
-                <div class="community-pills">
-                    <div class="community-pill">
-                        <span class="pill-icon">💡</span>
-                        <div>
-                            <strong>Ideas</strong>
-                            <small>Share your thoughts</small>
-                        </div>
-                    </div>
+							<h1>
+								Build.
+								<span> Discuss. </span>
+								Inspire.
+							</h1>
 
-                    <div class="community-pill">
-                        <span class="pill-icon">🚀</span>
-                        <div>
-                            <strong>Projects</strong>
-                            <small>Show what you're building</small>
-                        </div>
-                    </div>
+							<p class="community-description">
+								A space for builders, creators, and curious minds to
+								share ideas, projects, questions, and everything in between.
+							</p>
+						</div>
 
-                    <div class="community-pill">
-                        <span class="pill-icon">🛠️</span>
-                        <div>
-                            <strong>Build & Tech</strong>
-                            <small>Learn and discuss</small>
-                        </div>
+						<a class="start-discussion" href="#start-discussion" type="button">
+							<span>＋</span>
+							Start Discussion
+						</a>
+					</div>
+
+				</div>
+			</section>
+
+
+			<!-- COMMUNITY NAVIGATION -->
+			<section class="community-navigation">
+
+				<div class="community-tabs">
+
+					<button class="community-tab active" data-category="all">
+						All
+					</button>
+
+					<button class="community-tab" data-category="Ideas">
+						💡 Ideas
+					</button>
+
+					<button class="community-tab" data-category="Projects">
+						🚀 Projects
+					</button>
+
+					<button class="community-tab" data-category="Build & Tech">
+						🛠️ Build & Tech
+					</button>
+
+				</div>
+
+			</section>
+
+
+			<!-- COMMUNITY FEED -->
+			<section class="community-feed">
+
+				<div class="feed-heading">
+
+					<div>
+						<p class="feed-label">COMMUNITY FEED</p>
+
+						<h2>
+							What's happening
+							<span>  right now.</span>
+						</h2>
+					</div>
+
+					<p class="feed-description">
+						Discover discussions, projects, questions, and ideas
+						from the RISE community.
+					</p>
+
+				</div>
+
+
+				<!--
+					POST FEED
+
+					This is intentionally a temporary visual structure.
+
+					Next step:
+					community_posts → Supabase → dynamic post cards
+				-->
+
+				<div id="community-feed-list" class="community-feed-list">
+                    <div class="community-loading">
+                        Loading discussions...
                     </div>
                 </div>
-            </section>
+				<!-- EMPTY STATE -->
+				<div id="community-empty" class="community-empty hidden">
 
-            <section class="community-feed-heading">
-                <div>
-                    <p class="feed-eyebrow">COMMUNITY FEED</p>
-                    <h2>Join the conversation.</h2>
-                </div>
+					<div class="empty-icon">
+						✦
+					</div>
 
-                <p>
-                    Share ideas, give feedback, ask questions, or simply see
-                    what others are building.
-                </p>
-            </section>
+					<h3>
+						Nothing here yet
+					</h3>
 
-            <Community postId="community" />
+					<p>
+						Be the first person to start a discussion in this category.
+					</p>
+
+					<a href="#start-discussion" class="empty-button">
+						Start Discussion
+					</a>
+
+				</div>
+
+			</section>
+
+
+			<!-- START DISCUSSION -->
+			<section id="start-discussion" class="start-section">
+
+				<div class="start-card">
+
+					<div class="start-icon">
+						＋
+					</div>
+
+					<div>
+
+						<p class="start-label">
+							GOT SOMETHING TO SAY?
+						</p>
+
+						<h2>
+							Start a discussion
+						</h2>
+
+						<p>
+							Have an idea, project, question, or something
+							interesting to share? Start the conversation.
+						</p>
+
+					</div>
+
+					<button
+						id="open-discussion-modal-bottom"
+						class="start-button"
+						type="button"
+					>
+						Create Discussion
+						<span>→</span>
+					</button>
+
+				</div>
+
+			</section>
+
+			<!-- CREATE DISCUSSION MODAL -->
+			<div
+				id="discussion-modal"
+				class="discussion-modal"
+				hidden
+			>
+				<div
+					class="discussion-modal-backdrop"
+					id="discussion-modal-backdrop"
+				></div>
+
+				<div
+					class="discussion-dialog"
+					role="dialog"
+					aria-modal="true"
+					aria-labelledby="discussion-dialog-title"
+				>
+
+					<div class="discussion-dialog-header">
+
+						<div>
+							<p class="discussion-dialog-label">
+								RISE // COMMUNITY
+							</p>
+
+							<h2 id="discussion-dialog-title">
+								Start a discussion
+							</h2>
+						</div>
+
+						<button
+							id="close-discussion-modal"
+							class="discussion-dialog-close"
+							type="button"
+							aria-label="Close"
+						>
+							×
+						</button>
+
+					</div>
+
+					<div class="discussion-dialog-body">
+
+						<label for="discussion-title-input">
+							Title
+						</label>
+
+						<input
+							id="discussion-title-input"
+							type="text"
+							placeholder="What's on your mind?"
+							maxlength="120"
+						/>
+
+						<label for="discussion-category-input">
+							Category
+						</label>
+
+						<select id="discussion-category-input">
+							<option value="Ideas">💡 Ideas</option>
+							<option value="Projects">🚀 Projects</option>
+							<option value="Build & Tech">🛠️ Build & Tech</option>
+						</select>
+
+						<label for="discussion-body-input">
+							Discussion
+						</label>
+
+						<textarea
+							id="discussion-body-input"
+							rows="7"
+							placeholder="Share your idea, project, question, or thought..."
+						></textarea>
+
+					</div>
+
+					<div class="discussion-dialog-footer">
+
+						<button
+							id="cancel-discussion"
+							class="discussion-cancel-button"
+							type="button"
+						>
+							Cancel
+						</button>
+
+						<button
+							id="create-discussion"
+							class="discussion-create-button"
+							type="button"
+						>
+							Create Discussion
+						</button>
+
+					</div>
+
+				</div>
+			</div>
+
+		
+
+
+
 		</main>
 
 		<Footer />
 	</body>
 
+
 	<style>
-        .community-intro {
-            width: min(900px, calc(100% - 2rem));
-            margin: 5rem auto 0;
-            text-align: center;
-        }
 
-        .eyebrow {
-            margin: 0 0 1rem;
-            font-family: monospace;
-            font-size: 0.78rem;
-            letter-spacing: 0.18em;
-            color: #4cffed;
-        }
+		/* =========================================================
+		`  CREATE DISCUSSION MODAL
+		========================================================= */
 
-        .community-intro h1 {
+		:global(.discussion-modal) {
+			position: fixed;
+			inset: 0;
+			z-index: 1000;
+
+			display: grid;
+			place-items: center;
+
+			padding: 20px;
+		}
+
+		:global(.discussion-modal[hidden]) {
+			display: none;
+		}
+
+		:global(.discussion-modal-backdrop) {
+			position: absolute;
+			inset: 0;
+
+			background: rgba(5, 3, 10, 0.72);
+
+			backdrop-filter: blur(8px);
+		}
+
+		:global(.discussion-dialog) {
+			position: relative;
+			z-index: 1;
+
+			width: min(620px, 100%);
+
+			border: 1px solid rgba(168, 85, 247, 0.25);
+			border-radius: 18px;
+
+			background:
+				linear-gradient(
+					145deg,
+					rgba(24, 15, 36, 0.98),
+					rgba(10, 8, 16, 0.98)
+				);
+
+			box-shadow:
+				0 30px 90px rgba(0, 0, 0, 0.55),
+				0 0 45px rgba(168, 85, 247, 0.08);
+
+			overflow: hidden;
+		}
+
+		:global(.discussion-dialog-header) {
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
+
+			gap: 20px;
+
+			padding: 24px 26px 20px;
+
+			border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+		}
+
+		:global(.discussion-dialog-label) {
+			margin: 0 0 6px;
+
+			color: #0bffe8;
+
+			font-size: 0.62rem;
+			font-weight: 800;
+			letter-spacing: 0.16em;
+		}
+
+		:global(.discussion-dialog h2) {
+			margin: 0;
+
+			font-size: 1.45rem;
+			letter-spacing: -0.025em;
+		}
+
+		:global(.discussion-dialog-close) {
+			display: grid;
+			place-items: center;
+
+			width: 32px;
+			height: 32px;
+
+			border: none;
+			border-radius: 8px;
+
+			background: transparent;
+			color: rgba(255, 255, 255, 0.45);
+
+			font-size: 1.6rem;
+			line-height: 1;
+
+			cursor: pointer;
+
+			transition:
+				background 0.2s ease,
+				color 0.2s ease;
+		}
+
+		:global(.discussion-dialog-close:hover) {
+			background: rgba(168, 85, 247, 0.1);
+			color: #fff;
+		}
+
+		:global(.discussion-dialog-body) {
+			display: flex;
+			flex-direction: column;
+			gap: 9px;
+
+			padding: 24px 26px;
+		}
+
+		:global(.discussion-dialog-body label) {
+			margin-top: 5px;
+
+			color: rgba(255, 255, 255, 0.72);
+
+			font-size: 0.76rem;
+			font-weight: 700;
+		}
+
+		:global(.discussion-dialog-body input),
+		:global(.discussion-dialog-body select),
+		:global(.discussion-dialog-body textarea) {
+			width: 100%;
+			box-sizing: border-box;
+
+			border: 1px solid rgba(255, 255, 255, 0.09);
+			border-radius: 9px;
+
+			background: rgba(255, 255, 255, 0.035);
+			color: #fff;
+
+			font: inherit;
+			font-size: 0.85rem;
+
+			outline: none;
+
+			transition:
+				border-color 0.2s ease,
+				background 0.2s ease;
+		}
+
+		:global(.discussion-dialog-body input),
+		:global(.discussion-dialog-body select) {
+			height: 44px;
+			padding: 0 12px;
+		}
+
+		:global(.discussion-dialog-body textarea) {
+			min-height: 150px;
+			padding: 12px;
+
+			resize: vertical;
+			line-height: 1.6;
+		}
+
+		:global(.discussion-dialog-body input:focus),
+		:global(.discussion-dialog-body select:focus),
+		:global(.discussion-dialog-body textarea:focus) {
+			border-color: rgba(168, 85, 247, 0.55);
+
+			background: rgba(168, 85, 247, 0.045);
+		}
+
+		:global(.discussion-dialog-body input::placeholder),
+		:global(.discussion-dialog-body textarea::placeholder) {
+			color: rgba(255, 255, 255, 0.28);
+		}
+
+		:global(.discussion-dialog-body select) {
+			cursor: pointer;
+			color: #87e6f7;
+			background-color: #171020;
+			color-scheme: dark;
+		}
+
+		:global(.discussion-dialog-body select option) {
+			color: #87e6f7;
+			background-color: #171020;
+		}
+				
+
+		:global(.discussion-dialog-footer) {
+			display: flex;
+			justify-content: flex-end;
+			align-items: center;
+
+			gap: 10px;
+
+			padding: 18px 26px;
+
+			border-top: 1px solid rgba(255, 255, 255, 0.06);
+		}
+
+		:global(.discussion-cancel-button),
+		:global(.discussion-create-button) {
+			padding: 10px 15px;
+
+			border-radius: 8px;
+
+			font: inherit;
+			font-size: 0.78rem;
+			font-weight: 700;
+
+			cursor: pointer;
+
+			transition:
+				transform 0.2s ease,
+				border-color 0.2s ease,
+				background 0.2s ease;
+		}
+
+		:global(.discussion-cancel-button) {
+			border: 1px solid rgba(255, 255, 255, 0.09);
+
+			background: transparent;
+			color: rgba(255, 255, 255, 0.55);
+		}
+
+		:global(.discussion-cancel-button:hover) {
+			background: rgba(255, 255, 255, 0.04);
+			color: #fff;
+		}
+
+		:global(.discussion-create-button) {
+			border: 1px solid rgba(168, 85, 247, 0.4);
+
+			background: rgba(168, 85, 247, 0.12);
+			color: #fff;
+		}
+
+		:global(.discussion-create-button:hover) {
+			transform: translateY(-1px);
+
+			border-color: rgba(11, 255, 232, 0.4);
+			background: rgba(11, 255, 232, 0.07);
+		}`
+
+        main.community-page {
+            width: 100%;
+            max-width: none;
             margin: 0;
-            font-size: clamp(2.8rem, 7vw, 5rem);
-            line-height: 1.05;
-            letter-spacing: -0.045em;
+            padding: 0 0 80px;
         }
 
-        .community-intro h1 span {
-            color: #c084fc;
+		/* =========================================================
+		   PAGE
+		========================================================= */
+
+		.community-page {
+			min-height: 100vh;
+			padding-bottom: 80px;
+		}
+
+
+		/* =========================================================
+		   COMMUNITY HEADER
+		========================================================= */
+
+		.community-header {
+			position: relative;
+			padding: 92px 24px 46px;
+			overflow: hidden;
+		}
+
+
+		.community-header::before {
+			content: '';
+			position: absolute;
+			top: -180px;
+			left: 50%;
+			transform: translateX(-50%);
+
+			width: 700px;
+			height: 360px;
+
+			background: radial-gradient(
+				ellipse,
+				rgba(168, 85, 247, 0.15),
+				transparent 70%
+			);
+
+			pointer-events: none;
+		}
+
+
+		.community-header::after {
+			content: '';
+			position: absolute;
+			left: 0;
+			right: 0;
+			bottom: 0;
+
+			height: 1px;
+
+			background: linear-gradient(
+				90deg,
+				transparent,
+				rgba(168, 85, 247, 0.25),
+				transparent
+			);
+		}
+
+
+		.community-header-content {
+			position: relative;
+			z-index: 1;
+
+			max-width: 1120px;
+			margin: 0 auto;
+		}
+
+
+		.community-title-row {
+			display: flex;
+			align-items: flex-end;
+			justify-content: space-between;
+			gap: 50px;
+		}
+
+
+		.eyebrow {
+			margin: 0 0 14px;
+
+			font-size: 0.72rem;
+			font-weight: 700;
+			letter-spacing: 0.18em;
+
+			color: #0bffe8;
+		}
+
+
+		h1 {
+			margin: 0;
+
+			font-size: clamp(2.6rem, 6vw, 4.8rem);
+			line-height: 0.98;
+			letter-spacing: -0.045em;
+		}
+
+
+		h1 span {
+			color: #a55de9;
+		}
+
+
+		.community-description {
+			max-width: 640px;
+			margin: 22px 0 0;
+
+			color: rgba(255, 255, 255, 0.62);
+			font-size: 1rem;
+			line-height: 1.7;
+		}
+
+
+		/* =========================================================
+		   START DISCUSSION BUTTON
+		========================================================= */
+
+		.start-discussion {
+			display: inline-flex;
+			align-items: center;
+			gap: 10px;
+
+			padding: 13px 18px;
+
+			border: 1px solid rgba(168, 85, 247, 0.35);
+			border-radius: 10px;
+
+			background: rgba(168, 85, 247, 0.08);
+
+			color: #fff;
+			text-decoration: none;
+
+			font-size: 0.88rem;
+			font-weight: 700;
+
+			white-space: nowrap;
+
+			transition:
+				transform 0.2s ease,
+				border-color 0.2s ease,
+				background 0.2s ease;
+		}
+
+
+		.start-discussion span {
+			color: #0bffe8;
+			font-size: 1.2rem;
+		}
+
+
+		.start-discussion:hover {
+			transform: translateY(-2px);
+
+			border-color: rgba(11, 255, 232, 0.45);
+			background: rgba(11, 255, 232, 0.07);
+		}
+
+
+		/* =========================================================
+		   NAVIGATION
+		========================================================= */
+
+		.community-navigation {
+			max-width: 1120px;
+			margin: 0 auto;
+
+			padding: 26px 24px 0;
+		}
+
+
+		.community-tabs {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+
+			overflow-x: auto;
+			padding-bottom: 2px;
+
+			scrollbar-width: none;
+		}
+
+
+		.community-tabs::-webkit-scrollbar {
+			display: none;
+		}
+
+
+		.community-tab {
+			flex-shrink: 0;
+
+			padding: 9px 15px;
+
+			border: 1px solid rgba(255, 255, 255, 0.08);
+			border-radius: 999px;
+
+			background: rgba(255, 255, 255, 0.025);
+
+			color: rgba(255, 255, 255, 0.58);
+
+			font: inherit;
+			font-size: 0.82rem;
+			font-weight: 600;
+
+			cursor: pointer;
+
+			transition:
+				color 0.2s ease,
+				border-color 0.2s ease,
+				background 0.2s ease;
+		}
+
+
+		.community-tab:hover {
+			color: #fff;
+			border-color: rgba(168, 85, 247, 0.35);
+		}
+
+
+		.community-tab.active {
+			color: #fff;
+
+			border-color: rgba(168, 85, 247, 0.45);
+
+			background: rgba(168, 85, 247, 0.13);
+
+			box-shadow:
+				0 0 20px rgba(168, 85, 247, 0.06);
+		}
+
+
+		/* =========================================================
+		   FEED
+		========================================================= */
+
+		.community-feed {
+			max-width: 900px;
+			margin: 0 auto;
+
+			padding: 72px 24px 0;
+		}
+
+
+		.feed-heading {
+			display: flex;
+			align-items: flex-end;
+			justify-content: space-between;
+			gap: 40px;
+
+			margin-bottom: 28px;
+		}
+
+
+		.feed-label {
+			margin: 0 0 9px;
+
+			color: #0bffe8;
+
+			font-size: 0.68rem;
+			font-weight: 800;
+			letter-spacing: 0.16em;
+		}
+
+
+		.feed-heading h2 {
+			margin: 0;
+
+			font-size: clamp(1.8rem, 4vw, 2.7rem);
+			letter-spacing: -0.035em;
+		}
+
+
+		.feed-heading h2 span {
+			color: #a855f7;
+		}
+
+
+		.feed-description {
+			max-width: 330px;
+
+			margin: 0;
+
+			color: rgba(255, 255, 255, 0.45);
+
+			font-size: 0.84rem;
+			line-height: 1.6;
+
+			text-align: right;
+		}
+
+
+		/* =========================================================
+		   POST CARDS
+		========================================================= */
+
+		:global(.community-feed-list) {
+			display: flex;
+			flex-direction: column;
+			gap: 16px;
+		}
+
+		:global(.community-post) {
+			display: flex;
+			flex-direction: column;
+
+			width: 100%;
+			box-sizing: border-box;
+
+			padding: 24px 26px;
+
+			border: 1px solid rgba(168, 85, 247, 0.18);
+			border-radius: 18px;
+
+			background:
+				linear-gradient(
+					135deg,
+					rgba(168, 85, 247, 0.055),
+					rgba(255, 255, 255, 0.012)
+				);
+
+			box-shadow:
+				0 12px 35px rgba(0, 0, 0, 0.16);
+
+			transition:
+				transform 0.2s ease,
+				border-color 0.2s ease,
+				background 0.2s ease,
+				box-shadow 0.2s ease;
+		}
+
+		:global(.community-post:hover) {
+			transform: translateY(-2px);
+
+			border-color: rgba(168, 85, 247, 0.42);
+
+			background:
+				linear-gradient(
+					135deg,
+					rgba(168, 85, 247, 0.085),
+					rgba(11, 255, 232, 0.018)
+				);
+
+			box-shadow:
+				0 18px 45px rgba(0, 0, 0, 0.22),
+				0 0 30px rgba(168, 85, 247, 0.05);
+		}
+
+
+		/* ---------- TOP ROW ---------- */
+
+		:global(.post-top) {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+
+			width: 100%;
+			margin: 0 0 16px;
+		}
+
+		:global(.post-options) {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		:global(.post-menu-container) {
+			position: relative;
+			flex-shrink: 0;
+		}
+
+		:global(.post-menu-button) {
+			width: 30px;
+			height: 30px;
+			padding: 0;
+
+			border: none;
+			border-radius: 7px;
+
+			background: transparent;
+			color: rgba(255, 255, 255, 0.35);
+
+			font-size: 1.3rem;
+			line-height: 1;
+
+			cursor: pointer;
+
+			transition:
+				background 0.2s ease,
+				color 0.2s ease;
+		}
+
+		:global(.post-menu-button:hover) {
+			background: rgba(168, 85, 247, 0.1);
+			color: #fff;
+		}
+
+		:global(.post-menu) {
+			position: absolute;
+			top: 34px;
+			right: 0;
+			z-index: 20;
+
+			min-width: 100px;
+			padding: 5px;
+
+			border: 1px solid rgba(168, 85, 247, 0.2);
+			border-radius: 9px;
+
+			background: rgba(18, 12, 28, 0.96);
+
+			box-shadow:
+				0 10px 25px rgba(0, 0, 0, 0.35);
+		}
+
+		:global(.post-menu .post-delete) {
+			width: 100%;
+
+			margin: 0;
+			padding: 7px 9px;
+
+			border: none;
+			border-radius: 6px;
+
+			background: transparent;
+			color: #ff6b6b;
+
+			font: inherit;
+			font-size: 0.78rem;
+
+			text-align: left;
+			cursor: pointer;
+		}
+
+		:global(.post-menu .post-delete:hover) {
+			background: rgba(255, 100, 100, 0.08);
+		}
+
+		:global(.post-category) {
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+
+			color: #0bffe8;
+
+			font-size: 0.72rem;
+			font-weight: 700;
+			letter-spacing: 0.02em;
+		}
+
+		:global(.post-category span) {
+			font-size: 0.9rem;
+		}
+
+		:global(.post-time) {
+			color: rgba(255, 255, 255, 0.38);
+
+			font-size: 0.92rem;
+
+			white-space: nowrap;
+		}
+
+
+		/* ---------- TITLE ---------- */
+
+		:global(.post-title) {
+			display: block;
+
+			margin: 0;
+
+			color: rgba(255, 255, 255, 0.96);
+
+			font-size: 1.12rem;
+			font-weight: 750;
+			line-height: 1.4;
+
+			text-decoration: none;
+
+			transition: color 0.2s ease;
+		}
+
+		:global(.post-title:hover) {
+			color: #c084fc;
+		}
+
+
+		/* ---------- PREVIEW ---------- */
+
+		:global(.post-preview) {
+			max-width: 720px;
+
+			margin: 9px 0 22px;
+
+			color: rgba(255, 255, 255, 0.50);
+
+			font-size: 0.84rem;
+			line-height: 1.65;
+		}
+
+
+		/* ---------- BOTTOM ROW ---------- */
+
+		:global(.post-meta) {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+
+			width: 100%;
+
+			gap: 20px;
+
+			margin-top: auto;
+		}
+
+		:global(.post-author) {
+			display: inline-flex;
+			align-items: center;
+			gap: 9px;
+
+			color: rgba(255, 255, 255, 0.48);
+
+			font-size: 1.1rem;
+		}
+
+		:global(.author-avatar) {
+			display: grid;
+			place-items: center;
+
+			flex-shrink: 0;
+
+			width: 28px;
+			height: 28px;
+
+			border: 1px solid rgba(168, 85, 247, 0.40);
+			border-radius: 50%;
+
+			background: rgba(168, 85, 247, 0.10);
+
+			color: #c084fc;
+
+			font-size: 0.68rem;
+			font-weight: 800;
+		}
+
+		:global(.post-stats) {
+			display: inline-flex;
+			align-items: center;
+			gap: 16px;
+
+			color: rgba(255, 255, 255, 0.40);
+
+			font-size: 1.22rem;
+
+			white-space: nowrap;
+		}
+
+
+		/* =========================================================
+		   EMPTY STATE
+		========================================================= */
+
+		.community-empty {
+			padding: 70px 20px;
+
+			text-align: center;
+		}
+
+
+		.community-empty.hidden {
+			display: none;
+		}
+
+
+		.empty-icon {
+			margin-bottom: 14px;
+
+			color: #a855f7;
+
+			font-size: 2rem;
+		}
+
+
+		.community-empty h3 {
+			margin: 0 0 8px;
+
+			font-size: 1.25rem;
+		}
+
+
+		.community-empty p {
+			margin: 0 auto 20px;
+
+			max-width: 400px;
+
+			color: rgba(255, 255, 255, 0.45);
+
+			font-size: 0.85rem;
+			line-height: 1.6;
+		}
+
+
+		.empty-button {
+			display: inline-flex;
+
+			padding: 10px 15px;
+
+			border: 1px solid rgba(168, 85, 247, 0.35);
+			border-radius: 8px;
+
+			color: #fff;
+
+			font-size: 0.8rem;
+			font-weight: 700;
+
+			text-decoration: none;
+		}
+
+
+		/* =========================================================
+		   START SECTION
+		========================================================= */
+
+		.start-section {
+			max-width: 900px;
+			margin: 80px auto 0;
+
+			padding: 0 24px;
+		}
+
+
+		.start-card {
+			display: flex;
+			align-items: center;
+			gap: 22px;
+
+			padding: 28px;
+
+			border: 1px solid rgba(168, 85, 247, 0.18);
+			border-radius: 14px;
+
+			background:
+				linear-gradient(
+					135deg,
+					rgba(168, 85, 247, 0.075),
+					rgba(11, 255, 232, 0.025)
+				);
+
+			box-shadow:
+				0 20px 70px rgba(0, 0, 0, 0.18);
+		}
+
+
+		.start-icon {
+			display: grid;
+			place-items: center;
+
+			flex-shrink: 0;
+
+			width: 48px;
+			height: 48px;
+
+			border: 1px solid rgba(11, 255, 232, 0.22);
+			border-radius: 12px;
+
+			background: rgba(11, 255, 232, 0.05);
+
+			color: #0bffe8;
+
+			font-size: 1.5rem;
+		}
+
+
+		.start-label {
+			margin: 0 0 5px;
+
+			color: #0bffe8;
+
+			font-size: 0.62rem;
+			font-weight: 800;
+			letter-spacing: 0.15em;
+		}
+
+
+		.start-card h2 {
+			margin: 0;
+
+			font-size: 1.3rem;
+			letter-spacing: -0.02em;
+		}
+
+
+		.start-card p:not(.start-label) {
+			max-width: 520px;
+
+			margin: 7px 0 0;
+
+			color: rgba(255, 255, 255, 0.45);
+
+			font-size: 0.8rem;
+			line-height: 1.55;
+		}
+
+
+		.start-button {
+			display: inline-flex;
+			align-items: center;
+			gap: 9px;
+
+			margin-left: auto;
+
+			padding: 11px 15px;
+
+			border: 1px solid rgba(168, 85, 247, 0.35);
+			border-radius: 8px;
+
+			background: rgba(168, 85, 247, 0.1);
+
+			color: #fff;
+
+			font-size: 0.78rem;
+			font-weight: 700;
+
+			text-decoration: none;
+
+			white-space: nowrap;
+
+			transition:
+				border-color 0.2s ease,
+				background 0.2s ease,
+				transform 0.2s ease;
+		}
+
+
+		.start-button span {
+			color: #0bffe8;
+		}
+
+
+		.start-button:hover {
+			transform: translateY(-2px);
+
+			border-color: rgba(11, 255, 232, 0.4);
+			background: rgba(11, 255, 232, 0.06);
+		}
+
+
+		/* =========================================================
+		   RESPONSIVE
+		========================================================= */
+
+		@media (max-width: 760px) {
+
+			.community-header {
+				padding-top: 65px;
+			}
+
+
+			.community-title-row {
+				align-items: flex-start;
+				flex-direction: column;
+				gap: 26px;
+			}
+
+
+			.start-discussion {
+				align-self: flex-start;
+			}
+
+
+			.feed-heading {
+				align-items: flex-start;
+				flex-direction: column;
+				gap: 12px;
+			}
+
+
+			.feed-description {
+				max-width: 500px;
+
+				text-align: left;
+			}
+
+
+			.start-card {
+				align-items: flex-start;
+				flex-wrap: wrap;
+			}
+
+
+			.start-button {
+				margin-left: 0;
+			}
+
+		}
+
+
+		@media (max-width: 500px) {
+
+			.community-header {
+				padding-left: 18px;
+				padding-right: 18px;
+			}
+
+
+			.community-navigation {
+				padding-left: 18px;
+				padding-right: 18px;
+			}
+
+
+			.community-feed {
+				padding-left: 18px;
+				padding-right: 18px;
+				padding-top: 55px;
+			}
+
+
+			.start-section {
+				padding-left: 18px;
+				padding-right: 18px;
+			}
+
+
+			:global(.community-post) {
+				padding: 20px;
+				border-radius: 14px;
+			}
+
+			:global(.post-title) {
+				font-size: 1.05rem;
+			}
+		}
+
+
+			.post-title {
+				font-size: 1.05rem;
+			}
+
+
+			.start-card {
+				padding: 22px;
+			}
+
+			.community-post {
+				padding: 20px;
+				border-radius: 14px;
+			}
+			:global(.author-avatar) {
+				display: grid;
+				place-items: center;
+
+				width: 30px;
+				height: 30px;
+
+				flex-shrink: 0;
+
+				border: 1px solid rgba(168, 85, 247, 0.40);
+				border-radius: 50%;
+
+				overflow: hidden;
+
+				background: rgba(168, 85, 247, 0.10);
+
+				color: #c084fc;
+
+				font-size: 0.68rem;
+				font-weight: 800;
+			}
+
+			:global(.author-avatar img) {
+				display: block !important;
+
+				width: 100% !important;
+				height: 100% !important;
+
+				object-fit: cover !important;
+			}
+
+		
+
+	</style>
+
+
+	<script>
+	import { supabase } from '../lib/supabase';
+
+
+	const tabs =
+		document.querySelectorAll<HTMLButtonElement>('.community-tab');
+
+	const feed =
+		document.querySelector<HTMLElement>('#community-feed-list');
+
+	const emptyState =
+		document.querySelector<HTMLElement>('#community-empty');
+
+
+	let allPosts: any[] = [];
+	let currentUser: any = null;
+
+	const discussionModal =
+		document.querySelector<HTMLElement>('#discussion-modal');
+
+	const openDiscussionButton =
+		document.querySelector<HTMLButtonElement>('#open-discussion-modal');
+
+	const openDiscussionBottom =
+		document.querySelector<HTMLButtonElement>(
+			'#open-discussion-modal-bottom'
+		);
+
+	const closeDiscussionButton =
+		document.querySelector<HTMLButtonElement>(
+			'#close-discussion-modal'
+		);
+
+	const cancelDiscussionButton =
+		document.querySelector<HTMLButtonElement>(
+			'#cancel-discussion'
+		);
+
+	const discussionModalBackdrop =
+		document.querySelector<HTMLElement>(
+			'#discussion-modal-backdrop'
+		);
+
+	function openDiscussionModal() {
+		discussionModal?.removeAttribute('hidden');
+	}
+
+	function closeDiscussionModal() {
+		discussionModal?.setAttribute('hidden', '');
+	}
+
+	openDiscussionButton?.addEventListener(
+		'click',
+		openDiscussionModal
+	);
+
+	openDiscussionBottom?.addEventListener(
+		'click',
+		openDiscussionModal
+	);
+
+	closeDiscussionButton?.addEventListener(
+		'click',
+		closeDiscussionModal
+	);
+
+	cancelDiscussionButton?.addEventListener(
+		'click',
+		closeDiscussionModal
+	);
+
+	discussionModalBackdrop?.addEventListener(
+		'click',
+		closeDiscussionModal
+	);
+
+
+	/* =========================================================
+	   HELPERS
+	========================================================= */
+
+	function escapeHtml(value: string) {
+		return value
+			.replaceAll('&', '&amp;')
+			.replaceAll('<', '&lt;')
+			.replaceAll('>', '&gt;')
+			.replaceAll('"', '&quot;')
+			.replaceAll("'", '&#039;');
+	}
+
+
+	function formatTime(dateString: string) {
+
+		const date = new Date(dateString);
+
+		const seconds =
+			Math.floor(
+				(Date.now() - date.getTime()) / 1000
+			);
+
+
+		if (seconds < 60) {
+			return 'just now';
+		}
+
+
+		const minutes =
+			Math.floor(seconds / 60);
+
+
+		if (minutes < 60) {
+			return `${minutes}m ago`;
+		}
+
+
+		const hours =
+			Math.floor(minutes / 60);
+
+
+		if (hours < 24) {
+			return `${hours}h ago`;
+		}
+
+
+		const days =
+			Math.floor(hours / 24);
+
+
+		if (days < 7) {
+			return `${days}d ago`;
+		}
+
+
+		return date.toLocaleDateString(
+			'en-IN',
+			{
+				day: 'numeric',
+				month: 'short',
+				year: 'numeric',
+			}
+		);
+	}
+
+
+	function getCategoryIcon(category: string) {
+
+		if (category === 'Ideas') {
+			return '💡';
+		}
+
+		if (category === 'Projects') {
+			return '🚀';
+		}
+
+		if (category === 'Build & Tech') {
+			return '🛠️';
+		}
+
+		return '✦';
+	}
+
+
+	/* =========================================================
+	   RENDER POSTS
+	========================================================= */
+
+	function renderPosts(category = 'all') {
+
+		if (!feed) return;
+
+
+		const posts =
+			category === 'all'
+				? allPosts
+				: allPosts.filter(
+					(post) =>
+						post.category === category
+				);
+
+
+		if (posts.length === 0) {
+
+			feed.innerHTML = '';
+
+			if (emptyState) {
+				emptyState.classList.remove('hidden');
+			}
+
+			return;
+		}
+
+
+		if (emptyState) {
+			emptyState.classList.add('hidden');
+		}
+
+
+		feed.innerHTML = posts.map((post) => {
+
+			const username =
+				post.username || 'RISE User';
+
+			const firstLetter =
+				username.charAt(0).toUpperCase();
+
+
+			const title =
+				escapeHtml(post.title);
+
+			const body =
+				escapeHtml(post.body);
+
+			const safeUsername =
+				escapeHtml(username);
+
+			const categoryName =
+				escapeHtml(post.category);
+
+
+			return `
+				<article
+					class="community-post"
+					data-category="${categoryName}"
+					data-post-id="${post.id}"
+				>
+
+					<div class="post-top">
+
+						<div class="post-category">
+							<span>${getCategoryIcon(post.category)}</span>
+							${categoryName}
+						</div>
+
+						<div class="post-options">
+
+							<span class="post-time">
+								${formatTime(post.created_at)}
+							</span>
+
+							${
+								currentUser?.id === post.user_id
+									? `
+										<div class="post-menu-container">
+
+											<button
+												class="post-menu-button"
+												data-post-id="${post.id}"
+												type="button"
+												aria-label="Discussion options"
+											>
+												⋮
+											</button>
+
+											<div
+												class="post-menu"
+												data-menu-id="${post.id}"
+												hidden
+											>
+												<button
+													class="post-delete"
+													data-post-id="${post.id}"
+													type="button"
+												>
+													Delete
+												</button>
+											</div>
+
+										</div>
+									`
+									: ''
+							}
+
+						</div>
+
+					</div>
+
+
+					<a
+						href="#"
+						class="post-title"
+						data-post-id="${post.id}"
+					>
+						${title}
+					</a>
+
+
+					<p class="post-preview">
+						${body}
+					</p>
+
+
+					<div class="post-meta">
+
+						<div class="post-author">
+
+							<div class="author-avatar" data-fallback="${firstLetter}">
+								${
+									post.avatar_url
+										? `<img
+											src="${escapeHtml(post.avatar_url)}"
+											alt="@${safeUsername}"
+											loading="lazy"
+											style="display:block;width:30px;height:30px;min-width:30px;max-width:30px;min-height:30px;max-height:30px;object-fit:cover;"
+										/>`
+										: firstLetter
+								}
+							</div>
+
+							<span>
+								@${safeUsername}
+							</span>
+
+						</div>
+
+
+						<div class="post-stats">
+							<span>▲ ${post.upvote_count ?? 0}</span>
+							<span>💬 ${post.comment_count ?? 0}</span>
+						</div>
+
+					</div>
+
+				</article>
+			`;
+
+		}).join('');
+
+		// Fallback for unavailable profile pictures
+		feed
+			.querySelectorAll<HTMLImageElement>('.author-avatar img')
+			.forEach((img) => {
+				img.addEventListener('error', () => {
+					const avatar = img.closest<HTMLElement>(
+						'.author-avatar'
+					);
+
+					if (!avatar) return;
+
+					avatar.textContent =
+						avatar.dataset.fallback || 'R';
+				}, { once: true });
+			});
+
+
+		/* Prevent placeholder links from jumping */
+
+		feed
+			.querySelectorAll<HTMLAnchorElement>('.post-title')
+			.forEach((link) => {
+
+				link.addEventListener('click', (event) => {
+					event.preventDefault();
+
+					const postId =
+						link.dataset.postId;
+
+					if (!postId) return;
+
+					window.location.href =
+						`/community/post?id=${postId}`;
+				});
+
+			});
+
+		feed
+			.querySelectorAll<HTMLButtonElement>('.post-menu-button')
+			.forEach((button) => {
+
+				button.addEventListener('click', (event) => {
+
+					event.stopPropagation();
+
+					const postId =
+						button.dataset.postId;
+
+					if (!postId) return;
+
+					feed
+						.querySelectorAll<HTMLElement>('.post-menu')
+						.forEach((menu) => {
+
+							if (menu.dataset.menuId === postId) {
+								menu.toggleAttribute('hidden');
+							} else {
+								menu.setAttribute('hidden', '');
+							}
+
+						});
+
+				});
+
+			});	
+
+		feed
+			.querySelectorAll<HTMLButtonElement>('.post-delete')
+			.forEach((button) => {
+
+				button.addEventListener('click', async () => {
+
+					const postId = button.dataset.postId;
+
+					if (!postId) return;
+
+					const confirmed =
+						window.confirm('Delete this discussion?');
+
+					if (!confirmed) return;
+
+					const { error } =
+						await supabase
+							.from('community_posts')
+							.delete()
+							.eq('id', postId)
+							.eq('user_id', currentUser?.id);
+
+					if (error) {
+						console.error(
+							'Delete discussion error:',
+							error
+						);
+
+						return;
+					}
+
+					await loadCommunityPosts();
+				});
+
+			});	
+	}
+
+
+	/* =========================================================
+	   LOAD COMMUNITY POSTS
+	========================================================= */
+
+	async function loadCommunityPosts() {
+
+
+		if (!feed) return;
+
+		const {
+			data: { user },
+		} = await supabase.auth.getUser();
+
+		currentUser = user;
+
+
+		feed.innerHTML = `
+			<div class="community-loading">
+				Loading discussions...
+			</div>
+		`;
+
+
+		const {
+			data: posts,
+			error: postsError,
+		} = await supabase
+			.from('community_posts')
+			.select(`
+				id,
+				user_id,
+				title,
+				body,
+				category,
+				created_at,
+				updated_at
+			`)
+			.order('created_at', {
+				ascending: false,
+			});
+		
+	
+
+		if (postsError) {
+
+			console.error(
+				'Community posts error:',
+                JSON.stringify(postsError, null, 2)
+			);
+
+			feed.innerHTML = `
+				<div class="community-loading">
+					Unable to load discussions.
+				</div>
+			`;
+
+			return;
+		}
+
+
+
+		if (!posts || posts.length === 0) {
+
+			allPosts = [];
+
+			feed.innerHTML = '';
+
+			if (emptyState) {
+				emptyState.classList.remove('hidden');
+			}
+
+			return;
+		}
+
+
+		/* =====================================================
+		   LOAD PUBLIC RISE USERNAMES
+		===================================================== */
+
+		const userIds = [
+			...new Set(
+				posts.map(
+					(post) => post.user_id
+				)
+			),
+		];
+
+
+		const {
+			data: profiles,
+			error: profilesError,
+		} = await supabase
+			.from('profiles')
+			.select('id, username, avatar_url')
+			.in('id', userIds);
+
+
+		if (profilesError) {
+
+			console.error(
+				'Profiles error:',
+				profilesError
+			);
+
+		}
+
+
+		const profileMap =
+			new Map(
+				(profiles || []).map(
+					(profile) => [
+						profile.id,
+						{
+							username: profile.username,
+							avatar_url: profile.avatar_url,
+						},
+					]
+				)
+			);
+
+
+		/* =====================================================
+		   COMBINE POSTS + USERNAMES
+		===================================================== */
+
+		allPosts =
+            posts.map((post) => {
+
+                const profile =
+                    profileMap.get(post.user_id);
+
+                return {
+                    ...post,
+
+                    username:
+                        profile?.username
+                        || 'RISE User',
+
+                    avatar_url:
+                        profile?.avatar_url
+                        || null,
+
+                    upvote_count: 0,
+                    comment_count: 0,
+                };
+
+            });
+
+        // Load upvotes and comments for the fetched posts
+        const postIds = allPosts.map((post) => post.id);
+
+
+        const [
+            { data: upvotes, error: upvotesError },
+            { data: comments, error: commentsError },
+        ] = await Promise.all([
+            supabase
+                .from('upvotes')
+                .select('post_id')
+                .in('post_id', postIds),
+
+            supabase
+                .from('comments')
+                .select('post_id')
+                .in('post_id', postIds),
+        ]);
+
+
+        if (upvotesError) {
+            console.error('Upvote count error:', upvotesError);
         }
 
-        .intro {
-            max-width: 680px;
-            margin: 1.5rem auto 0;
-            color: #aaa4b9;
-            font-size: 1.05rem;
-            line-height: 1.8;
+        if (commentsError) {
+            console.error('Comment count error:', commentsError);
         }
 
-        .community-pills {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            max-width: 760px;
-            margin: 3rem auto 0;
-        }
+        const upvoteCounts = new Map<string, number>();
+        const commentCounts = new Map<string, number>();
 
-        .community-pill {
-            display: flex;
-            align-items: center;
-            gap: 0.9rem;
-            padding: 1rem 1.1rem;
-            text-align: left;
+        (upvotes || []).forEach(({ post_id }) => {
+            upvoteCounts.set(
+                post_id,
+                (upvoteCounts.get(post_id) || 0) + 1
+            );
+        });
 
-            border: 1px solid rgba(168, 85, 247, 0.18);
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.025);
+        (comments || []).forEach(({ post_id }) => {
+            commentCounts.set(
+                post_id,
+                (commentCounts.get(post_id) || 0) + 1
+            );
+        });
 
-            transition:
-                transform 0.25s ease,
-                border-color 0.25s ease,
-                background 0.25s ease;
-        }
+        allPosts = allPosts.map((post) => ({
+            ...post,
+            upvote_count: upvoteCounts.get(post.id) || 0,
+            comment_count: commentCounts.get(post.id) || 0,
+        }));
 
-        .community-pill:hover {
-            transform: translateY(-3px);
-            border-color: rgba(192, 132, 252, 0.45);
-            background: rgba(168, 85, 247, 0.06);
-        }
 
-        .pill-icon {
-            font-size: 1.4rem;
-        }
+        renderPosts('all');
+	}	
 
-        .community-pill strong {
-            display: block;
-            font-size: 0.9rem;
-        }
 
-        .community-pill small {
-            display: block;
-            margin-top: 0.2rem;
-            color: #8e899b;
-            font-size: 0.72rem;
-        }
 
-        .community-feed-heading {
-            width: min(900px, calc(100% - 2rem));
-            margin: 5rem auto 1.5rem;
 
-            display: flex;
-            align-items: end;
-            justify-content: space-between;
-            gap: 2rem;
 
-            padding-bottom: 1.2rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
 
-        .feed-eyebrow {
-            margin: 0 0 0.4rem;
-            font-family: monospace;
-            font-size: 0.7rem;
-            letter-spacing: 0.16em;
-            color: #4cffed;
-        }
+	/* =========================================================
+	   CATEGORY FILTERS
+	========================================================= */
 
-        .community-feed-heading h2 {
-            margin: 0;
-            font-size: 1.8rem;
-            letter-spacing: -0.02em;
-        }
+	tabs.forEach((tab) => {
 
-        .community-feed-heading > p {
-            max-width: 390px;
-            margin: 0;
-            color: #8e899b;
-            font-size: 0.85rem;
-            line-height: 1.6;
-            text-align: right;
-        }
+		tab.addEventListener('click', () => {
 
-        @media (max-width: 700px) {
-            .community-intro {
-                margin-top: 3.5rem;
-            }
+			const category =
+				tab.dataset.category || 'all';
 
-            .community-pills {
-                grid-template-columns: 1fr;
-                max-width: 500px;
-            }
 
-            .community-feed-heading {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-                margin-top: 4rem;
-            }
+			tabs.forEach((item) => {
+				item.classList.remove('active');
+			});
 
-            .community-feed-heading > p {
-                text-align: left;
-            }
-        }
 
-        @media (max-width: 600px) {
-            .community-intro h1 {
-                font-size: 2.7rem;
-            }
+			tab.classList.add('active');
 
-            .intro {
-                font-size: 0.95rem;
-            }
-        }
-    </style>
+
+			renderPosts(category);
+
+		});
+
+	});
+
+	const createDiscussionButton =
+		document.querySelector<HTMLButtonElement>(
+			'#create-discussion'
+		);
+
+	const discussionTitleInput =
+		document.querySelector<HTMLInputElement>(
+			'#discussion-title-input'
+		);
+
+	const discussionCategoryInput =
+		document.querySelector<HTMLSelectElement>(
+			'#discussion-category-input'
+		);
+
+	const discussionBodyInput =
+		document.querySelector<HTMLTextAreaElement>(
+			'#discussion-body-input'
+		);
+
+	createDiscussionButton?.addEventListener('click', async () => {
+		const title = discussionTitleInput?.value.trim();
+		const category = discussionCategoryInput?.value;
+		const body = discussionBodyInput?.value.trim();
+
+		if (!title || !body) {
+			alert('Please enter a title and discussion.');
+			return;
+		}
+
+		const {
+			data: { user },
+			error: userError,
+		} = await supabase.auth.getUser();
+
+		if (userError || !user) {
+			alert('Please log in to publish a discussion.');
+			return;
+		}
+
+		createDiscussionButton.disabled = true;
+		createDiscussionButton.textContent = 'Publishing...';
+
+		const { error } = await supabase
+			.from('community_posts')
+			.insert({
+				user_id: user.id,
+				title,
+				category,
+				body,
+			});
+
+		if (error) {
+			console.error('Publish discussion error:', error);
+			alert(`Could not publish: ${error.message}`);
+			createDiscussionButton.disabled = false;
+			createDiscussionButton.textContent = 'Create Discussion';
+			return;
+		}
+
+		if (discussionTitleInput) discussionTitleInput.value = '';
+		if (discussionBodyInput) discussionBodyInput.value = '';
+
+		closeDiscussionModal();
+		await loadCommunityPosts();
+
+		createDiscussionButton.disabled = false;
+		createDiscussionButton.textContent = 'Create Discussion';
+	});
+
+
+	/* =========================================================
+	   START
+	========================================================= */
+
+	loadCommunityPosts();
+
+
+	
+</script>
+
 </html>

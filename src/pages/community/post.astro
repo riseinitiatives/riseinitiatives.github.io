@@ -1,0 +1,1451 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+import { SITE_TITLE } from '../../consts';
+
+const pageTitle = `Discussion | ${SITE_TITLE}`;
+const pageDescription = 'RISE Community discussion';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={pageTitle}
+			description={pageDescription}
+		/>
+	</head>
+
+	<body>
+		<Header />
+
+		<main class="discussion-page">
+			<section class="discussion-container">
+
+				<p class="discussion-label">
+					RISE // COMMUNITY
+				</p>
+
+				<div id="discussion-loading">
+					Loading discussion...
+				</div>
+
+				<div id="discussion-content" hidden>
+
+					<div class="discussion-top">
+                        <div>
+                            <div class="discussion-category" id="discussion-category"></div>
+
+                            <h1 id="discussion-title"></h1>
+                        </div>
+
+                        <div id="discussion-menu-container" class="discussion-menu-container"></div>
+                    </div>
+
+					<div class="discussion-author">
+						<div id="discussion-avatar" class="discussion-avatar">
+							R
+						</div>
+
+						<span id="discussion-author"></span>
+
+						<span>·</span>
+
+						<span id="discussion-time"></span>
+					</div>
+
+					<div
+						id="discussion-body"
+						class="discussion-body"
+					></div>
+
+                    <div class="discussion-actions">
+                        <button id="upvote-button" type="button">
+                            ▲ <span id="upvote-count">0</span>
+                        </button>
+
+                        <button id="comment-count-button" type="button">
+                            💬 <span id="comment-count">0</span>
+                        </button>
+                    </div>
+                    <section class="comments-section">
+                    <h2>Comments</h2>
+
+                    <div id="comments-list">
+                        Loading comments...
+                    </div>
+
+                    <div id="comment-form" class="comment-form">
+                        <textarea
+                            id="comment-input"
+                            placeholder="Write a comment..."
+                            rows="4"
+                        ></textarea>
+
+                        <button id="post-comment-button" type="button">
+                            Post Comment
+                        </button>
+                    </div>
+                </section>
+
+				</div>
+
+				<div id="discussion-error" hidden>
+					<h1>Discussion not found</h1>
+
+					<p>
+						This discussion may have been deleted or the link may be invalid.
+					</p>
+
+					<a href="/community">
+						← Back to Community
+					</a>
+				</div>
+
+			</section>
+		</main>
+
+		<Footer />
+	</body>
+
+	<style>
+		.discussion-page {
+			min-height: 70vh;
+			padding: 110px 24px 100px;
+		}
+
+		.discussion-container {
+			max-width: 850px;
+			margin: 0 auto;
+		}
+
+		.discussion-label {
+			margin: 0 0 18px;
+
+			color: #0bffe8;
+
+			font-size: 0.7rem;
+			font-weight: 800;
+			letter-spacing: 0.16em;
+		}
+
+		#discussion-loading {
+			color: rgba(255, 255, 255, 0.5);
+		}
+
+		#discussion-content {
+			padding: 30px;
+
+			border: 1px solid rgba(168, 85, 247, 0.2);
+			border-radius: 18px;
+
+			background:
+				linear-gradient(
+					135deg,
+					rgba(168, 85, 247, 0.055),
+					rgba(255, 255, 255, 0.012)
+				);
+		}
+
+		.discussion-category {
+			margin-bottom: 14px;
+
+			color: #0bffe8;
+
+			font-size: 0.78rem;
+			font-weight: 700;
+		}
+
+		#discussion-title {
+			margin: 0;
+
+			color: #fff;
+
+			font-size: clamp(2rem, 5vw, 3.4rem);
+			line-height: 1.1;
+			letter-spacing: -0.04em;
+		}
+
+		.discussion-author {
+			display: flex;
+			align-items: center;
+			gap: 9px;
+
+			margin-top: 22px;
+
+			color: rgba(255, 255, 255, 0.42);
+
+			font-size: 0.88rem;
+		}
+
+		.discussion-avatar {
+			display: grid;
+			place-items: center;
+
+			width: 32px;
+			height: 32px;
+			min-width: 32px;
+
+			overflow: hidden;
+
+			border: 1px solid rgba(168, 85, 247, 0.4);
+			border-radius: 50%;
+
+			background: rgba(168, 85, 247, 0.1);
+
+			color: #c084fc;
+
+			font-size: 0.75rem;
+			font-weight: 800;
+		}
+
+		.discussion-avatar img {
+			display: block;
+
+			width: 32px;
+			height: 32px;
+
+			object-fit: cover;
+		}
+
+		.discussion-body {
+			margin-top: 32px;
+
+			color: rgba(255, 255, 255, 0.72);
+
+			font-size: 1rem;
+			line-height: 1.8;
+
+			white-space: pre-wrap;
+		}
+
+		#discussion-error {
+			padding: 40px 0;
+		}
+
+		#discussion-error h1 {
+			margin: 0 0 12px;
+		}
+
+		#discussion-error p {
+			color: rgba(255, 255, 255, 0.5);
+		}
+
+		#discussion-error a {
+			display: inline-block;
+
+			margin-top: 12px;
+
+			color: #0bffe8;
+			text-decoration: none;
+		}
+
+		@media (max-width: 600px) {
+			.discussion-page {
+				padding-left: 18px;
+				padding-right: 18px;
+			}
+
+			#discussion-content {
+				padding: 22px;
+				border-radius: 14px;
+			}
+		}
+        .discussion-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 28px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .discussion-actions button {
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 10px;
+            padding: 8px 14px;
+            background: rgba(168, 85, 247, 0.06);
+            color: rgba(255, 255, 255, 0.65);
+            font: inherit;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .discussion-actions button:hover {
+            border-color: rgba(168, 85, 247, 0.5);
+            background: rgba(168, 85, 247, 0.12);
+            color: #fff;
+        }
+
+        #upvote-button.active {
+            color: #c084fc;
+            border-color: rgba(192, 132, 252, 0.5);
+            background: rgba(168, 85, 247, 0.14);
+        }
+        
+        .comments-section {
+            margin-top: 40px;
+        }
+
+        .comments-section h2 {
+            margin-bottom: 20px;
+            color: #fff;
+            font-size: 1.4rem;
+        }
+
+       :global(.comment) {
+            padding: 15px 5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        :global(.comment-author) {
+            margin-bottom: 1%;
+            color: #c084fc;
+            font-size: 1.2rem;
+            
+        }
+
+        :global(.comment-body) {
+            margin-left: 40px;
+            padding-left: 4px;
+            color: rgba(255, 255, 255, 0.72);
+            line-height: 1.1;
+        }
+
+        :global(.comment-form) {
+            margin-top: 28px;
+        }
+
+        :global(#comment-input) {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 14px 16px;
+
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 12px;
+
+            background: rgba(255, 255, 255, 0.025);
+            color: #fff;
+
+            font: inherit;
+            line-height: 1.6;
+
+            resize: vertical;
+            outline: none;
+        }
+
+        :global(#comment-input)::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        :global(#comment-input):focus {
+            border-color: rgba(192, 132, 252, 0.55);
+            box-shadow: 0 0 18px rgba(168, 85, 247, 0.08);
+        }
+
+        :global(#post-comment-button) {
+            margin-top: 10px;
+            padding: 9px 16px;
+
+            border: 1px solid rgba(168, 85, 247, 0.35);
+            border-radius: 10px;
+
+            background: rgba(168, 85, 247, 0.1);
+            color: #c084fc;
+
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+
+            transition: 0.2s ease;
+        }
+
+        :global(#post-comment-button):hover {
+            background: rgba(168, 85, 247, 0.18);
+            border-color: rgba(192, 132, 252, 0.65);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        :global(.comment-header) {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 3px;
+        }
+
+        :global(.comment-left) {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        :global(.comment-menu-container) {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        :global(.comment-avatar) {
+            width: 30px;
+            height: 30px;
+            min-width: 30px;
+            min-height: 30px;
+
+            display: flex;
+            align-items: left;
+            justify-content: left;
+
+            overflow: hidden;
+
+            border: 1px solid rgba(168, 85, 247, 0.35);
+            border-radius: 50%;
+
+            background: rgba(168, 85, 247, 0.1);
+
+            color: #c084fc;
+            font-size: 0.72rem;
+            font-weight: 800;
+        }
+
+        :global(.comment-avatar) img {
+            display: block;
+
+            width: 100%;
+            height: 100%;
+
+            max-width: 100%;
+            max-height: 100%;
+
+            object-fit: cover;
+        }
+
+        :global(.comment-meta) {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            line-height: .3;
+        }
+
+        :global(.comment-time) {
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 0.9rem;
+        }
+
+        :global(.comment-reply) {
+            margin-left: 40px;
+            margin-top: 6px;
+            padding: 0;
+            border: none;
+            background: none;
+            color: rgba(192, 132, 252, 0.65);
+            font: inherit;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        :global(.comment-reply:hover) {
+            color: #c084fc;
+        }
+        :global(.comment-replies) {
+            margin-left: 40px;
+            margin-top: 4px;
+            padding-left: 14px;
+            border-left: 1px solid rgba(168, 85, 247, 0.18);
+        }
+
+        :global(.reply-comment) {
+            padding-top: 10px;
+        }
+        :global(.reply-form) {
+            margin-top: 10px;
+            margin-left: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        :global(.reply-input) {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 12px;
+
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 10px;
+
+            background: rgba(255, 255, 255, 0.025);
+            color: #fff;
+
+            font: inherit;
+            line-height: 1.5;
+
+            resize: vertical;
+            outline: none;
+        }
+
+        :global(.reply-input)::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        :global(.reply-input):focus {
+            border-color: rgba(192, 132, 252, 0.55);
+            box-shadow: 0 0 14px rgba(168, 85, 247, 0.08);
+        }
+
+        :global(.reply-submit) {
+            align-self: flex-start;
+
+            padding: 7px 13px;
+
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 8px;
+
+            background: rgba(168, 85, 247, 0.08);
+            color: #c084fc;
+
+            font: inherit;
+            font-size: 0.78rem;
+            font-weight: 700;
+
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        :global(.reply-submit:hover) {
+            background: rgba(168, 85, 247, 0.16);
+            border-color: rgba(192, 132, 252, 0.6);
+            color: #fff;
+        }
+
+        :global(.comment-delete) {
+            margin-left: 8px;
+            padding: 0;
+            border: none;
+            background: none;
+            color: rgba(255, 100, 100, 0.55);
+            font: inherit;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        :global(.comment-delete:hover) {
+            color: #ff6b6b;
+        }
+
+        .discussion-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .discussion-menu-container {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .discussion-menu-button {
+            width: 36px;
+            height: 36px;
+
+            border: none;
+            border-radius: 10px;
+
+            background: transparent;
+            color: rgba(255, 255, 255, 0.45);
+
+            font-size: 1.5rem;
+            line-height: 1;
+
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .discussion-menu-button:hover {
+            background: rgba(168, 85, 247, 0.1);
+            color: #fff;
+        }
+
+        .discussion-menu {
+            position: absolute;
+            top: 42px;
+            right: 0;
+            z-index: 20;
+
+            min-width: 120px;
+
+            padding: 6px;
+
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 10px;
+
+            background: rgba(18, 12, 28, 0.96);
+
+            box-shadow:
+                0 12px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .discussion-menu button {
+            width: 100%;
+
+            padding: 8px 10px;
+
+            border: none;
+            border-radius: 7px;
+
+            background: transparent;
+
+            color: #ff6b6b;
+
+            font: inherit;
+            font-size: 0.8rem;
+
+            text-align: left;
+
+            cursor: pointer;
+        }
+
+        .discussion-menu button:hover {
+            background: rgba(255, 100, 100, 0.08);
+        }
+
+        :global(.comment-menu-button) {
+            width: 28px;
+            height: 28px;
+
+            padding: 0;
+
+            border: none;
+            border-radius: 7px;
+
+            background: transparent;
+            color: rgba(255, 255, 255, 0.35);
+
+            font-size: 1.2rem;
+            line-height: 1;
+
+            cursor: pointer;
+        }
+
+        :global(.comment-menu-button:hover) {
+            background: rgba(168, 85, 247, 0.1);
+            color: #fff;
+        }
+
+        :global(.comment-menu) {
+            position: absolute;
+            top: 30px;
+            right: 0;
+            z-index: 20;
+
+            min-width: 100px;
+
+            padding: 5px;
+
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 9px;
+
+            background: rgba(18, 12, 28, 0.96);
+
+            box-shadow:
+                0 10px 25px rgba(0, 0, 0, 0.35);
+        }
+
+        :global(.comment-menu .comment-delete) {
+            width: 100%;
+
+            margin: 0;
+
+            padding: 7px 9px;
+
+            border: none;
+            border-radius: 6px;
+
+            background: transparent;
+
+            color: #ff6b6b;
+
+            font: inherit;
+            font-size: 0.78rem;
+
+            text-align: left;
+
+            cursor: pointer;
+        }
+
+        :global(.comment-menu .comment-delete:hover) {
+            background: rgba(255, 100, 100, 0.08);
+        }
+	</style>
+
+	<script>
+		import { supabase } from '../../lib/supabase';
+
+        const {
+            data: { user },
+        } = await supabase.auth.getUser();
+
+		const loading =
+			document.querySelector<HTMLElement>(
+				'#discussion-loading'
+			);
+
+		const content =
+			document.querySelector<HTMLElement>(
+				'#discussion-content'
+			);
+
+		const errorBox =
+			document.querySelector<HTMLElement>(
+				'#discussion-error'
+			);
+
+		const postId =
+			new URLSearchParams(
+				window.location.search
+			).get('id');
+
+        const commentInput =
+            document.querySelector<HTMLTextAreaElement>(
+                '#comment-input'
+            );
+
+        const postCommentButton =
+            document.querySelector<HTMLButtonElement>(
+                '#post-comment-button'
+            );
+
+        postCommentButton?.addEventListener('click', async () => {
+            if (!user) {
+                window.location.href = '/login';
+                return;
+            }
+
+            if (!postId || !commentInput) return;
+
+            const body = commentInput.value.trim();
+
+            if (!body) return;
+
+            const { data: profile, error: profileError } =
+                await supabase
+                    .from('profiles')
+                    .select('username')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+            if (profileError || !profile) {
+                console.error(
+                    'Profile error:',
+                    profileError
+                );
+                return;
+            }
+
+            const { error } = await supabase
+                .from('comments')
+                .insert({
+                    post_id: postId,
+                    user_id: user.id,
+                    display_name: profile.username,
+                    body,
+                    parent_id: null,
+                });
+
+            if (error) {
+                console.error(
+                    'Post comment error:',
+                    error
+                );
+                return;
+            }
+
+            commentInput.value = '';
+
+            await loadComments();
+        });    
+
+        async function loadComments() {
+            if (!postId) return;
+
+            const commentsList =
+                document.querySelector<HTMLElement>(
+                    '#comments-list'
+                );
+
+            const { data: comments, error } =
+            await supabase
+                .from('comments')
+                .select(`
+                    id,
+                    user_id,
+                    display_name,
+                    body,
+                    created_at,
+                    parent_id
+                `)
+                .eq('post_id', postId)
+                .order('created_at', {
+                    ascending: true,
+                });
+
+            if (error) {
+                console.error('Comments error:', error);
+
+                if (commentsList) {
+                    commentsList.textContent =
+                        'Unable to load comments.';
+                }
+
+                return;
+            }
+
+            if (!comments || comments.length === 0) {
+                if (commentsList) {
+                    commentsList.textContent =
+                        'No comments yet.';
+                }
+
+                return;
+            }
+
+            const userIds = [
+                ...new Set(
+                    comments.map((comment) => comment.user_id)
+                ),
+            ];
+
+            const { data: profiles } =
+                await supabase
+                    .from('profiles')
+                    .select('id, username, avatar_url')
+                    .in('id', userIds);
+
+            const profileMap = new Map(
+                (profiles || []).map((profile) => [
+                    profile.id,
+                    profile,
+                ])
+            );
+
+            if (commentsList) {
+                const escapeHTML = (value: string) =>
+                    value.replace(/[&<>"']/g, (char) => {
+                        const entities: Record<string, string> = {
+                            '&': '&amp;',
+                            '<': '&lt;',
+                            '>': '&gt;',
+                            '"': '&quot;',
+                            "'": '&#39;',
+                        };
+                        return entities[char];
+                    });
+
+                const renderComment = (comment: (typeof comments)[number]): string => {
+
+                    const profile = profileMap.get(comment.user_id);
+                    const username =
+                        profile?.username || comment.display_name || 'RISE User';
+                    const avatarUrl = profile?.avatar_url || '';
+                    const safeUsername = escapeHTML(username);
+                    const safeBody = escapeHTML(comment.body);
+                    const safeAvatarUrl = escapeHTML(avatarUrl);
+
+                    const formattedTime = new Date(comment.created_at)
+                        .toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                        });
+
+                    const children = comments.filter(
+                        (reply) => reply.parent_id === comment.id
+                    );
+
+                    const avatar = avatarUrl
+                        ? `<img src="${safeAvatarUrl}" alt="@${safeUsername}" />`
+                        : escapeHTML(username.charAt(0).toUpperCase());
+
+                    const menu = user?.id === comment.user_id
+                        ? `
+                            <div class="comment-menu-container">
+                                <button
+                                    class="comment-menu-button"
+                                    data-comment-id="${comment.id}"
+                                    type="button"
+                                    aria-label="Comment options"
+                                >⋮</button>
+
+                                <div
+                                    class="comment-menu"
+                                    data-menu-id="${comment.id}"
+                                    hidden
+                                >
+                                    <button
+                                        class="comment-delete"
+                                        data-comment-id="${comment.id}"
+                                        type="button"
+                                    >Delete</button>
+                                </div>
+                            </div>
+                        `
+                        : '';
+
+                    return `
+                        <article class="comment">
+                            <div class="comment-header">
+                                <div class="comment-left">
+                                    <div class="comment-avatar">
+                                        ${avatar}
+                                    </div>
+
+                                    <div class="comment-meta">
+                                        <span class="comment-author">
+                                            @${safeUsername}
+                                        </span>
+                                        <span class="comment-time">
+                                            ${formattedTime}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                ${menu}
+                            </div>
+
+                            <div class="comment-body">${safeBody}</div>
+
+                            <button
+                                class="comment-reply"
+                                data-comment-id="${comment.id}"
+                                type="button"
+                            >Reply</button>
+
+                            ${
+                                children.length
+                                    ? `
+                                        <div class="comment-replies">
+                                            ${children.map(renderComment).join('')}
+                                        </div>
+                                    `
+                                    : ''
+                            }
+                        </article>
+                    `;
+                };
+
+                const topLevelComments = comments.filter(
+                    (comment) => !comment.parent_id
+                );
+
+                commentsList.innerHTML = topLevelComments
+                    .map(renderComment)
+                    .join('');
+            
+
+                document
+                .querySelectorAll<HTMLButtonElement>('.comment-reply')
+                .forEach((button) => {
+                    button.addEventListener('click', () => {
+                        const commentId = button.dataset.commentId;
+
+                        if (!commentId) return;
+
+                        document
+                            .querySelector('.reply-form')
+                            ?.remove();
+
+                        const replyForm =
+                            document.createElement('div');
+
+                        replyForm.className = 'reply-form';
+
+                        replyForm.innerHTML = `
+                            <textarea
+                                class="reply-input"
+                                placeholder="Write a reply..."
+                                rows="3"
+                            ></textarea>
+
+                            <button
+                                class="reply-submit"
+                                type="button"
+                            >
+                                Reply
+                            </button>
+                        `;
+
+                        button.parentElement?.appendChild(replyForm);
+
+                        const replyInput =
+                            replyForm.querySelector<HTMLTextAreaElement>(
+                                '.reply-input'
+                            );
+
+                        const replySubmit =
+                            replyForm.querySelector<HTMLButtonElement>(
+                                '.reply-submit'
+                            );
+
+                        replySubmit?.addEventListener(
+                            'click',
+                            async () => {
+                                if (!user) {
+                                    window.location.href = '/login';
+                                    return;
+                                }
+
+                                const body =
+                                    replyInput?.value.trim();
+
+                                if (!body) return;
+
+                                const { data: profile } =
+                                    await supabase
+                                        .from('profiles')
+                                        .select('username')
+                                        .eq('id', user.id)
+                                        .maybeSingle();
+
+                                if (!profile) return;
+
+                                const { error } =
+                                    await supabase
+                                        .from('comments')
+                                        .insert({
+                                            post_id: postId,
+                                            user_id: user.id,
+                                            display_name:
+                                                profile.username,
+                                            body,
+                                            parent_id: commentId,
+                                        });
+
+                                if (error) {
+                                    console.error(
+                                        'Reply error:',
+                                        error
+                                    );
+                                    return;
+                                }
+
+                                await loadComments();
+                            }
+                        );
+                    });
+                });
+
+                document
+                .querySelectorAll<HTMLButtonElement>('.comment-delete')
+                .forEach((button) => {
+                    button.addEventListener('click', async () => {
+                        if (!user) {
+                            window.location.href = '/login';
+                            return;
+                        }
+
+                        const commentId =
+                            button.dataset.commentId;
+
+                        if (!commentId) return;
+
+                        const confirmed =
+                            window.confirm(
+                                'Delete this comment?'
+                            );
+
+                        if (!confirmed) return;
+
+                        const { error } =
+                            await supabase
+                                .from('comments')
+                                .delete()
+                                .eq('id', commentId)
+                                .eq('user_id', user.id);
+
+                        if (error) {
+                            console.error(
+                                'Delete comment error:',
+                                error
+                            );
+                            return;
+                        }
+
+                        await loadComments();
+                    });
+                });
+
+                document
+                .querySelectorAll<HTMLButtonElement>(
+                    '.comment-menu-button'
+                )
+                .forEach((button) => {
+
+                    button.addEventListener(
+                        'click',
+                        (event) => {
+                            event.stopPropagation();
+
+                            const commentId =
+                                button.dataset.commentId;
+
+                            if (!commentId) return;
+
+                            document
+                                .querySelectorAll<HTMLElement>(
+                                    '.comment-menu'
+                                )
+                                .forEach((menu) => {
+
+                                    if (
+                                        menu.dataset.menuId ===
+                                        commentId
+                                    ) {
+                                        menu.toggleAttribute(
+                                            'hidden'
+                                        );
+                                    } else {
+                                        menu.setAttribute(
+                                            'hidden',
+                                            ''
+                                        );
+                                    }
+
+                                });
+                        }
+                    );
+
+                });
+
+
+            }
+        }
+
+        loadComments();   
+
+		async function loadDiscussion() {
+			if (!postId) {
+				loading?.setAttribute('hidden', '');
+				errorBox?.removeAttribute('hidden');
+				return;
+			}
+
+			const { data: post, error: postError } =
+				await supabase
+					.from('community_posts')
+					.select(`
+						id,
+						user_id,
+						title,
+						body,
+						category,
+						created_at
+					`)
+					.eq('id', postId)
+					.maybeSingle();
+
+			if (postError || !post) {
+				console.error(
+					'Discussion error:',
+					postError
+				);
+
+				loading?.setAttribute('hidden', '');
+				errorBox?.removeAttribute('hidden');
+
+				return;
+			}
+
+            const { data: upvotes, error: upvotesError } =
+                await supabase
+                    .from('upvotes')
+                    .select('user_id')
+                    .eq('post_id', post.id);
+
+            let     upvoteCount = upvotes?.length ?? 0;      
+            
+            const upvoteButton =
+                document.querySelector<HTMLButtonElement>(
+                    '#upvote-button'
+                );  
+
+            let hasUpvoted =
+                user
+                    ? upvotes?.some(
+                            (upvote) =>
+                                upvote.user_id === user.id
+                        )
+                    : false;
+
+            if (hasUpvoted) {
+                upvoteButton?.classList.add('active');
+            }        
+                    
+
+			const { data: profile } =
+				await supabase
+					.from('profiles')
+					.select(
+						'username, avatar_url'
+					)
+					.eq('id', post.user_id)
+					.maybeSingle();
+
+			const username =
+				profile?.username || 'RISE User';
+
+            const discussionMenuContainer =
+                document.querySelector<HTMLElement>(
+                                    '#discussion-men    u-container'
+                                );
+
+                            if (discussionMenuContainer && user?.id === post.user_id) {
+                                discussionMenuContainer.innerHTML = `
+                                    <button
+                                        id="discussion-menu-button"
+                                        class="discussion-menu-button"
+                                        type="button"
+                                        aria-label="Discussion options"
+                                    >
+                                        ⋮
+                                    </button>
+
+                                    <div
+                                        id="discussion-menu"
+                                        class="discussion-menu"
+                                        hidden
+                                    >
+                                        <button
+                                            id="delete-post-button"
+                                            type="button"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                `;
+                            }  
+
+                            const discussionMenuButton =
+                                document.querySelector<HTMLButtonElement>(
+                                    '#discussion-menu-button'
+                                );
+
+                            const discussionMenu =
+                                document.querySelector<HTMLElement>(
+                                    '#discussion-menu'
+                                );
+
+                            discussionMenuButton?.addEventListener(
+                                'click',
+                                (event) => {
+                                    event.stopPropagation();
+
+                                    discussionMenu?.toggleAttribute('hidden');
+                                }
+                            );
+
+                            const deletePostButton =
+                                document.querySelector<HTMLButtonElement>(
+                                    '#delete-post-button'
+                                );
+
+                            deletePostButton?.addEventListener(
+                                'click',
+                                async () => {
+                                    if (!user) {
+                                        window.location.href = '/login';
+                                        return;
+                                    }
+
+                                    const confirmed =
+                                        window.confirm(
+                                            'Delete this discussion?'
+                                        );
+
+                                    if (!confirmed) return;
+
+                                    const { error } =
+                                        await supabase
+                                            .from('community_posts')
+                                            .delete()
+                                            .eq('id', post.id)
+                                            .eq('user_id', user.id);
+
+                                    if (error) {
+                                        console.error(
+                                            'Delete discussion error:',
+                                            error
+                                        );
+                                        return;
+                                    }
+
+                                    window.location.href = '/community';
+                                }
+                            );                    
+
+			const avatarUrl =
+				profile?.avatar_url || null;
+
+			const categoryIcons: Record<string, string> = {
+				Ideas: '💡',
+				Projects: '🚀',
+				'Build & Tech': '🛠️',
+			};
+
+			const icon =
+				categoryIcons[post.category] || '✦';
+
+			const date =
+				new Date(post.created_at);
+
+			const formattedDate =
+				date.toLocaleDateString(
+					'en-IN',
+					{
+						day: 'numeric',
+						month: 'short',
+						year: 'numeric',
+					}
+				);
+
+			const categoryElement =
+				document.querySelector(
+					'#discussion-category'
+				);
+
+			const titleElement =
+				document.querySelector(
+					'#discussion-title'
+				);
+
+			const authorElement =
+				document.querySelector(
+					'#discussion-author'
+				);
+
+			const timeElement =
+				document.querySelector(
+					'#discussion-time'
+				);
+
+			const bodyElement =
+				document.querySelector(
+					'#discussion-body'
+				);
+
+			const avatarElement =
+				document.querySelector(
+					'#discussion-avatar'
+				);
+
+            const upvoteCountElement =
+                document.querySelector(
+                    '#upvote-count'
+                ); 
+
+            
+
+            if (upvoteCountElement) {
+                upvoteCountElement.textContent =
+                    String(upvoteCount);
+            } 
+            
+            upvoteButton?.addEventListener('click', async () => {
+                if (!user) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                if (hasUpvoted) {
+                    const { error } = await supabase
+                        .from('upvotes')
+                        .delete()
+                        .eq('post_id', post.id)
+                        .eq('user_id', user.id);
+
+                    if (error) {
+                        console.error('Remove upvote error:', error);
+                        return;
+                    }
+
+                    hasUpvoted = false;
+                    upvoteCount -= 1;
+                } else {
+                    const { error } = await supabase
+                        .from('upvotes')
+                        .insert({
+                            post_id: post.id,
+                            user_id: user.id,
+                        });
+
+                    if (error) {
+                        console.error('Add upvote error:', error);
+                        return;
+                    }
+
+                    hasUpvoted = true;
+                    upvoteCount += 1;
+                }
+
+                if (upvoteCountElement) {
+                    upvoteCountElement.textContent =
+                        String(upvoteCount);
+                }
+
+                upvoteButton.classList.toggle(
+                    'active',
+                    hasUpvoted
+                );
+            });
+
+			if (categoryElement) {
+				categoryElement.textContent =
+					`${icon} ${post.category}`;
+			}
+
+			if (titleElement) {
+				titleElement.textContent =
+					post.title;
+			}
+
+			if (authorElement) {
+				authorElement.textContent =
+					`@${username}`;
+			}
+
+			if (timeElement) {
+				timeElement.textContent =
+					formattedDate;
+			}
+
+			if (bodyElement) {
+				bodyElement.textContent =
+					post.body;
+			}
+
+			if (avatarElement) {
+				if (avatarUrl) {
+					avatarElement.innerHTML = `
+						<img
+							src="${avatarUrl}"
+							alt="@${username}"
+						/>
+					`;
+				} else {
+					avatarElement.textContent =
+						username
+							.charAt(0)
+							.toUpperCase();
+				}
+			}
+
+            
+
+			loading?.setAttribute('hidden', '');
+			content?.removeAttribute('hidden');
+		}
+
+		loadDiscussion();
+	</script>
+</html>

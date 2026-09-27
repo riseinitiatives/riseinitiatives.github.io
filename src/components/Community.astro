@@ -58,660 +58,779 @@ const { postId } = Astro.props;
 </section>
 
 <script>
-  console.log('🔥 COMMUNITY SCRIPT IS RUNNING');
-
-  import { supabase } from '../lib/supabase';
-
-  const community = document.querySelector<HTMLElement>('.community');
-
-  if (community instanceof HTMLElement) {
-    const postId = community.dataset.postId;
-
-    if (postId) {
-      initializeCommunity(postId);
-    }
-  }
-
-  // ─────────────────────────────
-  // INITIALIZE COMMUNITY
-  // ─────────────────────────────
-
-  async function initializeCommunity(postId: string) {
-    // Check whether this browser already has an anonymous session
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    let user = session?.user;
-
-    // No session yet → create an anonymous user
-    if (!user) {
-      const { data, error } =
-        await supabase.auth.signInAnonymously();
-
-      if (error) {
-        console.error(
-          'Anonymous sign-in failed:',
-          error.message
-        );
-        return;
-      }
-
-      // IMPORTANT: save the newly created user
-      user = data.user;
-    }
-
-    console.log('RISE anonymous user:', user?.id);
-
-    if (!user) {
-      console.error('No anonymous user found.');
-      return;
-    }
-
-    // ─────────────────────────────
-    // LIKE SYSTEM
-    // ─────────────────────────────
-
-    async function toggleLike(
-      postId: string,
-      userId: string
-    ) {
-      const {
-        data: existingLike,
-        error: checkError,
-      } = await supabase
-        .from('likes')
-        .select('id')
-        .eq('post_id', postId)
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (checkError) {
-        console.error(
-          'Could not check like:',
-          checkError.message
-        );
-        return;
-      }
-
-      if (existingLike) {
-        const { error } = await supabase
-          .from('likes')
-          .delete()
-          .eq('id', existingLike.id);
-
-        if (error) {
-          console.error(
-            'Could not remove like:',
-            error.message
-          );
-          return;
-        }
-      } else {
-        const { error } = await supabase
-          .from('likes')
-          .insert({
-            post_id: postId,
-            user_id: userId,
-          });
-
-        if (error) {
-          console.error(
-            'Could not add like:',
-            error.message
-          );
-          return;
-        }
-      }
-
-      await loadCommunity(postId, userId);
-    }
-
-    const likeButton =
-      community?.querySelector('.like-button');
-
-    if (likeButton instanceof HTMLButtonElement) {
-      likeButton.addEventListener('click', async () => {
-        await toggleLike(postId, user.id);
-      });
-    }
-
-    // ─────────────────────────────
-    // TOP-LEVEL COMMENT SYSTEM
-    // ─────────────────────────────
-
-    const commentButton =
-      community?.querySelector('.comment-submit');
-
-    const nameInput =
-      community?.querySelector(
-        `#display-name-${postId}`
-      );
-
-    const commentInput =
-      community?.querySelector(
-        `#comment-${postId}`
-      );
-
-    if (
-      commentButton instanceof HTMLButtonElement &&
-      nameInput instanceof HTMLInputElement &&
-      commentInput instanceof HTMLTextAreaElement
-    ) {
-      commentButton.addEventListener(
-        'click',
-        async () => {
-          const displayName =
-            nameInput.value.trim() || 'Anonymous';
-
-          const body =
-            commentInput.value.trim();
-
-          if (!body) {
-            alert('Please write a comment first.');
-            return;
-          }
-
-          commentButton.disabled = true;
-          commentButton.textContent = 'Posting...';
-
-          const { error } = await supabase
-            .from('comments')
-            .insert({
-              post_id: postId,
-              user_id: user.id,
-              display_name: displayName,
-              body: body,
-              parent_id: null,
-            });
-
-          if (error) {
-            console.error(
-              'Could not post comment:',
-              error.message
-            );
-
-            alert(
-              'Could not post comment. Please try again.'
-            );
-
-            commentButton.disabled = false;
-            commentButton.textContent = 'Post Comment';
-
-            return;
-          }
-
-          commentInput.value = '';
-
-          await loadCommunity(postId, user.id);
-
-          commentButton.disabled = false;
-          commentButton.textContent = 'Post Comment';
-        }
-      );
-    }
-
-    // Initial load
-    await loadCommunity(postId, user.id);
-  }
-
-  // ─────────────────────────────
-  // LOAD COMMUNITY
-  // ─────────────────────────────
-
-  async function loadCommunity(
-    postId: string,
-    userId?: string
-  ) {
-    const {
-      data: comments,
-      error: commentsError,
-    } = await supabase
-      .from('comments')
-      .select('*')
-      .eq('post_id', postId)
-      .order('created_at', {
-        ascending: true,
-      });
-
-    if (commentsError) {
-      console.error(
-        'Could not load comments:',
-        commentsError.message
-      );
-      return;
-    }
-
-    // ─────────────────────────────
-    // GET LIKES
-    // ─────────────────────────────
-
-    const {
-      count: likeCount,
-      error: likesError,
-    } = await supabase
-      .from('likes')
-      .select('*', {
-        count: 'exact',
-        head: true,
-      })
-      .eq('post_id', postId);
-
-    if (likesError) {
-      console.error(
-        'Could not load likes:',
-        likesError.message
-      );
-      return;
-    }
-
-    const likeElement =
-      community?.querySelector('.like-count');
-
-    const commentElement =
-      community?.querySelector('.comment-count');
-
-    const likeButton =
-      community?.querySelector('.like-button');
-
-    let userHasLiked = false;
-
-    if (userId) {
-      const { data: userLike } =
-        await supabase
-          .from('likes')
-          .select('id')
-          .eq('post_id', postId)
-          .eq('user_id', userId)
-          .maybeSingle();
-
-      userHasLiked = !!userLike;
-    }
-
-    if (likeElement) {
-      likeElement.textContent =
-        String(likeCount ?? 0);
-    }
-
-    if (commentElement) {
-      commentElement.textContent =
-        String(comments?.length ?? 0);
-    }
-
-    if (likeButton instanceof HTMLButtonElement) {
-      likeButton.textContent =
-        userHasLiked
-          ? '❤️ Liked'
-          : '❤️ Like';
-    }
-
-    const commentsList =
-      community?.querySelector('.comments-list');
-
-    if (!commentsList) {
-      return;
-    }
-
-    commentsList.innerHTML = '';
-
-    if (!comments || comments.length === 0) {
-      return;
-    }
-
-    // ─────────────────────────────
-    // BUILD COMMENT TREE
-    // ─────────────────────────────
-
-    const commentMap = new Map();
-
-    comments.forEach((comment) => {
-      commentMap.set(comment.id, {
-        ...comment,
-        replies: [],
-      });
-    });
-
-    const rootComments: any[] = [];
-
-    comments.forEach((comment) => {
-      const currentComment =
-        commentMap.get(comment.id);
-
-      if (!comment.parent_id) {
-        rootComments.push(currentComment);
-      } else {
-        const parentComment =
-          commentMap.get(comment.parent_id);
-
-        if (parentComment) {
-          parentComment.replies.push(
-            currentComment
-          );
-        } else {
-          // If the parent no longer exists,
-          // display the comment as top-level.
-          rootComments.push(currentComment);
-        }
-      }
-    });
-
-    // ─────────────────────────────
-    // RENDER COMMENT TREE
-    // ─────────────────────────────
-
-    rootComments.forEach((comment) => {
-      commentsList.appendChild(
-        renderComment(
-          comment,
-          0,
-          postId,
-          userId
-        )
-      );
-    });
-  }
-
-  // ─────────────────────────────
-  // RENDER ONE COMMENT
-  // ─────────────────────────────
-
-  function renderComment(
-    comment: any,
-    depth = 0,
-    postId: string,
-    userId?: string
-  ): HTMLElement {
-    const wrapper =
-      document.createElement('div');
-
-    wrapper.className = 'comment-wrapper';
-
-    const item =
-      document.createElement('article');
-
-    item.className = 'comment';
-
-    // Limit visual nesting depth
-    if (depth > 0) {
-      item.classList.add('comment-reply');
-
-      const visualDepth =
-        Math.min(depth, 4);
-
-      item.style.marginLeft =
-        `${visualDepth * 1.25}rem`;
-    }
-
-    const strong =
-      document.createElement('strong');
-
-    strong.textContent =
-      comment.display_name || 'Anonymous';
-
-    const p =
-      document.createElement('p');
-
-    p.textContent = comment.body;
-
-    item.appendChild(strong);
-    item.appendChild(p);
-
-    // ─────────────────────────────
-    // COMMENT ACTIONS
-    // ─────────────────────────────
-
-    const actions =
-      document.createElement('div');
-
-    actions.className =
-      'comment-actions';
-
-    const replyButton =
-      document.createElement('button');
-
-    replyButton.className =
-      'reply-button';
-
-    replyButton.type = 'button';
-
-    replyButton.textContent =
-      '↩ Reply';
-
-    actions.appendChild(replyButton);
-    item.appendChild(actions);
-
-    wrapper.appendChild(item);
-
-    // ─────────────────────────────
-    // REPLY FORM
-    // ─────────────────────────────
-
-    let replyForm: HTMLElement | null =
-      null;
-
-    replyButton.addEventListener(
-      'click',
-      () => {
-        if (replyForm) {
-          replyForm.remove();
-          replyForm = null;
-          return;
-        }
-
-        replyForm =
-          document.createElement('form');
-
-        replyForm.className =
-          'reply-form';
-
-        replyForm.innerHTML = `
-          <input
-            type="text"
-            placeholder="Your name"
-            value="Anonymous"
-            maxlength="40"
-            required
-          />
-
-          <textarea
-            placeholder="Write a reply..."
-            maxlength="1000"
-            required
-          ></textarea>
-
-          <div class="reply-form-actions">
-            <button
-              type="button"
-              class="reply-cancel"
-            >
-              Cancel
-            </button>
-
-            <button
-              type="submit"
-              class="reply-submit"
-            >
-              Post Reply
-            </button>
-          </div>
-        `;
-
-        const cancelButton =
-          replyForm.querySelector(
-            '.reply-cancel'
-          ) as HTMLButtonElement;
-
-        cancelButton.addEventListener(
-          'click',
-          () => {
-            replyForm?.remove();
-            replyForm = null;
-          }
-        );
-
-        replyForm.addEventListener(
-          'submit',
-          async (event) => {
-            event.preventDefault();
-
-            const input =
-              replyForm!.querySelector(
-                'input'
-              ) as HTMLInputElement;
-
-            const textarea =
-              replyForm!.querySelector(
-                'textarea'
-              ) as HTMLTextAreaElement;
-
-            const submitButton =
-              replyForm!.querySelector(
-                '.reply-submit'
-              ) as HTMLButtonElement;
-
-            const displayName =
-              input.value.trim() ||
-              'Anonymous';
-
-            const body =
-              textarea.value.trim();
-
-            if (!body) {
-              return;
-            }
-
-            submitButton.disabled = true;
-            submitButton.textContent =
-              'Posting...';
-
-            try {
-              const {
-                data: sessionData,
-              } = await supabase.auth.getSession();
-
-              const currentUserId =
-                sessionData.session?.user?.id;
-
-              if (!currentUserId) {
-                alert(
-                  'Please wait a moment and try again.'
-                );
-                return;
-              }
-
-              const { error } =
-                await supabase
-                  .from('comments')
-                  .insert({
-                    post_id: postId,
-                    user_id: currentUserId,
-                    display_name: displayName,
-                    body: body,
-                    parent_id: comment.id,
-                  });
-
-              if (error) {
-                throw error;
-              }
-
-              await loadCommunity(
-                postId,
-                currentUserId
-              );
-            } catch (error) {
-              console.error(
-                'Could not post reply:',
-                error
-              );
-
-              alert(
-                'Could not post reply. Please try again.'
-              );
-            } finally {
-              submitButton.disabled = false;
-              submitButton.textContent =
-                'Post Reply';
-            }
-          }
-        );
-
-        wrapper.appendChild(replyForm);
-      }
-    );
-
-    // ─────────────────────────────
-    // NESTED REPLIES
-    // ─────────────────────────────
-
-    if (
-      comment.replies &&
-      comment.replies.length > 0
-    ) {
-      const replies =
-        document.createElement('div');
-
-      replies.className = 'replies';
-
-      // Replies collapsed by default
-      replies.hidden = true;
-
-      const toggleButton =
-        document.createElement('button');
-
-      toggleButton.type = 'button';
-
-      toggleButton.className =
-        'reply-toggle';
-
-      const replyCount =
-        comment.replies.length;
-
-      toggleButton.textContent =
-        `${replyCount} ${
-          replyCount === 1
-            ? 'reply'
-            : 'replies'
-        } ▾`;
-
-      toggleButton.addEventListener(
-        'click',
-        () => {
-          replies.hidden =
-            !replies.hidden;
-
-          toggleButton.textContent =
-            replies.hidden
-              ? `${replyCount} ${
-                  replyCount === 1
-                    ? 'reply'
-                    : 'replies'
-                } ▾`
-              : `${replyCount} ${
-                  replyCount === 1
-                    ? 'reply'
-                    : 'replies'
-                } ▴`;
-        }
-      );
-
-      wrapper.appendChild(toggleButton);
-      wrapper.appendChild(replies);
-
-      // Render each nested reply recursively
-      for (const reply of comment.replies) {
-        replies.appendChild(
-          renderComment(
-            reply,
-            depth + 1,
-            postId,
-            userId
-          )
-        );
-      }
-    }
-
-    return wrapper;
-  }
+	import { supabase } from '../lib/supabase';
+
+	const community = document.querySelector<HTMLElement>('.community');
+
+	if (community instanceof HTMLElement) {
+		const postId = community.dataset.postId;
+
+		if (postId) {
+			initializeCommunity(postId);
+		}
+	}
+
+	async function initializeCommunity(postId: string) {
+		const {
+			data: { user },
+		} = await supabase.auth.getUser();
+
+		/*
+		 * Community now requires a real RISE account.
+		 */
+		const isAnonymous =
+			user?.is_anonymous === true ||
+			user?.app_metadata?.is_anonymous === true;
+
+		if (!user || isAnonymous) {
+			showLoginMessage();
+			return;
+		}
+
+		/*
+		 * Make sure the user has created their RISE ID.
+		 */
+		const { data: profile, error: profileError } =
+			await supabase
+				.from('profiles')
+				.select('username, avatar_url')
+				.eq('id', user.id)
+				.maybeSingle();
+
+		if (profileError) {
+			console.error(
+				'Could not load profile:',
+				profileError.message
+			);
+			return;
+		}
+
+		if (!profile) {
+			showProfileMessage();
+			return;
+		}
+
+		const userId = user.id;
+
+		// ─────────────────────────────
+		// LIKE SYSTEM
+		// ─────────────────────────────
+
+		async function toggleLike(
+			postId: string,
+			userId: string
+		) {
+			const {
+				data: existingLike,
+				error: checkError,
+			} = await supabase
+				.from('likes')
+				.select('id')
+				.eq('post_id', postId)
+				.eq('user_id', userId)
+				.maybeSingle();
+
+			if (checkError) {
+				console.error(
+					'Could not check like:',
+					checkError.message
+				);
+				return;
+			}
+
+			if (existingLike) {
+				const { error } = await supabase
+					.from('likes')
+					.delete()
+					.eq('id', existingLike.id);
+
+				if (error) {
+					console.error(
+						'Could not remove like:',
+						error.message
+					);
+					return;
+				}
+			} else {
+				const { error } = await supabase
+					.from('likes')
+					.insert({
+						post_id: postId,
+						user_id: userId,
+					});
+
+				if (error) {
+					console.error(
+						'Could not add like:',
+						error.message
+					);
+					return;
+				}
+			}
+
+			await loadCommunity(postId, userId);
+		}
+
+		const likeButton =
+			community.querySelector('.like-button');
+
+		if (likeButton instanceof HTMLButtonElement) {
+			likeButton.addEventListener(
+				'click',
+				async () => {
+					await toggleLike(postId, userId);
+				}
+			);
+		}
+
+		// ─────────────────────────────
+		// COMMENT SYSTEM
+		// ─────────────────────────────
+
+		const commentButton =
+			community.querySelector('.comment-submit');
+
+		const nameInput =
+			community.querySelector(
+				`#display-name-${postId}`
+			);
+
+		const commentInput =
+			community.querySelector(
+				`#comment-${postId}`
+			);
+
+		/*
+		 * The username comes from the user's RISE profile.
+		 * Users can no longer impersonate another username.
+		 */
+		if (nameInput instanceof HTMLInputElement) {
+			nameInput.value = `@${profile.username}`;
+			nameInput.readOnly = true;
+		}
+
+		if (
+			commentButton instanceof HTMLButtonElement &&
+			commentInput instanceof HTMLTextAreaElement
+		) {
+			commentButton.addEventListener(
+				'click',
+				async () => {
+					const body =
+						commentInput.value.trim();
+
+					if (!body) {
+						alert(
+							'Please write a comment first.'
+						);
+						return;
+					}
+
+					commentButton.disabled = true;
+					commentButton.textContent =
+						'Posting...';
+
+					const { error } =
+						await supabase
+							.from('comments')
+							.insert({
+								post_id: postId,
+								user_id: userId,
+								display_name:
+									profile.username,
+								body,
+								parent_id: null,
+							});
+
+					if (error) {
+						console.error(
+							'Could not post comment:',
+							error.message
+						);
+
+						alert(
+							'Could not post comment. Please try again.'
+						);
+
+						commentButton.disabled = false;
+						commentButton.textContent =
+							'Post Comment';
+
+						return;
+					}
+
+					commentInput.value = '';
+
+					await loadCommunity(
+						postId,
+						userId
+					);
+
+					commentButton.disabled = false;
+					commentButton.textContent =
+						'Post Comment';
+				}
+			);
+		}
+
+		await loadCommunity(postId, userId);
+	}
+
+	function showLoginMessage() {
+		const commentForm =
+			community?.querySelector('.comment-form');
+
+		if (commentForm) {
+			commentForm.innerHTML = `
+				<div class="community-auth-message">
+					<p>Sign in to join the RISE community.</p>
+					<a href="/login">Sign in</a>
+				</div>
+			`;
+		}
+
+		const likeButton =
+			community?.querySelector('.like-button');
+
+		if (likeButton instanceof HTMLButtonElement) {
+			likeButton.disabled = true;
+			likeButton.textContent = '❤️ Sign in to like';
+		}
+	}
+
+	function showProfileMessage() {
+		const commentForm =
+			community?.querySelector('.comment-form');
+
+		if (commentForm) {
+			commentForm.innerHTML = `
+				<div class="community-auth-message">
+					<p>Create your RISE ID to join the community.</p>
+					<a href="/setup-profile">Create RISE ID</a>
+				</div>
+			`;
+		}
+
+		const likeButton =
+			community?.querySelector('.like-button');
+
+		if (likeButton instanceof HTMLButtonElement) {
+			likeButton.disabled = true;
+			likeButton.textContent =
+				'❤️ Create your RISE ID';
+		}
+	}
+
+	async function loadCommunity(
+		postId: string,
+		userId?: string
+	) {
+		const {
+			data: comments,
+			error: commentsError,
+		} = await supabase
+			.from('comments')
+			.select('*')
+			.eq('post_id', postId)
+			.order('created_at', {
+				ascending: true,
+			});
+
+		if (commentsError) {
+			console.error(
+				'Could not load comments:',
+				commentsError.message
+			);
+			return;
+		}
+
+		const commentUserIds = [
+			...new Set(
+				(comments || []).map(
+					(comment) => comment.user_id
+				)
+			),
+		];
+
+		let profileMap = new Map();
+
+		if (commentUserIds.length > 0) {
+			const { data: profiles } = await supabase
+				.from('profiles')
+				.select('id, username, avatar_url')
+				.in('id', commentUserIds);
+
+			profileMap = new Map(
+				(profiles || []).map((profile) => [
+					profile.id,
+					profile,
+				])
+			);
+		}
+		(comments || []).forEach((comment) => {
+			comment.avatar_url =
+				profileMap.get(comment.user_id)?.avatar_url
+				|| null;
+		});
+
+		
+
+		const {
+			count: likeCount,
+			error: likesError,
+		} = await supabase
+			.from('likes')
+			.select('*', {
+				count: 'exact',
+				head: true,
+			})
+			.eq('post_id', postId);
+
+		if (likesError) {
+			console.error(
+				'Could not load likes:',
+				likesError.message
+			);
+			return;
+		}
+
+		const likeElement =
+			community?.querySelector('.like-count');
+
+		const commentElement =
+			community?.querySelector('.comment-count');
+
+		const likeButton =
+			community?.querySelector('.like-button');
+
+		let userHasLiked = false;
+
+		if (userId) {
+			const { data: userLike } =
+				await supabase
+					.from('likes')
+					.select('id')
+					.eq('post_id', postId)
+					.eq('user_id', userId)
+					.maybeSingle();
+
+			userHasLiked = !!userLike;
+		}
+
+		if (likeElement) {
+			likeElement.textContent =
+				String(likeCount ?? 0);
+		}
+
+		if (commentElement) {
+			commentElement.textContent =
+				String(comments?.length ?? 0);
+		}
+
+		if (likeButton instanceof HTMLButtonElement) {
+			likeButton.textContent =
+				userHasLiked
+					? '❤️ Liked'
+					: '❤️ Like';
+		}
+
+		const commentsList =
+			community?.querySelector('.comments-list');
+
+		if (!commentsList) {
+			return;
+		}
+
+		commentsList.innerHTML = '';
+
+		if (!comments || comments.length === 0) {
+			return;
+		}
+
+		const commentMap = new Map();
+
+		comments.forEach((comment) => {
+			commentMap.set(comment.id, {
+				...comment,
+				replies: [],
+			});
+		});
+
+		const rootComments: any[] = [];
+
+		comments.forEach((comment) => {
+			const currentComment =
+				commentMap.get(comment.id);
+
+			if (!comment.parent_id) {
+				rootComments.push(currentComment);
+			} else {
+				const parentComment =
+					commentMap.get(comment.parent_id);
+
+				if (parentComment) {
+					parentComment.replies.push(
+						currentComment
+					);
+				} else {
+					rootComments.push(
+						currentComment
+					);
+				}
+			}
+		});
+
+		rootComments.forEach((comment) => {
+			commentsList.appendChild(
+				renderComment(
+					comment,
+					0,
+					postId,
+					userId
+				)
+			);
+		});
+	}
+
+	function renderComment(
+		comment: any,
+		depth = 0,
+		postId: string,
+		userId?: string
+	): HTMLElement {
+		const wrapper =
+			document.createElement('div');
+
+		wrapper.className =
+			'comment-wrapper';
+
+		const item =
+			document.createElement('article');
+
+		item.className = 'comment';
+
+		if (depth > 0) {
+			item.classList.add('comment-reply');
+
+			const visualDepth =
+				Math.min(depth, 4);
+
+			item.style.marginLeft =
+				`${visualDepth * 1.25}rem`;
+		}
+
+		const authorRow =
+			document.createElement('div');
+
+		authorRow.className = 'comment-author';
+
+		const avatar =
+			document.createElement('div');
+
+		avatar.className = 'comment-avatar';
+
+		const avatarUrl =
+			comment.avatar_url;
+
+		if (avatarUrl) {
+			avatar.innerHTML = `
+				<img
+					src="${avatarUrl}"
+					alt="@${comment.display_name || 'unknown'}"
+					style="
+						display:block;
+						width:30px;
+						height:30px;
+						min-width:30px;
+						max-width:30px;
+						min-height:30px;
+						max-height:30px;
+						object-fit:cover;
+					"
+				/>
+			`;
+		} else {
+			avatar.textContent =
+				(comment.display_name || 'U')
+					.charAt(0)
+					.toUpperCase();
+		}
+
+		const strong =
+			document.createElement('strong');
+
+		strong.textContent =
+			`@${comment.display_name || 'unknown'}`;
+
+		authorRow.appendChild(avatar);
+		authorRow.appendChild(strong);
+
+		const p =
+			document.createElement('p');
+
+		p.textContent = comment.body;
+
+		item.appendChild(authorRow);
+		item.appendChild(p);
+
+		const actions =
+			document.createElement('div');
+
+		actions.className =
+			'comment-actions';
+
+		const replyButton =
+			document.createElement('button');
+
+		replyButton.className =
+			'reply-button';
+
+		replyButton.type = 'button';
+		replyButton.textContent = '↩ Reply';
+
+		actions.appendChild(replyButton);
+		item.appendChild(actions);
+
+		wrapper.appendChild(item);
+
+		let replyForm: HTMLElement | null = null;
+
+		replyButton.addEventListener(
+			'click',
+			() => {
+				if (replyForm) {
+					replyForm.remove();
+					replyForm = null;
+					return;
+				}
+
+				replyForm =
+					document.createElement('form');
+
+				replyForm.className =
+					'reply-form';
+
+				replyForm.innerHTML = `
+					<textarea
+						placeholder="Write a reply..."
+						maxlength="1000"
+						required
+					></textarea>
+
+					<div class="reply-form-actions">
+						<button
+							type="button"
+							class="reply-cancel"
+						>
+							Cancel
+						</button>
+
+						<button
+							type="submit"
+							class="reply-submit"
+						>
+							Post Reply
+						</button>
+					</div>
+				`;
+
+				const cancelButton =
+					replyForm.querySelector(
+						'.reply-cancel'
+					) as HTMLButtonElement;
+
+				cancelButton.addEventListener(
+					'click',
+					() => {
+						replyForm?.remove();
+						replyForm = null;
+					}
+				);
+
+				replyForm.addEventListener(
+					'submit',
+					async (event) => {
+						event.preventDefault();
+
+						const textarea =
+							replyForm!.querySelector(
+								'textarea'
+							) as HTMLTextAreaElement;
+
+						const submitButton =
+							replyForm!.querySelector(
+								'.reply-submit'
+							) as HTMLButtonElement;
+
+						const body =
+							textarea.value.trim();
+
+						if (!body) return;
+
+						submitButton.disabled = true;
+						submitButton.textContent =
+							'Posting...';
+
+						try {
+							const {
+								data: {
+									user: currentUser,
+								},
+							} =
+								await supabase.auth.getUser();
+
+							const currentUserId =
+								currentUser?.id;
+
+							const isAnonymous =
+								currentUser?.is_anonymous ===
+									true ||
+								currentUser?.app_metadata
+									?.is_anonymous === true;
+
+							if (
+								!currentUserId ||
+								isAnonymous
+							) {
+								throw new Error(
+									'You must be signed in.'
+								);
+							}
+
+							const {
+								data: replyProfile,
+								error:
+									replyProfileError,
+							} =
+								await supabase
+									.from('profiles')
+									.select(
+										'username, avatar_url'
+									)
+									.eq(
+										'id',
+										currentUserId
+									)
+									.single();
+
+							if (
+								replyProfileError ||
+								!replyProfile
+							) {
+								throw new Error(
+									'RISE profile not found.'
+								);
+							}
+
+							const { error } =
+								await supabase
+									.from('comments')
+									.insert({
+										post_id:
+											postId,
+										user_id:
+											currentUserId,
+										display_name:
+											replyProfile.username,
+										body,
+										parent_id:
+											comment.id,
+									});
+
+							if (error) {
+								throw error;
+							}
+
+							await loadCommunity(
+								postId,
+								currentUserId
+							);
+						} catch (error) {
+							console.error(
+								'Could not post reply:',
+								error
+							);
+
+							alert(
+								'Could not post reply. Please try again.'
+							);
+						} finally {
+							submitButton.disabled = false;
+							submitButton.textContent =
+								'Post Reply';
+						}
+					}
+				);
+
+				wrapper.appendChild(replyForm);
+			}
+		);
+
+		if (
+			comment.replies &&
+			comment.replies.length > 0
+		) {
+			const replies =
+				document.createElement('div');
+
+			replies.className = 'replies';
+			replies.hidden = true;
+
+			const toggleButton =
+				document.createElement('button');
+
+			toggleButton.type = 'button';
+			toggleButton.className =
+				'reply-toggle';
+
+			const replyCount =
+				comment.replies.length;
+
+			toggleButton.textContent =
+				`${replyCount} ${
+					replyCount === 1
+						? 'reply'
+						: 'replies'
+				} ▾`;
+
+			toggleButton.addEventListener(
+				'click',
+				() => {
+					replies.hidden =
+						!replies.hidden;
+
+					toggleButton.textContent =
+						replies.hidden
+							? `${replyCount} ${
+									replyCount === 1
+										? 'reply'
+										: 'replies'
+								} ▾`
+							: `${replyCount} ${
+									replyCount === 1
+										? 'reply'
+										: 'replies'
+								} ▴`;
+				}
+			);
+
+			wrapper.appendChild(toggleButton);
+			wrapper.appendChild(replies);
+
+			for (const reply of comment.replies) {
+				replies.appendChild(
+					renderComment(
+						reply,
+						depth + 1,
+						postId,
+						userId
+					)
+				);
+			}
+		}
+
+		return wrapper;
+	}
 </script>
 
 <style>
@@ -1242,5 +1361,33 @@ const { postId } = Astro.props;
     :global(.reply-submit) {
       width: 100%;
     }
+  }
+  .community-auth-message {
+    padding: 0.5rem 0;
+    text-align: center;
+  }
+
+  .community-auth-message p {
+    margin: 0 0 1rem;
+    color: rgb(var(--gray));
+  }
+
+  .community-auth-message a {
+    display: inline-block;
+    padding: 0.65rem 1rem;
+    border: 1px solid rgba(168, 85, 247, 0.5);
+    border-radius: 9px;
+    background: rgba(168, 85, 247, 0.1);
+    color: rgb(var(--gray-dark));
+    text-decoration: none;
+    font-weight: 700;
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .community-auth-message a:hover {
+    background: rgba(168, 85, 247, 0.2);
+    border-color: rgba(192, 132, 252, 0.8);
   }
 </style>
