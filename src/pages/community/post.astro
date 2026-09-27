@@ -449,6 +449,42 @@ const pageDescription = 'RISE Community discussion';
         :global(.comment-reply:hover) {
             color: #c084fc;
         }
+
+        :global(.toggle-replies) {
+            display: inline-block;
+            margin: 8px 0 4px 40px;
+            padding: 5px 10px;
+
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 8px;
+
+            background: rgba(168, 85, 247, 0.06);
+            color: #c084fc;
+
+            font: inherit;
+            font-size: 0.82rem;
+            font-weight: 600;
+
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        :global(.toggle-replies:hover) {
+            border-color: rgba(11, 255, 232, 0.4);
+            background: rgba(168, 85, 247, 0.14);
+            color: #0bffe8;
+            transform: translateY(-1px);
+        }
+
+        :global(.toggle-replies:focus-visible) {
+            outline: 2px solid #0bffe8;
+            outline-offset: 3px;
+        }
+
+        :global(.comment-replies[hidden]) {
+            display: none;
+        }
+        
         :global(.comment-replies) {
             margin-left: 40px;
             margin-top: 4px;
@@ -546,7 +582,7 @@ const pageDescription = 'RISE Community discussion';
             flex-shrink: 0;
         }
 
-        .discussion-menu-button {
+        :global(.discussion-menu-button) {
             width: 36px;
             height: 36px;
 
@@ -563,12 +599,12 @@ const pageDescription = 'RISE Community discussion';
             transition: 0.2s ease;
         }
 
-        .discussion-menu-button:hover {
+        :global(.discussion-menu-button:hover) {
             background: rgba(168, 85, 247, 0.1);
             color: #fff;
         }
 
-        .discussion-menu {
+        :global(.discussion-menu) {
             position: absolute;
             top: 42px;
             right: 0;
@@ -587,7 +623,7 @@ const pageDescription = 'RISE Community discussion';
                 0 12px 30px rgba(0, 0, 0, 0.35);
         }
 
-        .discussion-menu button {
+        :global(.discussion-menu button) {
             width: 100%;
 
             padding: 8px 10px;
@@ -612,26 +648,31 @@ const pageDescription = 'RISE Community discussion';
         }
 
         :global(.comment-menu-button) {
+            display: grid;
+            place-items: center;
+
             width: 28px;
             height: 28px;
-
             padding: 0;
 
-            border: none;
+            border: 1px solid rgba(168, 85, 247, 0.18);
             border-radius: 7px;
 
-            background: transparent;
-            color: rgba(255, 255, 255, 0.35);
+            background: rgba(168, 85, 247, 0.05);
+            color: rgba(192, 132, 252, 0.75);
 
             font-size: 1.2rem;
             line-height: 1;
 
             cursor: pointer;
+            transition: all 0.2s ease;
         }
 
         :global(.comment-menu-button:hover) {
-            background: rgba(168, 85, 247, 0.1);
-            color: #fff;
+            border-color: rgba(168, 85, 247, 0.55);
+            background: rgba(168, 85, 247, 0.16);
+            color: #0bffe8;
+            box-shadow: 0 0 12px rgba(168, 85, 247, 0.12);
         }
 
         :global(.comment-menu) {
@@ -802,6 +843,17 @@ const pageDescription = 'RISE Community discussion';
                 return;
             }
 
+            const commentCountElement =
+                document.querySelector<HTMLElement>(
+                    '#comment-count'
+                );
+
+            if (commentCountElement) {
+                commentCountElement.textContent = String(
+                    comments?.length ?? 0
+                );
+            }
+
             if (!comments || comments.length === 0) {
                 if (commentsList) {
                     commentsList.textContent =
@@ -912,7 +964,7 @@ const pageDescription = 'RISE Community discussion';
                                 </div>
 
                                 ${menu}
-                            </div>
+                            </div>  
 
                             <div class="comment-body">${safeBody}</div>
 
@@ -925,7 +977,16 @@ const pageDescription = 'RISE Community discussion';
                             ${
                                 children.length
                                     ? `
-                                        <div class="comment-replies">
+                                        <button
+                                            class="toggle-replies"
+                                            type="button"
+                                            aria-expanded="false"
+                                        >
+                                            View ${children.length}
+                                            ${children.length === 1 ? 'reply' : 'replies'} ▼
+                                        </button>
+
+                                        <div class="comment-replies" hidden>
                                             ${children.map(renderComment).join('')}
                                         </div>
                                     `
@@ -942,6 +1003,34 @@ const pageDescription = 'RISE Community discussion';
                 commentsList.innerHTML = topLevelComments
                     .map(renderComment)
                     .join('');
+
+                commentsList
+                .querySelectorAll<HTMLButtonElement>('.toggle-replies')
+                .forEach((button) => {
+                    button.addEventListener('click', () => {
+                        const replies = button
+                            .closest('.comment')
+                            ?.querySelector<HTMLElement>(':scope > .comment-replies');
+
+                        if (!replies) return;
+
+                        const isExpanded =
+                            button.getAttribute('aria-expanded') === 'true';
+
+                        replies.hidden = isExpanded;
+
+                        button.setAttribute(
+                            'aria-expanded',
+                            String(!isExpanded)
+                        );
+
+                        const count = replies.children.length;
+
+                        button.textContent = isExpanded
+                            ? `View ${count} ${count === 1 ? 'reply' : 'replies'} ▼`
+                            : 'Hide replies ▲';
+                    });
+                });    
             
 
                 document
@@ -1197,117 +1286,113 @@ const pageDescription = 'RISE Community discussion';
 
             const discussionMenuContainer =
                 document.querySelector<HTMLElement>(
-                                    '#discussion-men    u-container'
-                                );
+                    '#discussion-menu-container'
+                );
 
-                            if (discussionMenuContainer && user?.id === post.user_id) {
-                                discussionMenuContainer.innerHTML = `
-                                    <button
-                                        id="discussion-menu-button"
-                                        class="discussion-menu-button"
-                                        type="button"
-                                        aria-label="Discussion options"
-                                    >
-                                        ⋮
-                                    </button>
+            if (
+                discussionMenuContainer &&
+                user?.id === post.user_id
+            ) {
+                discussionMenuContainer.innerHTML = `
+                    <button
+                        id="discussion-menu-button"
+                        class="discussion-menu-button"
+                        type="button"
+                        aria-label="Discussion options"
+                    >
+                        ⋮
+                    </button>
 
-                                    <div
-                                        id="discussion-menu"
-                                        class="discussion-menu"
-                                        hidden
-                                    >
-                                        <button
-                                            id="delete-post-button"
-                                            type="button"
-                                        >
-                                            Delete
-                                        </button>
-                                    </div>
-                                `;
-                            }  
+                    <div
+                        id="discussion-menu"
+                        class="discussion-menu"
+                        hidden
+                    >
+                        <button
+                            id="delete-post-button"
+                            type="button"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                `;
+            }
 
-                            const discussionMenuButton =
-                                document.querySelector<HTMLButtonElement>(
-                                    '#discussion-menu-button'
-                                );
+            const discussionMenuButton =
+                document.querySelector<HTMLButtonElement>(
+                    '#discussion-menu-button'
+                );
 
-                            const discussionMenu =
-                                document.querySelector<HTMLElement>(
-                                    '#discussion-menu'
-                                );
+            const discussionMenu =
+                document.querySelector<HTMLElement>(
+                    '#discussion-menu'
+                );
 
-                            discussionMenuButton?.addEventListener(
-                                'click',
-                                (event) => {
-                                    event.stopPropagation();
+            discussionMenuButton?.addEventListener(
+                'click',
+                (event) => {
+                    event.stopPropagation();
+                    discussionMenu?.toggleAttribute('hidden');
+                }
+            );
 
-                                    discussionMenu?.toggleAttribute('hidden');
-                                }
-                            );
+            const deletePostButton =
+                document.querySelector<HTMLButtonElement>(
+                    '#delete-post-button'
+                );
 
-                            const deletePostButton =
-                                document.querySelector<HTMLButtonElement>(
-                                    '#delete-post-button'
-                                );
+            deletePostButton?.addEventListener(
+                'click',
+                async () => {
+                    if (!user) {
+                        window.location.href = '/login';
+                        return;
+                    }
 
-                            deletePostButton?.addEventListener(
-                                'click',
-                                async () => {
-                                    if (!user) {
-                                        window.location.href = '/login';
-                                        return;
-                                    }
+                    const confirmed = window.confirm(
+                        'Delete this discussion?'
+                    );
 
-                                    const confirmed =
-                                        window.confirm(
-                                            'Delete this discussion?'
-                                        );
+                    if (!confirmed) return;
 
-                                    if (!confirmed) return;
+                    const { error } = await supabase
+                        .from('community_posts')
+                        .delete()
+                        .eq('id', post.id)
+                        .eq('user_id', user.id);
 
-                                    const { error } =
-                                        await supabase
-                                            .from('community_posts')
-                                            .delete()
-                                            .eq('id', post.id)
-                                            .eq('user_id', user.id);
+                    if (error) {
+                        console.error(
+                            'Delete discussion error:',
+                            error
+                        );
+                        return;
+                    }
 
-                                    if (error) {
-                                        console.error(
-                                            'Delete discussion error:',
-                                            error
-                                        );
-                                        return;
-                                    }
+                    window.location.href = '/community';
+                }
+            );
 
-                                    window.location.href = '/community';
-                                }
-                            );                    
+            const avatarUrl = profile?.avatar_url || null;
 
-			const avatarUrl =
-				profile?.avatar_url || null;
+            const categoryIcons: Record<string, string> = {
+                Ideas: '💡',
+                Projects: '🚀',
+                'Build & Tech': '🛠️',
+            };
 
-			const categoryIcons: Record<string, string> = {
-				Ideas: '💡',
-				Projects: '🚀',
-				'Build & Tech': '🛠️',
-			};
+            const icon = categoryIcons[post.category] || '✦';
 
-			const icon =
-				categoryIcons[post.category] || '✦';
+            const date = new Date(post.created_at);
 
-			const date =
-				new Date(post.created_at);
-
-			const formattedDate =
-				date.toLocaleDateString(
-					'en-IN',
-					{
-						day: 'numeric',
-						month: 'short',
-						year: 'numeric',
-					}
-				);
+            const formattedDate = date.toLocaleDateString(
+                'en-IN',
+                {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                }
+            );
 
 			const categoryElement =
 				document.querySelector(

@@ -45,10 +45,14 @@ const communityDescription =
 							</p>
 						</div>
 
-						<a class="start-discussion" href="#start-discussion" type="button">
+						<button
+							id="open-discussion-modal"
+							class="start-discussion"
+							type="button"
+						>
 							<span>＋</span>
 							Start Discussion
-						</a>
+						</button>
 					</div>
 
 				</div>
@@ -85,29 +89,29 @@ const communityDescription =
 			<section class="community-feed">
 
 				<div class="feed-heading">
-
 					<div>
 						<p class="feed-label">COMMUNITY FEED</p>
 
 						<h2>
 							What's happening
-							<span>  right now.</span>
+							<span> right now.</span>
 						</h2>
 					</div>
 
-					<p class="feed-description">
-						Discover discussions, projects, questions, and ideas
-						from the RISE community.
-					</p>
+					<div class="feed-heading-side">
+						<p class="feed-description">
+							Discover discussions, projects, questions, and ideas
+							from the RISE community.
+						</p>
 
-					<div class="feed-sort">
-						<label for="community-sort">Sort by</label>
-						<select id="community-sort">
-							<option value="top" selected>⬆ Top upvoted</option>
-							<option value="newest">🕒 Newest</option>
-						</select>
+						<div class="feed-sort">
+							<label for="community-sort">Sort by</label>
+							<select id="community-sort">
+								<option value="top" selected>⬆ Top upvoted</option>
+								<option value="newest">🕒 Newest</option>
+							</select>
+						</div>
 					</div>
-
 				</div>
 
 
@@ -789,14 +793,7 @@ const communityDescription =
 		}
 
 
-		.feed-heading {
-			display: flex;
-			align-items: flex-end;
-			justify-content: space-between;
-			gap: 40px;
-
-			margin-bottom: 28px;
-		}
+		
 
 
 		.feed-label {
@@ -823,16 +820,27 @@ const communityDescription =
 		}
 
 
+		.feed-heading {
+			display: flex;
+			align-items: flex-end;
+			justify-content: space-between;
+			gap: 40px;
+			margin-bottom: 28px;
+		}
+
+		.feed-heading-side {
+			display: flex;
+			flex-direction: column;
+			align-items: flex-end;
+			gap: 12px;
+		}
+
 		.feed-description {
 			max-width: 330px;
-
 			margin: 0;
-
 			color: rgba(255, 255, 255, 0.45);
-
-			font-size: 0.84rem;
+			font-size: 0.7rem;
 			line-height: 1.6;
-
 			text-align: right;
 		}
 
@@ -1662,6 +1670,11 @@ const communityDescription =
 		:global(.discussion-create-button) {
 			min-height: 42px;
 		}
+
+		.feed-heading-side {
+			width: 100%;
+			align-items: flex-start;
+		}
 	}
 
 	/* Extra-small phones */
@@ -1703,7 +1716,7 @@ const communityDescription =
 		display: flex;
 		align-items: center;
 		gap: 10px;
-		margin-top: 18px;
+		margin-top: 0px;
 	}
 
 	.feed-sort label {
@@ -1824,6 +1837,85 @@ const communityDescription =
 		'click',
 		closeDiscussionModal
 	);
+
+	const createDiscussionButton =
+		document.querySelector<HTMLButtonElement>(
+			'#create-discussion'
+		);
+
+	const discussionTitleInput =
+		document.querySelector<HTMLInputElement>(
+			'#discussion-title-input'
+		);
+
+	const discussionCategoryInput =
+		document.querySelector<HTMLSelectElement>(
+			'#discussion-category-input'
+		);
+
+	const discussionBodyInput =
+		document.querySelector<HTMLTextAreaElement>(
+			'#discussion-body-input'
+		);
+
+	createDiscussionButton?.addEventListener('click', async () => {
+		const title = discussionTitleInput?.value.trim();
+		const category = discussionCategoryInput?.value;
+		const body = discussionBodyInput?.value.trim();
+
+		if (!title || !category || !body) {
+			alert('Please fill in the title, category, and discussion.');
+			return;
+		}
+
+		createDiscussionButton.disabled = true;
+		createDiscussionButton.textContent = 'Publishing...';
+
+		try {
+			const {
+				data: { user },
+				error: authError,
+			} = await supabase.auth.getUser();
+
+			if (authError) throw authError;
+
+			if (!user) {
+				alert('Please sign in before creating a discussion.');
+				return;
+			}
+
+			const { error } = await supabase
+				.from('community_posts')
+				.insert({
+					user_id: user.id,
+					title,
+					category,
+					body,
+				});
+
+			if (error) throw error;
+
+			if (discussionTitleInput) discussionTitleInput.value = '';
+			if (discussionBodyInput) discussionBodyInput.value = '';
+			if (discussionCategoryInput) {
+				discussionCategoryInput.value = 'Ideas';
+			}
+
+			closeDiscussionModal();
+			await loadCommunityPosts();
+
+		} catch (error) {
+			console.error('Create discussion error:', error);
+			alert(
+				error instanceof Error
+					? error.message
+					: 'Could not create the discussion. Please try again.'
+			);
+		} finally {
+			createDiscussionButton.disabled = false;
+			createDiscussionButton.textContent = 'Create Discussion';
+		}
+	});
 
 
 	/* =========================================================
