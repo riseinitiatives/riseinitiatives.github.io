@@ -1,6 +1,5 @@
----
-import { supabase } from '../lib/supabase';
 
+---
 interface Props {
   postId: string;
 }
@@ -9,1006 +8,1142 @@ const { postId } = Astro.props;
 ---
 
 <section class="community" data-post-id={postId}>
-  <div class="community-header">
-    <h2>Community</h2>
-
-    <div class="community-stats">
+  <header class="community-header">
+    <div>
+      <h2>Community</h2>
+      <p class="community-subtitle">Share your thoughts with the RISE community.</p>
+    </div>
+    <div class="community-stats" aria-live="polite">
       <span>❤️ <strong class="like-count">0</strong> Likes</span>
       <span>💬 <strong class="comment-count">0</strong> Comments</span>
     </div>
-  </div>
+  </header>
 
-  <button class="like-button" type="button">
+  <button class="like-button" type="button" disabled>
     ❤️ Like
   </button>
 
-  <div class="comment-form">
-    <label for={`display-name-${postId}`}>Comment as:</label>
+  <p class="community-status" role="status" aria-live="polite"></p>
 
-    <input
-      id={`display-name-${postId}`}
-      type="text"
-      maxlength="40"
-      placeholder="Anonymous"
-      value="Anonymous"
-    />
+	<div class="comment-form">
+	<div class="composer-heading">
+		<div>
+		<h3>Join the conversation</h3>
+		<p>Share your thoughts with the RISE community.</p>
+		</div>
+		<span class="composer-icon" aria-hidden="true">✦</span>
+	</div>
 
-    <textarea
-      id={`comment-${postId}`}
-      maxlength="500"
-      placeholder="Share your thoughts..."
-    ></textarea>
+	
 
-    <button class="comment-submit" type="button">
-      Post Comment
-    </button>
-  </div>
+	<div class="composer-editor">
+		<label for={`comment-${postId}`}>Your comment</label>
+		<textarea
+		id={`comment-${postId}`}
+		class="comment-input"
+		maxlength="500"
+		placeholder="What's on your mind? Share an idea, ask a question, or start a discussion..."
+		rows="5"
+		disabled
+		></textarea>
+		<div class="composer-footer">
+		<span class="composer-hint">Be thoughtful. Build the community.</span>
+		<button class="comment-submit" type="button" disabled>
+			Post Comment <span aria-hidden="true">↗</span>
+		</button>
+		</div>
+	</div>
+	</div>
 
-  <div class="community-divider">
-    <span>✦</span>
-  </div>
+  	<div class="community-divider"><span>✦</span></div>
 
-  <div class="comments-section">
-    <div class="comments-header">
-      <h3>Comments</h3>
+  <section class="comments-section" aria-label="Comments">
+    <h3>Comments</h3>
+    <div class="comments-list" aria-live="polite">
+      <p class="comments-loading">Loading comments…</p>
     </div>
-
-    <div class="comments-list"></div>
-  </div>
+  </section>
 </section>
 
 <script>
-	import { supabase } from '../lib/supabase';
-
-	const community = document.querySelector<HTMLElement>('.community');
-
-	if (community instanceof HTMLElement) {
-		const postId = community.dataset.postId;
-
-		if (postId) {
-			initializeCommunity(postId);
-		}
-	}
-
-	async function initializeCommunity(postId: string) {
-		const {
-			data: { user },
-		} = await supabase.auth.getUser();
-
-		/*
-		 * Community now requires a real RISE account.
-		 */
-		const isAnonymous =
-			user?.is_anonymous === true ||
-			user?.app_metadata?.is_anonymous === true;
-
-		if (!user || isAnonymous) {
-			showLoginMessage();
-			return;
-		}
-
-		/*
-		 * Make sure the user has created their RISE ID.
-		 */
-		const { data: profile, error: profileError } =
-			await supabase
-				.from('profiles')
-				.select('username, avatar_url')
-				.eq('id', user.id)
-				.maybeSingle();
-
-		if (profileError) {
-			console.error(
-				'Could not load profile:',
-				profileError.message
-			);
-			return;
-		}
-
-		if (!profile) {
-			showProfileMessage();
-			return;
-		}
-
-		const userId = user.id;
-
-		// ─────────────────────────────
-		// LIKE SYSTEM
-		// ─────────────────────────────
-
-		async function toggleLike(
-			postId: string,
-			userId: string
-		) {
-			const {
-				data: existingLike,
-				error: checkError,
-			} = await supabase
-				.from('likes')
-				.select('id')
-				.eq('post_id', postId)
-				.eq('user_id', userId)
-				.maybeSingle();
-
-			if (checkError) {
-				console.error(
-					'Could not check like:',
-					checkError.message
-				);
-				return;
-			}
-
-			if (existingLike) {
-				const { error } = await supabase
-					.from('likes')
-					.delete()
-					.eq('id', existingLike.id);
-
-				if (error) {
-					console.error(
-						'Could not remove like:',
-						error.message
-					);
-					return;
-				}
-			} else {
-				const { error } = await supabase
-					.from('likes')
-					.insert({
-						post_id: postId,
-						user_id: userId,
-					});
-
-				if (error) {
-					console.error(
-						'Could not add like:',
-						error.message
-					);
-					return;
-				}
-			}
-
-			await loadCommunity(postId, userId);
-		}
-
-		const likeButton =
-			community.querySelector('.like-button');
-
-		if (likeButton instanceof HTMLButtonElement) {
-			likeButton.addEventListener(
-				'click',
-				async () => {
-					await toggleLike(postId, userId);
-				}
-			);
-		}
-
-		// ─────────────────────────────
-		// COMMENT SYSTEM
-		// ─────────────────────────────
-
-		const commentButton =
-			community.querySelector('.comment-submit');
-
-		const nameInput =
-			community.querySelector(
-				`#display-name-${postId}`
-			);
-
-		const commentInput =
-			community.querySelector(
-				`#comment-${postId}`
-			);
-
-		/*
-		 * The username comes from the user's RISE profile.
-		 * Users can no longer impersonate another username.
-		 */
-		if (nameInput instanceof HTMLInputElement) {
-			nameInput.value = `@${profile.username}`;
-			nameInput.readOnly = true;
-		}
-
-		if (
-			commentButton instanceof HTMLButtonElement &&
-			commentInput instanceof HTMLTextAreaElement
-		) {
-			commentButton.addEventListener(
-				'click',
-				async () => {
-					const body =
-						commentInput.value.trim();
-
-					if (!body) {
-						alert(
-							'Please write a comment first.'
-						);
-						return;
-					}
-
-					commentButton.disabled = true;
-					commentButton.textContent =
-						'Posting...';
-
-					const { error } =
-						await supabase
-							.from('comments')
-							.insert({
-								post_id: postId,
-								user_id: userId,
-								display_name:
-									profile.username,
-								body,
-								parent_id: null,
-							});
-
-					if (error) {
-						console.error(
-							'Could not post comment:',
-							error.message
-						);
-
-						alert(
-							'Could not post comment. Please try again.'
-						);
-
-						commentButton.disabled = false;
-						commentButton.textContent =
-							'Post Comment';
-
-						return;
-					}
-
-					commentInput.value = '';
-
-					await loadCommunity(
-						postId,
-						userId
-					);
-
-					commentButton.disabled = false;
-					commentButton.textContent =
-						'Post Comment';
-				}
-			);
-		}
-
-		await loadCommunity(postId, userId);
-	}
-
-	function showLoginMessage() {
-		const commentForm =
-			community?.querySelector('.comment-form');
-
-		if (commentForm) {
-			commentForm.innerHTML = `
-				<div class="community-auth-message">
-					<p>Sign in to join the RISE community.</p>
-					<a href="/login">Sign in</a>
-				</div>
-			`;
-		}
-
-		const likeButton =
-			community?.querySelector('.like-button');
-
-		if (likeButton instanceof HTMLButtonElement) {
-			likeButton.disabled = true;
-			likeButton.textContent = '❤️ Sign in to like';
-		}
-	}
-
-	function showProfileMessage() {
-		const commentForm =
-			community?.querySelector('.comment-form');
-
-		if (commentForm) {
-			commentForm.innerHTML = `
-				<div class="community-auth-message">
-					<p>Create your RISE ID to join the community.</p>
-					<a href="/setup-profile">Create RISE ID</a>
-				</div>
-			`;
-		}
-
-		const likeButton =
-			community?.querySelector('.like-button');
-
-		if (likeButton instanceof HTMLButtonElement) {
-			likeButton.disabled = true;
-			likeButton.textContent =
-				'❤️ Create your RISE ID';
-		}
-	}
-
-	async function loadCommunity(
-		postId: string,
-		userId?: string
-	) {
-		const {
-			data: comments,
-			error: commentsError,
-		} = await supabase
-			.from('comments')
-			.select('*')
-			.eq('post_id', postId)
-			.order('created_at', {
-				ascending: true,
-			});
-
-		if (commentsError) {
-			console.error(
-				'Could not load comments:',
-				commentsError.message
-			);
-			return;
-		}
-
-		const commentUserIds = [
-			...new Set(
-				(comments || []).map(
-					(comment) => comment.user_id
-				)
-			),
-		];
-
-		let profileMap = new Map();
-
-		if (commentUserIds.length > 0) {
-			const { data: profiles } = await supabase
-				.from('profiles')
-				.select('id, username, avatar_url')
-				.in('id', commentUserIds);
-
-			profileMap = new Map(
-				(profiles || []).map((profile) => [
-					profile.id,
-					profile,
-				])
-			);
-		}
-		(comments || []).forEach((comment) => {
-			comment.avatar_url =
-				profileMap.get(comment.user_id)?.avatar_url
-				|| null;
-		});
-
-		
-
-		const {
-			count: likeCount,
-			error: likesError,
-		} = await supabase
-			.from('likes')
-			.select('*', {
-				count: 'exact',
-				head: true,
-			})
-			.eq('post_id', postId);
-
-		if (likesError) {
-			console.error(
-				'Could not load likes:',
-				likesError.message
-			);
-			return;
-		}
-
-		const likeElement =
-			community?.querySelector('.like-count');
-
-		const commentElement =
-			community?.querySelector('.comment-count');
-
-		const likeButton =
-			community?.querySelector('.like-button');
-
-		let userHasLiked = false;
-
-		if (userId) {
-			const { data: userLike } =
-				await supabase
-					.from('likes')
-					.select('id')
-					.eq('post_id', postId)
-					.eq('user_id', userId)
-					.maybeSingle();
-
-			userHasLiked = !!userLike;
-		}
-
-		if (likeElement) {
-			likeElement.textContent =
-				String(likeCount ?? 0);
-		}
-
-		if (commentElement) {
-			commentElement.textContent =
-				String(comments?.length ?? 0);
-		}
-
-		if (likeButton instanceof HTMLButtonElement) {
-			likeButton.textContent =
-				userHasLiked
-					? '❤️ Liked'
-					: '❤️ Like';
-		}
-
-		const commentsList =
-			community?.querySelector('.comments-list');
-
-		if (!commentsList) {
-			return;
-		}
-
-		commentsList.innerHTML = '';
-
-		if (!comments || comments.length === 0) {
-			return;
-		}
-
-		const commentMap = new Map();
-
-		comments.forEach((comment) => {
-			commentMap.set(comment.id, {
-				...comment,
-				replies: [],
-			});
-		});
-
-		const rootComments: any[] = [];
-
-		comments.forEach((comment) => {
-			const currentComment =
-				commentMap.get(comment.id);
-
-			if (!comment.parent_id) {
-				rootComments.push(currentComment);
-			} else {
-				const parentComment =
-					commentMap.get(comment.parent_id);
-
-				if (parentComment) {
-					parentComment.replies.push(
-						currentComment
-					);
-				} else {
-					rootComments.push(
-						currentComment
-					);
-				}
-			}
-		});
-
-		rootComments.forEach((comment) => {
-			commentsList.appendChild(
-				renderComment(
-					comment,
-					0,
-					postId,
-					userId
-				)
-			);
-		});
-	}
-
-	function renderComment(
-		comment: any,
-		depth = 0,
-		postId: string,
-		userId?: string
-	): HTMLElement {
-		const wrapper =
-			document.createElement('div');
-
-		wrapper.className =
-			'comment-wrapper';
-
-		const item =
-			document.createElement('article');
-
-		item.className = 'comment';
-
-		if (depth > 0) {
-			item.classList.add('comment-reply');
-
-			const visualDepth =
-				Math.min(depth, 4);
-
-			item.style.marginLeft =
-				`${visualDepth * 1.25}rem`;
-		}
-
-		const authorRow =
-			document.createElement('div');
-
-		authorRow.className = 'comment-author';
-
-		const avatar =
-			document.createElement('div');
-
-		avatar.className = 'comment-avatar';
-
-		const avatarUrl =
-			comment.avatar_url;
-
-		if (avatarUrl) {
-			avatar.innerHTML = `
-				<img
-					src="${avatarUrl}"
-					alt="@${comment.display_name || 'unknown'}"
-					style="
-						display:block;
-						width:30px;
-						height:30px;
-						min-width:30px;
-						max-width:30px;
-						min-height:30px;
-						max-height:30px;
-						object-fit:cover;
-					"
-				/>
-			`;
-		} else {
-			avatar.textContent =
-				(comment.display_name || 'U')
-					.charAt(0)
-					.toUpperCase();
-		}
-
-		const strong =
-			document.createElement('strong');
-
-		strong.textContent =
-			`@${comment.display_name || 'unknown'}`;
-
-		authorRow.appendChild(avatar);
-		authorRow.appendChild(strong);
-
-		const p =
-			document.createElement('p');
-
-		p.textContent = comment.body;
-
-		item.appendChild(authorRow);
-		item.appendChild(p);
-
-		const actions =
-			document.createElement('div');
-
-		actions.className =
-			'comment-actions';
-
-		const replyButton =
-			document.createElement('button');
-
-		replyButton.className =
-			'reply-button';
-
-		replyButton.type = 'button';
-		replyButton.textContent = '↩ Reply';
-
-		actions.appendChild(replyButton);
-		item.appendChild(actions);
-
-		wrapper.appendChild(item);
-
-		let replyForm: HTMLElement | null = null;
-
-		replyButton.addEventListener(
-			'click',
-			() => {
-				if (replyForm) {
-					replyForm.remove();
-					replyForm = null;
-					return;
-				}
-
-				replyForm =
-					document.createElement('form');
-
-				replyForm.className =
-					'reply-form';
-
-				replyForm.innerHTML = `
-					<textarea
-						placeholder="Write a reply..."
-						maxlength="1000"
-						required
-					></textarea>
-
-					<div class="reply-form-actions">
-						<button
-							type="button"
-							class="reply-cancel"
-						>
-							Cancel
-						</button>
-
-						<button
-							type="submit"
-							class="reply-submit"
-						>
-							Post Reply
-						</button>
-					</div>
-				`;
-
-				const cancelButton =
-					replyForm.querySelector(
-						'.reply-cancel'
-					) as HTMLButtonElement;
-
-				cancelButton.addEventListener(
-					'click',
-					() => {
-						replyForm?.remove();
-						replyForm = null;
-					}
-				);
-
-				replyForm.addEventListener(
-					'submit',
-					async (event) => {
-						event.preventDefault();
-
-						const textarea =
-							replyForm!.querySelector(
-								'textarea'
-							) as HTMLTextAreaElement;
-
-						const submitButton =
-							replyForm!.querySelector(
-								'.reply-submit'
-							) as HTMLButtonElement;
-
-						const body =
-							textarea.value.trim();
-
-						if (!body) return;
-
-						submitButton.disabled = true;
-						submitButton.textContent =
-							'Posting...';
-
-						try {
-							const {
-								data: {
-									user: currentUser,
-								},
-							} =
-								await supabase.auth.getUser();
-
-							const currentUserId =
-								currentUser?.id;
-
-							const isAnonymous =
-								currentUser?.is_anonymous ===
-									true ||
-								currentUser?.app_metadata
-									?.is_anonymous === true;
-
-							if (
-								!currentUserId ||
-								isAnonymous
-							) {
-								throw new Error(
-									'You must be signed in.'
-								);
-							}
-
-							const {
-								data: replyProfile,
-								error:
-									replyProfileError,
-							} =
-								await supabase
-									.from('profiles')
-									.select(
-										'username, avatar_url'
-									)
-									.eq(
-										'id',
-										currentUserId
-									)
-									.single();
-
-							if (
-								replyProfileError ||
-								!replyProfile
-							) {
-								throw new Error(
-									'RISE profile not found.'
-								);
-							}
-
-							const { error } =
-								await supabase
-									.from('comments')
-									.insert({
-										post_id:
-											postId,
-										user_id:
-											currentUserId,
-										display_name:
-											replyProfile.username,
-										body,
-										parent_id:
-											comment.id,
-									});
-
-							if (error) {
-								throw error;
-							}
-
-							await loadCommunity(
-								postId,
-								currentUserId
-							);
-						} catch (error) {
-							console.error(
-								'Could not post reply:',
-								error
-							);
-
-							alert(
-								'Could not post reply. Please try again.'
-							);
-						} finally {
-							submitButton.disabled = false;
-							submitButton.textContent =
-								'Post Reply';
-						}
-					}
-				);
-
-				wrapper.appendChild(replyForm);
-			}
+  import { supabase } from '../lib/supabase';
+
+  type Profile = {
+    id: string;
+    username: string;
+    avatar_url: string | null;
+  };
+
+  type CommentRecord = {
+    id: string;
+    post_id: string;
+    user_id: string;
+    display_name: string;
+    body: string;
+    created_at: string;
+    parent_id: string | null;
+    avatar_url?: string | null;
+    replies: CommentRecord[];
+  };
+
+  const roots = document.querySelectorAll<HTMLElement>('.community');
+
+  roots.forEach((root) => {
+    if (root.dataset.initialized === 'true') return;
+    root.dataset.initialized = 'true';
+
+    const postId = root.dataset.postId;
+    if (!postId) return;
+
+    const $ = <T extends Element>(selector: string) =>
+      root.querySelector<T>(selector);
+
+    const likeButton = $('.like-button') as HTMLButtonElement | null;
+    const likeCount = $('.like-count');
+    const commentCount = $('.comment-count');
+    const nameInput = $('.display-name') as HTMLInputElement | null;
+    const commentInput = $('.comment-input') as HTMLTextAreaElement | null;
+    const commentSubmit = $('.comment-submit') as HTMLButtonElement | null;
+    const commentsList = $('.comments-list');
+    const status = $('.community-status');
+
+    let currentUserId: string | null = null;
+    let currentProfile: Profile | null = null;
+    let busy = false;
+    let refreshToken = 0;
+
+    function setStatus(message: string, isError = false) {
+      if (!status) return;
+      status.textContent = message;
+      status.classList.toggle('is-error', isError);
+    }
+
+    function setFormEnabled(enabled: boolean) {
+      if (commentInput) commentInput.disabled = !enabled;
+      if (commentSubmit) commentSubmit.disabled = !enabled;
+      if (likeButton) likeButton.disabled = !enabled;
+    }
+
+    function showAuthMessage(message: string, href: string, linkText: string) {
+      const form = $('.comment-form');
+      if (!form) return;
+
+      form.replaceChildren();
+
+      const text = document.createElement('p');
+      text.className = 'auth-message-text';
+      text.textContent = message;
+
+      const link = document.createElement('a');
+      link.href = href;
+      link.className = 'auth-message-link';
+      link.textContent = linkText;
+
+      form.append(text, link);
+    }
+
+    function formatDate(value: string) {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '';
+      return new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }).format(date);
+    }
+
+    function makeButton(text: string, className: string) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = className;
+      button.textContent = text;
+      return button;
+    }
+
+    function renderComment(comment: CommentRecord, depth = 0): HTMLElement {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'comment-wrapper';
+
+      const article = document.createElement('article');
+      article.className = 'comment';
+      if (depth > 0) article.classList.add('comment-reply');
+      article.style.setProperty('--reply-depth', String(Math.min(depth, 4)));
+
+      const authorRow = document.createElement('div');
+      authorRow.className = 'comment-author';
+
+      const avatar = document.createElement('div');
+      avatar.className = 'comment-avatar';
+      avatar.setAttribute('aria-hidden', 'true');
+
+      const avatarUrl = comment.avatar_url;
+      if (avatarUrl) {
+        try {
+          const parsed = new URL(avatarUrl);
+          if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+            const image = document.createElement('img');
+            image.src = parsed.href;
+            image.alt = '';
+            image.loading = 'lazy';
+            image.referrerPolicy = 'no-referrer';
+            image.onerror = () => {
+              avatar.textContent = (comment.display_name || 'U').charAt(0).toUpperCase();
+            };
+            avatar.appendChild(image);
+          } else {
+            avatar.textContent = (comment.display_name || 'U').charAt(0).toUpperCase();
+          }
+        } catch {
+          avatar.textContent = (comment.display_name || 'U').charAt(0).toUpperCase();
+        }
+      } else {
+        avatar.textContent = (comment.display_name || 'U').charAt(0).toUpperCase();
+      }
+
+      const author = document.createElement('strong');
+      author.className = 'comment-username';
+      author.textContent = `@${comment.display_name || 'unknown'}`;
+
+      const date = document.createElement('time');
+      date.className = 'comment-date';
+      date.dateTime = comment.created_at;
+      date.textContent = formatDate(comment.created_at);
+
+      authorRow.append(avatar, author, date);
+
+      const body = document.createElement('p');
+      body.className = 'comment-body';
+      body.textContent = comment.body;
+
+      const actions = document.createElement('div');
+      actions.className = 'comment-actions';
+
+      const replyButton = makeButton('↩ Reply', 'reply-button');
+	  actions.appendChild(replyButton);
+
+      if (currentUserId && comment.user_id === currentUserId) {
+        const deleteButton = makeButton('Delete', 'delete-button');
+        deleteButton.addEventListener('click', async () => {
+          if (!currentUserId || !confirm('Delete this comment and its replies?')) return;
+
+          deleteButton.disabled = true;
+          deleteButton.textContent = 'Deleting…';
+
+          try {
+            // Delete descendants first because parent_id may not cascade.
+            const { data: allComments, error: fetchError } = await supabase
+              .from('comments')
+              .select('id, parent_id, user_id')
+              .eq('post_id', postId);
+
+            if (fetchError) throw fetchError;
+
+            const rows = allComments ?? [];
+            const descendants = new Set<string>([comment.id]);
+            let changed = true;
+
+            while (changed) {
+              changed = false;
+              for (const row of rows) {
+                if (
+                  row.parent_id &&
+                  descendants.has(row.parent_id) &&
+                  !descendants.has(row.id)
+                ) {
+                  descendants.add(row.id);
+                  changed = true;
+                }
+              }
+            }
+
+            // The RLS policy only permits deleting one's own comments.
+            // If a descendant belongs to another user, abort rather than
+            // leave a partially deleted thread.
+            const foreignDescendant = rows.some(
+              (row) => descendants.has(row.id) && row.user_id !== currentUserId
+            );
+            if (foreignDescendant) {
+              throw new Error(
+                'This thread contains replies by other users. The full thread cannot be deleted with the current permissions.'
+              );
+            }
+
+            for (const id of descendants) {
+              const { error } = await supabase
+                .from('comments')
+                .delete()
+                .eq('id', id)
+                .eq('user_id', currentUserId);
+
+              if (error) throw error;
+            }
+
+            setStatus('Comment deleted.');
+            await loadCommunity();
+          } catch (error) {
+            console.error('Comment deletion failed:', error);
+            setStatus(
+              error instanceof Error ? error.message : 'Could not delete the comment.',
+              true
+            );
+            deleteButton.disabled = false;
+            deleteButton.textContent = 'Delete';
+          }
+        });
+        actions.appendChild(deleteButton);
+      }
+
+      const bodyPanel = document.createElement('div');
+      bodyPanel.className = 'comment-content';
+      bodyPanel.append(body, actions);
+
+      article.append(authorRow, bodyPanel);
+      wrapper.appendChild(article);
+
+      replyButton.addEventListener('click', () => {
+        const existing = wrapper.querySelector('.reply-form');
+        if (existing) {
+          existing.remove();
+          replyButton.textContent = '↩ Reply';
+          return;
+        }
+
+        if (!currentUserId || !currentProfile) {
+          setStatus('Sign in with your RISE account to reply.', true);
+          return;
+        }
+
+        const form = document.createElement('form');
+        form.className = 'reply-form';
+
+        const textarea = document.createElement('textarea');
+        textarea.maxLength = 1000;
+        textarea.rows = 3;
+        textarea.required = true;
+        textarea.placeholder = `Reply to @${comment.display_name}…`;
+
+        const controls = document.createElement('div');
+        controls.className = 'reply-form-actions';
+
+        const cancel = makeButton('Cancel', 'reply-cancel');
+        const submit = document.createElement('button');
+        submit.type = 'submit';
+        submit.className = 'reply-submit';
+        submit.textContent = 'Post Reply';
+
+        cancel.addEventListener('click', () => {
+          form.remove();
+          replyButton.textContent = '↩ Reply';
+        });
+
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          const bodyText = textarea.value.trim();
+          if (!bodyText || !currentUserId || !currentProfile) return;
+
+          submit.disabled = true;
+          cancel.disabled = true;
+          submit.textContent = 'Posting…';
+
+          try {
+            const { error } = await supabase.from('comments').insert({
+              post_id: postId,
+              user_id: currentUserId,
+              display_name: currentProfile.username,
+              body: bodyText,
+              parent_id: comment.id,
+            });
+
+            if (error) throw error;
+
+            setStatus('Reply posted.');
+            await loadCommunity();
+          } catch (error) {
+            console.error('Reply submission failed:', error);
+            setStatus(
+              error instanceof Error ? error.message : 'Could not post your reply.',
+              true
+            );
+            submit.disabled = false;
+            cancel.disabled = false;
+            submit.textContent = 'Post Reply';
+          }
+        });
+
+        controls.append(cancel, submit);
+        form.append(textarea, controls);
+        wrapper.appendChild(form);
+        replyButton.textContent = 'Close reply';
+        textarea.focus();
+      });
+
+      if (comment.replies.length > 0) {
+		const thread = document.createElement('div');
+		thread.className = 'comment-thread';
+
+		const replies = document.createElement('div');
+		replies.className = 'replies';
+		replies.hidden = true;
+
+		const replyCount = comment.replies.length;
+
+		const controls = document.createElement('div');
+		controls.className = 'thread-controls';
+
+		const toggle = makeButton(
+			`${replyCount} ${replyCount === 1 ? 'reply' : 'replies'} ▾`,
+			'reply-toggle'
 		);
+		toggle.setAttribute('aria-expanded', 'false');
 
-		if (
-			comment.replies &&
-			comment.replies.length > 0
-		) {
-			const replies =
-				document.createElement('div');
+	
+		// Expand or collapse replies independently.
+		toggle.addEventListener('click', () => {
+			if (bodyPanel.hidden) return;
 
-			replies.className = 'replies';
-			replies.hidden = true;
+			replies.hidden = !replies.hidden;
+			toggle.setAttribute('aria-expanded', String(!replies.hidden));
+			toggle.textContent = replies.hidden
+			? `${replyCount} ${replyCount === 1 ? 'reply' : 'replies'} ▾`
+			: `${replyCount} ${replyCount === 1 ? 'reply' : 'replies'} ▴`;
+		});
 
-			const toggleButton =
-				document.createElement('button');
+		for (const reply of comment.replies) {
+			replies.appendChild(renderComment(reply, depth + 1));
+		}
 
-			toggleButton.type = 'button';
-			toggleButton.className =
-				'reply-toggle';
-
-			const replyCount =
-				comment.replies.length;
-
-			toggleButton.textContent =
-				`${replyCount} ${
-					replyCount === 1
-						? 'reply'
-						: 'replies'
-				} ▾`;
-
-			toggleButton.addEventListener(
-				'click',
-				() => {
-					replies.hidden =
-						!replies.hidden;
-
-					toggleButton.textContent =
-						replies.hidden
-							? `${replyCount} ${
-									replyCount === 1
-										? 'reply'
-										: 'replies'
-								} ▾`
-							: `${replyCount} ${
-									replyCount === 1
-										? 'reply'
-										: 'replies'
-								} ▴`;
-				}
-			);
-
-			wrapper.appendChild(toggleButton);
-			wrapper.appendChild(replies);
-
-			for (const reply of comment.replies) {
-				replies.appendChild(
-					renderComment(
-						reply,
-						depth + 1,
-						postId,
-						userId
-					)
-				);
-			}
+		controls.append(toggle);
+		thread.append(controls, replies);
+		wrapper.appendChild(thread);
+        
 		}
 
 		return wrapper;
-	}
+    
+    } 
+
+    async function loadCommunity() {
+      const token = ++refreshToken;
+      if (!commentsList) return;
+
+      const { data: comments, error: commentsError } = await supabase
+        .from('comments')
+        .select('id, post_id, user_id, display_name, body, created_at, parent_id')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
+
+      if (token !== refreshToken) return;
+      if (commentsError) {
+        console.error('Could not load comments:', commentsError);
+        setStatus('Comments could not be loaded. Please refresh and try again.', true);
+        return;
+      }
+
+      const rows = comments ?? [];
+      const userIds = [...new Set(rows.map((comment) => comment.user_id))];
+      let profiles = new Map<string, Profile>();
+
+      if (userIds.length > 0) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', userIds);
+
+        if (error) {
+          console.warn('Could not load comment profiles:', error);
+        } else {
+          profiles = new Map((data ?? []).map((profile) => [profile.id, profile]));
+        }
+      }
+
+      if (token !== refreshToken) return;
+
+      const commentMap = new Map<string, CommentRecord>();
+      for (const row of rows) {
+        commentMap.set(row.id, {
+          ...row,
+          avatar_url: profiles.get(row.user_id)?.avatar_url ?? null,
+          replies: [],
+        });
+      }
+
+      const topLevel: CommentRecord[] = [];
+      for (const row of rows) {
+        const comment = commentMap.get(row.id)!;
+        const parent = row.parent_id ? commentMap.get(row.parent_id) : undefined;
+        if (parent && parent.id !== comment.id) {
+          parent.replies.push(comment);
+        } else {
+          topLevel.push(comment);
+        }
+      }
+
+      const [{ count: likes, error: likesError }, { data: userLike, error: userLikeError }] =
+        await Promise.all([
+          supabase
+            .from('likes')
+            .select('id', { count: 'exact', head: true })
+            .eq('post_id', postId),
+          currentUserId
+            ? supabase
+                .from('likes')
+                .select('id')
+                .eq('post_id', postId)
+                .eq('user_id', currentUserId)
+                .maybeSingle()
+            : Promise.resolve({ data: null, error: null }),
+        ]);
+
+      if (token !== refreshToken) return;
+
+      if (likesError) {
+        console.error('Could not load likes:', likesError);
+        setStatus('Like count could not be loaded.', true);
+      }
+      if (userLikeError) {
+        console.warn('Could not check the current user like:', userLikeError);
+      }
+
+      if (likeCount) likeCount.textContent = String(likes ?? 0);
+      if (commentCount) commentCount.textContent = String(rows.length);
+
+      if (likeButton) {
+        likeButton.textContent = userLike ? '❤️ Liked' : '❤️ Like';
+        likeButton.setAttribute('aria-pressed', String(Boolean(userLike)));
+      }
+
+      commentsList.replaceChildren();
+
+      if (topLevel.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'comments-empty';
+        empty.textContent = 'No comments yet. Start the conversation!';
+        commentsList.appendChild(empty);
+      } else {
+        for (const comment of topLevel) {
+          commentsList.appendChild(renderComment(comment));
+        }
+      }
+    }
+
+    async function initialize() {
+      setFormEnabled(false);
+
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if (error) throw error;
+
+        const user = data.user;
+        const anonymous =
+          (user as (typeof user & { is_anonymous?: boolean }) | null)
+            ?.is_anonymous === true ||
+          user?.app_metadata?.is_anonymous === true;
+
+        if (!user || anonymous) {
+          showAuthMessage('Sign in with your RISE account to comment and like.', '/login', 'Sign in');
+          setStatus('You can browse the discussion while signed out.');
+          await loadCommunity();
+          return;
+        }
+
+        currentUserId = user.id;
+
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (profileError) throw profileError;
+
+        if (!profile) {
+          showAuthMessage('Create your RISE ID to join the discussion.', '/setup-profile', 'Create RISE ID');
+          setStatus('Your profile is needed before posting.');
+          await loadCommunity();
+          return;
+        }
+
+        currentProfile = profile;
+        if (nameInput) {
+          nameInput.value = `@${profile.username}`;
+          nameInput.readOnly = true;
+        }
+
+        setFormEnabled(true);
+        setStatus('');
+        await loadCommunity();
+      } catch (error) {
+        console.error('Community initialization failed:', error);
+        setStatus('The community could not initialize. Please refresh the page.', true);
+        if (commentsList) {
+          commentsList.replaceChildren();
+          const message = document.createElement('p');
+          message.className = 'comments-empty';
+          message.textContent = 'Comments are temporarily unavailable.';
+          commentsList.appendChild(message);
+        }
+      }
+    }
+
+    likeButton?.addEventListener('click', async () => {
+      if (!currentUserId || busy || !likeButton) return;
+
+      busy = true;
+      likeButton.disabled = true;
+      const previousText = likeButton.textContent;
+      likeButton.textContent = 'Updating…';
+
+      try {
+        const { data: existing, error: checkError } = await supabase
+          .from('likes')
+          .select('id')
+          .eq('post_id', postId)
+          .eq('user_id', currentUserId)
+          .maybeSingle();
+
+        if (checkError) throw checkError;
+
+        if (existing) {
+          const { error } = await supabase
+            .from('likes')
+            .delete()
+            .eq('id', existing.id)
+            .eq('user_id', currentUserId);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase.from('likes').insert({
+            post_id: postId,
+            user_id: currentUserId,
+          });
+          if (error) throw error;
+        }
+
+        setStatus('');
+        await loadCommunity();
+      } catch (error) {
+        console.error('Like update failed:', error);
+        setStatus(
+          error instanceof Error ? error.message : 'Could not update your like.',
+          true
+        );
+        likeButton.textContent = previousText || '❤️ Like';
+      } finally {
+        busy = false;
+        likeButton.disabled = !currentUserId;
+      }
+    });
+
+    commentSubmit?.addEventListener('click', async () => {
+      if (!currentUserId || !currentProfile || busy || !commentInput || !commentSubmit) return;
+
+      const body = commentInput.value.trim();
+      if (!body) {
+        setStatus('Please write a comment first.', true);
+        commentInput.focus();
+        return;
+      }
+
+      busy = true;
+      commentSubmit.disabled = true;
+      commentSubmit.textContent = 'Posting…';
+
+      try {
+        const { error } = await supabase.from('comments').insert({
+          post_id: postId,
+          user_id: currentUserId,
+          display_name: currentProfile.username,
+          body,
+          parent_id: null,
+        });
+
+        if (error) throw error;
+
+        commentInput.value = '';
+        setStatus('Comment posted.');
+        await loadCommunity();
+      } catch (error) {
+        console.error('Comment submission failed:', error);
+        setStatus(
+          error instanceof Error ? error.message : 'Could not post your comment.',
+          true
+        );
+      } finally {
+        busy = false;
+        commentSubmit.disabled = !currentUserId;
+        commentSubmit.textContent = 'Post Comment';
+      }
+    });
+
+    initialize();
+  });
 </script>
 
 <style>
+   /* Thread controls */
+	:global(.comment-thread) {
+	margin: 12px 0 4px 8px;
+	min-width: 0;
+	}
+
+	:global(.thread-controls) {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 8px 0 10px;
+	}
+
+	/* Nested replies */
+	:global(.replies) {
+	display: grid;
+	gap: 10px;
+	margin: 0 0 4px 10px;
+	padding: 4px 0 4px 14px;
+	border-left: 2px solid rgba(168, 85, 247, 0.32);
+	}
+
+	:global(.replies[hidden]),
+
+	:global(.comment[hidden]) {
+	display: none !important;
+	}
+
+	/* Nested comment card */
+	:global(.replies .comment) {
+	min-width: 0;
+	padding: 13px 15px;
+	border: 1px solid rgba(168, 85, 247, 0.2);
+	border-radius: 12px;
+	background:
+		linear-gradient(
+		135deg,
+		rgba(168, 85, 247, 0.09),
+		rgba(11, 255, 232, 0.025)
+		),
+		rgba(17, 14, 25, 0.94);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+	transition: border-color 160ms ease, background 160ms ease;
+	}
+
+	:global(.replies .comment:hover) {
+	border-color: rgba(168, 85, 247, 0.45);
+	background:
+		linear-gradient(
+		135deg,
+		rgba(168, 85, 247, 0.13),
+		rgba(11, 255, 232, 0.045)
+		),
+		rgba(20, 16, 30, 0.98);
+	}
+
+	:global(.replies .comment-body) {
+	color: rgba(245, 242, 250, 0.92);
+	line-height: 1.6;
+	overflow-wrap: anywhere;
+	}
+
+	/* Thread buttons */
+	:global(.reply-toggle),
+	:global(.collapse-button) {
+	padding: 5px 10px;
+	border: 1px solid rgba(168, 85, 247, 0.25);
+	border-radius: 999px;
+	background: rgba(168, 85, 247, 0.07);
+	color: #c084fc;
+	font: inherit;
+	font-size: 0.78rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+	}
+
+	:global(.reply-toggle:hover),
+	:global(.collapse-button:hover) {
+	border-color: rgba(11, 255, 232, 0.45);
+	background: rgba(11, 255, 232, 0.07);
+	color: #0bffe8;
+	}
+
+	@media (max-width: 600px) {
+	:global(.comment-thread) {
+		margin-left: 2px;
+	}
+
+	:global(.replies) {
+		margin-left: 4px;
+		padding-left: 9px;
+	}
+
+	:global(.replies .comment) {
+		padding: 11px 12px;
+	}
+	}
+
   .community {
-    position: relative;
-    width: min(720px, calc(100% - 2em));
+    width: min(720px, calc(100% - 2rem));
     margin: 4rem auto 0;
     padding: 2.5rem 0 3rem;
     color: rgb(var(--gray-dark));
   }
 
-  /* ─────────────────────────────
-     COMMUNITY HEADER
-  ───────────────────────────── */
-
   .community-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 1rem;
     margin-bottom: 1.5rem;
   }
 
   .community-header h2 {
-    margin: 0 0 0.5rem;
+    margin: 0 0 .35rem;
     font-size: 2.2rem;
     line-height: 1.2;
-    letter-spacing: -0.02em;
+    letter-spacing: -.02em;
+  }
+
+  .community-subtitle {
+    margin: 0;
+    color: rgb(var(--gray));
+    font-size: .92rem;
   }
 
   .community-stats {
     display: flex;
-    gap: 1.5rem;
-    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
     color: rgb(var(--gray));
-    font-size: 0.95rem;
+    font-size: .9rem;
   }
 
   .community-stats span {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: .3rem;
   }
 
   .community-stats strong {
     color: rgb(var(--gray-dark));
   }
 
-  /* ─────────────────────────────
-     LIKE BUTTON
-  ───────────────────────────── */
-
-  .like-button {
-    margin: 0 0 1.75rem;
-    padding: 0.65rem 1.2rem;
-    border: 1px solid rgba(168, 85, 247, 0.45);
+  .like-button,
+  .comment-submit,
+  .reply-submit {
+    border: 1px solid rgba(168, 85, 247, .55);
     border-radius: 10px;
-    background: rgba(168, 85, 247, 0.08);
-    color: rgb(var(--gray-dark));
-    font: inherit;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition:
-      background 0.2s ease,
-      border-color 0.2s ease,
-      box-shadow 0.2s ease,
-      transform 0.2s ease;
-  }
-
-  .like-button:hover {
-    background: rgba(168, 85, 247, 0.16);
-    border-color: rgba(192, 132, 252, 0.8);
-    box-shadow: 0 0 18px rgba(168, 85, 247, 0.2);
-    transform: translateY(-1px);
-  }
-
-  .like-button:active {
-    transform: translateY(0);
-  }
-
-  /* ─────────────────────────────
-     COMMENT FORM
-  ───────────────────────────── */
-
-  .comment-form {
-    padding: 1.5rem;
-    border: 1px solid rgba(168, 85, 247, 0.16);
-    border-radius: 16px;
-    background: rgba(18, 14, 25, 0.45);
-    box-shadow:
-      0 8px 30px rgba(0, 0, 0, 0.18),
-      inset 0 0 30px rgba(168, 85, 247, 0.025);
-    backdrop-filter: blur(8px);
-  }
-
-  .comment-form label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: rgb(var(--gray));
-    font-size: 0.9rem;
-  }
-
-  .comment-form input,
-  .comment-form textarea {
-    width: 100%;
-    box-sizing: border-box;
-    border: 1px solid rgba(150, 150, 170, 0.2);
-    border-radius: 10px;
-    background: rgba(8, 6, 14, 0.72);
-    color: rgb(var(--gray-dark));
-    font: inherit;
-    outline: none;
-    transition:
-      border-color 0.2s ease,
-      box-shadow 0.2s ease,
-      background 0.2s ease;
-  }
-
-  .comment-form input {
-    height: 46px;
-    padding: 0 0.9rem;
-    margin-bottom: 1rem;
-  }
-
-  .comment-form textarea {
-    min-height: 130px;
-    padding: 0.8rem 0.9rem;
-    resize: vertical;
-  }
-
-  .comment-form input::placeholder,
-  .comment-form textarea::placeholder {
-    color: rgba(150, 150, 170, 0.65);
-  }
-
-  .comment-form input:focus,
-  .comment-form textarea:focus {
-    border-color: rgba(168, 85, 247, 0.7);
-    background: rgba(10, 7, 17, 0.9);
-    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.08);
-  }
-
-  .comment-submit {
-    display: block;
-    margin: 1rem 0 0 auto;
-    padding: 0.7rem 1.25rem;
-    border: 1px solid rgba(168, 85, 247, 0.7);
-    border-radius: 10px;
-    background: rgba(168, 85, 247, 0.16);
+    background: rgba(168, 85, 247, .13);
     color: rgb(var(--gray-dark));
     font: inherit;
     font-weight: 700;
-    font-size: 0.9rem;
     cursor: pointer;
-    transition:
-      background 0.2s ease,
-      box-shadow 0.2s ease,
-      transform 0.2s ease;
+    transition: background .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease;
   }
 
-  .comment-submit:hover {
-    background: rgba(168, 85, 247, 0.28);
-    box-shadow: 0 0 20px rgba(168, 85, 247, 0.22);
+  .like-button {
+    margin: 0 0 1.5rem;
+    padding: .65rem 1.15rem;
+  }
+
+  .like-button:hover,
+  .comment-submit:hover,
+  .reply-submit:hover {
+    background: rgba(168, 85, 247, .25);
+    border-color: rgba(192, 132, 252, .85);
+    box-shadow: 0 0 18px rgba(168, 85, 247, .2);
     transform: translateY(-1px);
   }
 
-  .comment-submit:disabled {
-    opacity: 0.55;
+  .like-button:disabled,
+  .comment-submit:disabled,
+  .reply-submit:disabled,
+  .reply-cancel:disabled,
+  .delete-button:disabled {
+    opacity: .55;
     cursor: wait;
     transform: none;
   }
 
-  /* ─────────────────────────────
-     DIVIDER
-  ───────────────────────────── */
+  .community-status {
+    min-height: 1.2em;
+    margin: 0 0 .75rem;
+    color: rgb(var(--gray));
+    font-size: .88rem;
+  }
+
+  .community-status.is-error {
+    color: #fca5a5;
+  }
+
+
+	/* RISE comment composer */
+	.comment-form {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 1.4rem;
+	padding: 1.6rem;
+	overflow: hidden;
+	border: 1px solid rgba(168, 85, 247, 0.28);
+	border-radius: 20px;
+	background:
+		radial-gradient(
+		ellipse at top right,
+		rgba(168, 85, 247, 0.12),
+		transparent 55%
+		),
+		linear-gradient(145deg, rgba(22, 16, 34, 0.96), rgba(10, 8, 17, 0.96));
+	box-shadow:
+		0 12px 36px rgba(0, 0, 0, 0.22),
+		inset 0 1px 0 rgba(255, 255, 255, 0.035);
+	backdrop-filter: blur(12px);
+	transition: border-color 180ms ease, box-shadow 180ms ease;
+	}
+
+	.comment-form:focus-within {
+	border-color: rgba(168, 85, 247, 0.62);
+	box-shadow:
+		0 0 0 3px rgba(168, 85, 247, 0.08),
+		0 14px 38px rgba(0, 0, 0, 0.25);
+	}
+
+	.composer-heading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	}
+
+	.composer-heading h3 {
+	margin: 0 0 0.35rem;
+	color: rgb(var(--gray-dark));
+	font-size: 1.2rem;
+	font-weight: 750;
+	letter-spacing: -0.025em;
+	}
+
+	.composer-heading p {
+	margin: 0;
+	color: rgb(var(--gray));
+	font-size: 0.86rem;
+	line-height: 1.5;
+	}
+
+	.composer-icon {
+	display: grid;
+	place-items: center;
+	flex: 0 0 42px;
+	width: 42px;
+	height: 42px;
+	border: 1px solid rgba(168, 85, 247, 0.35);
+	border-radius: 14px;
+	background: rgba(168, 85, 247, 0.12);
+	color: #c084fc;
+	font-size: 1.2rem;
+	box-shadow: 0 0 20px rgba(168, 85, 247, 0.09);
+	}
+
+	.composer-identity {
+	display: flex;
+	align-items: center;
+	gap: 0.8rem;
+	padding: 0.8rem 0.9rem;
+	border: 1px solid rgba(168, 85, 247, 0.16);
+	border-radius: 13px;
+	background: rgba(8, 6, 14, 0.48);
+	}
+
+	.identity-avatar {
+	display: grid;
+	place-items: center;
+	flex: 0 0 38px;
+	width: 38px;
+	height: 38px;
+	border: 1px solid rgba(11, 255, 232, 0.28);
+	border-radius: 50%;
+	background: linear-gradient(
+		145deg,
+		rgba(168, 85, 247, 0.3),
+		rgba(11, 255, 232, 0.1)
+	);
+	color: #0bffe8;
+	font-size: 1rem;
+	}
+
+	.identity-details {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	gap: 0.15rem;
+	}
+
+	.comment-form .identity-details label,
+	.comment-form .composer-editor > label {
+	display: block;
+	margin: 0;
+	color: rgb(var(--gray));
+	font-size: 0.78rem;
+	font-weight: 600;
+	}
+
+	.comment-form .display-name {
+	width: 100%;
+	height: auto;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: #c084fc;
+	font: inherit;
+	font-size: 0.92rem;
+	font-weight: 700;
+	outline: none;
+	}
+
+	.comment-form .display-name:focus {
+	box-shadow: none;
+	}
+
+	.composer-editor {
+	display: flex;
+	flex-direction: column;
+	gap: 0.65rem;
+	}
+
+	.comment-form .comment-input {
+	display: block;
+	width: 100%;
+	min-height: 145px;
+	box-sizing: border-box;
+	padding: 1rem 1.05rem;
+	border: 1px solid rgba(168, 85, 247, 0.2);
+	border-radius: 13px;
+	background: rgba(6, 5, 12, 0.72);
+	color: rgb(var(--gray-dark));
+	font: inherit;
+	font-size: 0.95rem;
+	line-height: 1.65;
+	resize: vertical;
+	outline: none;
+	transition:
+		border-color 180ms ease,
+		background 180ms ease,
+		box-shadow 180ms ease;
+	}
+
+	.comment-form .comment-input::placeholder {
+	color: rgba(160, 155, 174, 0.66);
+	}
+
+	.comment-form .comment-input:focus {
+	border-color: rgba(168, 85, 247, 0.68);
+	background: rgba(9, 7, 17, 0.94);
+	box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.09);
+	}
+
+	.comment-form .comment-input:disabled,
+	.comment-form .display-name:disabled {
+	opacity: 0.62;
+	cursor: not-allowed;
+	}
+
+	.composer-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 0.9rem;
+	padding-top: 0.25rem;
+	}
+
+	.composer-hint {
+	color: rgb(var(--gray));
+	font-size: 0.76rem;
+	line-height: 1.5;
+	}
+
+	.comment-form .comment-submit {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.55rem;
+	min-height: 43px;
+	margin: 0;
+	padding: 0.7rem 1.15rem;
+	border: 1px solid rgba(192, 132, 252, 0.55);
+	border-radius: 11px;
+	background: linear-gradient(110deg, #9333ea, #7e22ce);
+	color: #fff;
+	font: inherit;
+	font-size: 0.86rem;
+	font-weight: 700;
+	cursor: pointer;
+	box-shadow: 0 5px 18px rgba(147, 51, 234, 0.19);
+	transition:
+		transform 180ms ease,
+		box-shadow 180ms ease,
+		filter 180ms ease;
+	}
+
+	.comment-form .comment-submit:hover:not(:disabled) {
+	transform: translateY(-2px);
+	filter: brightness(1.12);
+	box-shadow: 0 8px 24px rgba(147, 51, 234, 0.3);
+	}
+
+	.comment-form .comment-submit:disabled {
+	opacity: 0.48;
+	cursor: not-allowed;
+	box-shadow: none;
+	transform: none;
+	}
+
+	@media (max-width: 600px) {
+	.comment-form {
+		padding: 1.1rem;
+		gap: 1.1rem;
+		border-radius: 16px;
+	}
+
+	.composer-heading h3 {
+		font-size: 1.08rem;
+	}
+
+	.composer-icon {
+		flex-basis: 36px;
+		width: 36px;
+		height: 36px;
+	}
+
+	.comment-form .comment-input {
+		min-height: 125px;
+		font-size: 0.9rem;
+	}
+
+	.composer-footer {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.comment-form .comment-submit {
+		width: 100%;
+	}
+	}
+
+
+
+
+  .comment-submit {
+    display: block;
+    margin: 1rem 0 0 auto;
+    padding: .7rem 1.2rem;
+  }
 
   .community-divider {
     display: flex;
     align-items: center;
     gap: 1rem;
-    margin: 2.75rem 0 2rem;
-    color: rgba(192, 132, 252, 0.7);
+    margin: 2.5rem 0 2rem;
+    color: rgba(192, 132, 252, .75);
   }
 
   .community-divider::before,
@@ -1016,300 +1151,222 @@ const { postId } = Astro.props;
     content: "";
     height: 1px;
     flex: 1;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(168, 85, 247, 0.25),
-      transparent
-    );
+    background: linear-gradient(90deg, transparent, rgba(168, 85, 247, .28), transparent);
   }
 
   .community-divider span {
-    font-size: 0.8rem;
-    text-shadow: 0 0 12px rgba(168, 85, 247, 0.6);
+    font-size: .8rem;
+    text-shadow: 0 0 12px rgba(168, 85, 247, .6);
   }
 
-  /* ─────────────────────────────
-     COMMENTS SECTION
-  ───────────────────────────── */
-
-  .comments-section {
-    padding: 1.5rem;
-    border: 1px solid rgba(168, 85, 247, 0.12);
-    border-radius: 18px;
-    background: rgba(12, 9, 18, 0.28);
-    box-shadow:
-      0 10px 35px rgba(0, 0, 0, 0.16),
-      inset 0 0 35px rgba(168, 85, 247, 0.018);
-  }
-
-  .comments-header {
-    margin-bottom: 1.25rem;
-  }
-
-  .comments-header h3 {
-    margin: 0;
-    color: rgb(var(--gray-dark));
+  .comments-section h3 {
+    margin: 0 0 1.2rem;
     font-size: 1.15rem;
-    font-weight: 700;
-    letter-spacing: 0.01em;
   }
-
-  /* ─────────────────────────────
-     COMMENT LIST
-  ───────────────────────────── */
 
   .comments-list {
     display: grid;
-    margin-top: 0;
+    gap: .8rem;
+  }
+
+  .comments-loading,
+  .comments-empty {
+    margin: 0;
+    color: rgb(var(--gray));
+    font-size: .92rem;
   }
 
   :global(.comment-wrapper) {
-    position: relative;
+    min-width: 0;
   }
 
   :global(.comment) {
-    position: relative;
-    z-index: 0;
-    padding: 1.15rem 1.1rem;
-    border: 1px solid rgba(168, 85, 247, 0.12);
+    padding: 1rem;
+    border: 1px solid rgba(168, 85, 247, .13);
     border-radius: 12px;
-    background: rgba(18, 14, 25, 0.48);
-    box-shadow:
-      0 4px 18px rgba(0, 0, 0, 0.12),
-      inset 0 0 20px rgba(168, 85, 247, 0.015);
-    transition:
-      border-color 0.2s ease,
-      background 0.2s ease,
-      transform 0.2s ease;
+    background: rgba(18, 14, 25, .48);
+    transition: border-color .2s ease, background .2s ease;
   }
 
-  :global(.comment) + :global(.comment) {
-    margin-top: 0.85rem;
+  :global(.comment:hover) {
+    border-color: rgba(168, 85, 247, .27);
+    background: rgba(22, 17, 30, .58);
   }
 
-  :global(.comment + .comment::before) {
-    content: "";
-    position: absolute;
-    top: -0.45rem;
-    left: 8%;
-    right: 8%;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(168, 85, 247, 0.22),
-      transparent
-    );
-    z-index: 5;
-    pointer-events: none;
+  :global(.comment-author) {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin-bottom: .7rem;
   }
 
-  :global(.comment):hover {
-    border-color: rgba(168, 85, 247, 0.24);
-    background: rgba(22, 17, 30, 0.58);
-    transform: translateY(-1px);
-  }
-
-  :global(.comment) strong {
-    display: block;
-    margin-bottom: 0.3rem;
+  :global(.comment-avatar) {
+    display: grid;
+    place-items: center;
+    flex: 0 0 32px;
+    width: 32px;
+    height: 32px;
+    overflow: hidden;
+    border: 1px solid rgba(168, 85, 247, .35);
+    border-radius: 50%;
+    background: rgba(168, 85, 247, .13);
     color: rgb(var(--gray-dark));
-    font-size: 0.95rem;
+    font-size: .85rem;
+    font-weight: 700;
   }
 
-  :global(.comment) p {
+  :global(.comment-avatar img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  :global(.comment-username) {
+    color: rgb(var(--gray-dark));
+    font-size: .92rem;
+  }
+
+  :global(.comment-date) {
+    color: rgb(var(--gray));
+    font-size: .76rem;
+  }
+
+  :global(.comment-body) {
     margin: 0;
     color: rgb(var(--gray));
-    font-size: 0.95rem;
-    line-height: 1.6;
+    font-size: .94rem;
+    line-height: 1.65;
     overflow-wrap: anywhere;
+    white-space: pre-wrap;
   }
-
-  /* ─────────────────────────────
-     NESTED REPLIES
-  ───────────────────────────── */
-
-  :global(.replies) {
-    position: relative;
-    margin-top: 0.85rem;
-  }
-
-  :global(.comment-reply) {
-    border-color: rgba(168, 85, 247, 0.09);
-    background: rgba(15, 11, 22, 0.42);
-  }
-
-  :global(.comment-reply)::before {
-    content: "";
-    position: absolute;
-    left: -0.7rem;
-    top: 0;
-    bottom: 0;
-    width: 1px;
-    background: linear-gradient(
-      180deg,
-      rgba(168, 85, 247, 0.3),
-      rgba(168, 85, 247, 0.05)
-    );
-    pointer-events: none;
-  }
-
-  :global(.reply-toggle) {
-    display: block;
-    margin: 0.65rem 0 0.2rem 0.25rem;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: rgba(192, 132, 252, 0.78);
-    font: inherit;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition:
-      color 0.2s ease,
-      text-shadow 0.2s ease;
-  }
-
-  :global(.reply-toggle:hover) {
-    color: rgb(216, 180, 254);
-    text-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
-  }
-
-  :global(.replies[hidden]) {
-    display: none;
-  }
-
-  /* ─────────────────────────────
-     COMMENT ACTIONS
-  ───────────────────────────── */
 
   :global(.comment-actions) {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    margin-top: 0.75rem;
+    gap: .9rem;
+    margin-top: .8rem;
   }
 
-  :global(.reply-button) {
+  :global(.reply-button),
+  :global(.collapse-button),
+  :global(.delete-button),
+  :global(.reply-toggle) {
     padding: 0;
     border: 0;
     background: transparent;
-    color: rgba(192, 132, 252, 0.8);
+    color: rgba(192, 132, 252, .85);
     font: inherit;
-    font-size: 0.82rem;
+    font-size: .8rem;
+    font-weight: 600;
     cursor: pointer;
-    transition:
-      color 0.2s ease,
-      text-shadow 0.2s ease;
   }
 
-  :global(.reply-button:hover) {
+  :global(.reply-button:hover),
+  :global(.collapse-button:hover),
+  :global(.reply-toggle:hover) {
     color: rgb(216, 180, 254);
-    text-shadow: 0 0 12px rgba(168, 85, 247, 0.45);
+    text-shadow: 0 0 10px rgba(168, 85, 247, .35);
   }
 
-  /* ─────────────────────────────
-     REPLY FORM
-  ───────────────────────────── */
+  :global(.delete-button) {
+    color: #fca5a5;
+  }
+
+  :global(.delete-button:hover) {
+    color: #fecaca;
+  }
+
+  :global(.replies) {
+    display: grid;
+    gap: .7rem;
+    margin: .7rem 0 0 .85rem;
+    padding-left: .85rem;
+    border-left: 1px solid rgba(168, 85, 247, .25);
+  }
+
+  :global(.replies[hidden]),
+  :global(.comment-content[hidden]) {
+    display: none;
+  }
+
+  :global(.comment-reply) {
+    margin-left: min(calc(var(--reply-depth) * .25rem), 1rem);
+    background: rgba(15, 11, 22, .42);
+  }
+
+  :global(.reply-toggle) {
+    justify-self: start;
+    margin: .6rem 0 0 .25rem;
+  }
 
   :global(.reply-form) {
-    margin-top: 0.85rem;
-    padding: 1rem;
-    border: 1px solid rgba(168, 85, 247, 0.12);
-    border-radius: 12px;
-    background: rgba(8, 6, 14, 0.42);
-    box-shadow: inset 0 0 20px rgba(168, 85, 247, 0.015);
-  }
-
-  :global(.reply-form input),
-  :global(.reply-form textarea) {
-    width: 100%;
-    box-sizing: border-box;
-    border: 1px solid rgba(150, 150, 170, 0.18);
-    border-radius: 9px;
-    background: rgba(8, 6, 14, 0.72);
-    color: rgb(var(--gray-dark));
-    font: inherit;
-    outline: none;
-    transition:
-      border-color 0.2s ease,
-      box-shadow 0.2s ease;
-  }
-
-  :global(.reply-form input) {
-    height: 42px;
-    padding: 0 0.8rem;
+    margin-top: .8rem;
+    padding: .9rem;
+    border: 1px solid rgba(168, 85, 247, .15);
+    border-radius: 11px;
+    background: rgba(8, 6, 14, .4);
   }
 
   :global(.reply-form textarea) {
-    min-height: 90px;
-    margin-top: 0.7rem;
-    padding: 0.7rem 0.8rem;
-    resize: vertical;
-  }
-
-  :global(.reply-form input:focus),
-  :global(.reply-form textarea:focus) {
-    border-color: rgba(168, 85, 247, 0.55);
-    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.06);
-  }
-
-  :global(.reply-form input::placeholder),
-  :global(.reply-form textarea::placeholder) {
-    color: rgba(150, 150, 170, 0.6);
+    min-height: 85px;
   }
 
   :global(.reply-form-actions) {
     display: flex;
     justify-content: flex-end;
-    gap: 0.65rem;
-    margin-top: 0.75rem;
+    gap: .6rem;
+    margin-top: .7rem;
   }
 
   :global(.reply-cancel),
   :global(.reply-submit) {
-    padding: 0.55rem 0.9rem;
+    padding: .55rem .9rem;
     border-radius: 8px;
     font: inherit;
-    font-size: 0.82rem;
+    font-size: .82rem;
     cursor: pointer;
-    transition:
-      background 0.2s ease,
-      border-color 0.2s ease,
-      box-shadow 0.2s ease;
   }
 
   :global(.reply-cancel) {
-    border: 1px solid rgba(150, 150, 170, 0.18);
+    border: 1px solid rgba(150, 150, 170, .2);
     background: transparent;
     color: rgb(var(--gray));
   }
 
   :global(.reply-cancel:hover) {
-    background: rgba(150, 150, 170, 0.06);
+    background: rgba(150, 150, 170, .08);
   }
 
   :global(.reply-submit) {
-    border: 1px solid rgba(168, 85, 247, 0.55);
-    background: rgba(168, 85, 247, 0.13);
+    border: 1px solid rgba(168, 85, 247, .55);
+    background: rgba(168, 85, 247, .13);
     color: rgb(var(--gray-dark));
     font-weight: 700;
   }
 
-  :global(.reply-submit:hover) {
-    background: rgba(168, 85, 247, 0.24);
-    border-color: rgba(192, 132, 252, 0.75);
-    box-shadow: 0 0 16px rgba(168, 85, 247, 0.16);
+  :global(.auth-message-text) {
+    margin: 0 0 .8rem;
+    color: rgb(var(--gray));
+    text-align: center;
   }
 
-  :global(.reply-submit:disabled) {
-    opacity: 0.55;
-    cursor: wait;
+  :global(.auth-message-link) {
+    display: inline-block;
+    padding: .65rem 1rem;
+    border: 1px solid rgba(168, 85, 247, .5);
+    border-radius: 9px;
+    background: rgba(168, 85, 247, .1);
+    color: rgb(var(--gray-dark));
+    font-weight: 700;
+    text-decoration: none;
   }
 
-  /* ─────────────────────────────
-     MOBILE
-  ───────────────────────────── */
+  :global(.auth-message-link:hover) {
+    background: rgba(168, 85, 247, .2);
+  }
 
   @media (max-width: 600px) {
     .community {
@@ -1323,34 +1380,21 @@ const { postId } = Astro.props;
     }
 
     .community-stats {
-      gap: 1rem;
-      font-size: 0.85rem;
+      gap: .8rem;
+      font-size: .82rem;
     }
 
-    .comment-form {
+    .comment-form,
+    .comments-section {
       padding: 1rem;
     }
 
     .comment-submit {
       width: 100%;
-      margin-top: 0.9rem;
-    }
-
-    .community-divider {
-      margin: 2.25rem 0 1.5rem;
-    }
-
-    .comments-section {
-      padding: 1rem;
-      border-radius: 14px;
     }
 
     :global(.comment) {
-      padding: 0.9rem 1rem;
-    }
-
-    :global(.comment-reply) {
-      margin-left: 0.75rem !important;
+      padding: .85rem;
     }
 
     :global(.reply-form-actions) {
@@ -1362,32 +1406,50 @@ const { postId } = Astro.props;
       width: 100%;
     }
   }
-  .community-auth-message {
-    padding: 0.5rem 0;
-    text-align: center;
-  }
 
-  .community-auth-message p {
-    margin: 0 0 1rem;
-    color: rgb(var(--gray));
-  }
+	:global(.reply-form) {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin: 12px 0 16px 24px;
+	padding: 14px;
+	background: rgba(18, 13, 30, 0.96);
+	border: 1px solid rgba(168, 85, 247, 0.35);
+	border-radius: 14px;
+	}
 
-  .community-auth-message a {
-    display: inline-block;
-    padding: 0.65rem 1rem;
-    border: 1px solid rgba(168, 85, 247, 0.5);
-    border-radius: 9px;
-    background: rgba(168, 85, 247, 0.1);
-    color: rgb(var(--gray-dark));
-    text-decoration: none;
-    font-weight: 700;
-    transition:
-      background 0.2s ease,
-      border-color 0.2s ease;
-  }
+	:global(.reply-form textarea) {
+	width: 100%;
+	min-height: 90px;
+	padding: 12px;
+	color: #f5f3ff;
+	background: #100c1b;
+	border: 1px solid rgba(168, 85, 247, 0.35);
+	border-radius: 10px;
+	font: inherit;
+	resize: vertical;
+	outline: none;
+	box-sizing: border-box;
+	}
 
-  .community-auth-message a:hover {
-    background: rgba(168, 85, 247, 0.2);
-    border-color: rgba(192, 132, 252, 0.8);
-  }
+	:global(.reply-form textarea:focus) {
+	border-color: #a855f7;
+	box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+	}
+
+	:global(.reply-form button) {
+	align-self: flex-end;
+	padding: 9px 16px;
+	color: #0b0810;
+	background: #a855f7;
+	border: 0;
+	border-radius: 999px;
+	font-weight: 600;
+	cursor: pointer;
+	}
+
+	:global(.reply-form button:hover) {
+	background: #c084fc;
+	}
 </style>
+
