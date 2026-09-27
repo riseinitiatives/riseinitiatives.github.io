@@ -67,6 +67,10 @@ const { postId } = Astro.props;
 
 <script>
   import { supabase } from '../lib/supabase';
+	import {
+		loadUserBadges,
+		renderUserBadges,
+	} from '../lib/userBadges';
 
   type Profile = {
     id: string;
@@ -111,6 +115,10 @@ const { postId } = Astro.props;
     let currentProfile: Profile | null = null;
     let busy = false;
     let refreshToken = 0;
+	let userBadges = new Map<
+	string,
+	('dev_verified' | 'collaborator')[]
+	>();
 
     function setStatus(message: string, isError = false) {
       if (!status) return;
@@ -340,16 +348,23 @@ const { postId } = Astro.props;
         avatar.textContent = (comment.display_name || 'U').charAt(0).toUpperCase();
       }
 
-      const author = document.createElement('strong');
-      author.className = 'comment-username';
-      author.textContent = `@${comment.display_name || 'unknown'}`;
+      	const author = document.createElement('strong');
+		author.className = 'comment-username';
+		author.textContent = `@${comment.display_name || 'unknown'}`;
+
+		const badgeContainer = document.createElement('span');
+		badgeContainer.className = 'comment-user-badges';
+		badgeContainer.innerHTML = renderUserBadges(
+		comment.user_id,
+		userBadges
+		);
 
       const date = document.createElement('time');
       date.className = 'comment-date';
       date.dateTime = comment.created_at;
       date.textContent = formatDate(comment.created_at);
 
-      authorRow.append(avatar, author, date);
+      authorRow.append(avatar, author, badgeContainer, date);
 
       const body = document.createElement('p');
       body.className = 'comment-body';
@@ -592,8 +607,10 @@ const { postId } = Astro.props;
         return;
       }
 
-      const rows = comments ?? [];
-      const userIds = [...new Set(rows.map((comment) => comment.user_id))];
+      	const rows = comments ?? [];
+		const userIds = [...new Set(rows.map((comment) => comment.user_id))];
+
+		userBadges = await loadUserBadges(supabase, userIds);
       let profiles = new Map<string, Profile>();
 
       if (userIds.length > 0) {
@@ -1713,6 +1730,37 @@ const { postId } = Astro.props;
 	:global(.report-cancel:disabled) {
 	opacity: 0.55;
 	cursor: wait;
+	}
+	/* RISE Dev Verified — green circular check */
+	:global(.dev-verified-badge) {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+
+	width: 18px;
+	height: 18px;
+	min-width: 18px;
+	flex: 0 0 18px;
+	box-sizing: border-box;
+
+	border: 1.5px solid #16a34a;
+	border-radius: 50%;
+	background: #16a34a;
+	color: #ffffff;
+
+	font-size: 12px;
+	font-weight: 900;
+	line-height: 1;
+
+	vertical-align: middle;
+	box-shadow: 0 0 8px rgba(22, 163, 74, 0.35);
+	}
+
+	:global(.comment-user-badges) {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	flex: 0 0 auto;
 	}
 </style>
 

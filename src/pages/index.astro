@@ -1425,10 +1425,56 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 		}
 
 
+		:global(#home-comments-list .home-comment-name) {
+		display: inline-flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 6px;	
+		min-width: 0;
+		color: #06c03e;
+		font-size: 1.2rem;
+		
+		}
+
+		:global(#home-comments-list .home-comment-name span) {
+		overflow-wrap: anywhere;
+		}
+
+		/* RISE Dev Verified — green circular badge */
+		:global(.dev-verified-badge) {
+		display: inline-flex !important;
+		align-items: center;
+		justify-content: center;
+
+		width: 18px;
+		height: 18px;
+		min-width: 18px;
+		flex: 0 0 18px;
+		box-sizing: border-box;
+
+		border: 1.5px solid #16a34a;
+		border-radius: 50% !important;
+
+		background: #16a34a;
+		color: #ffffff;
+
+		font-size: 12px;
+		font-weight: 900;
+		line-height: 1;
+
+		vertical-align: middle;
+		box-shadow: 0 0 8px rgba(22, 163, 74, 0.35);
+		}
+
+
 	</style>
 </html>
 
 <script>
+	import {
+	loadUserBadges,
+	renderUserBadges,
+	} from '../lib/userBadges';
     import { supabase } from '../lib/supabase';
 
     // Replace this with the UUID of the dedicated homepage anchor post.
@@ -1594,6 +1640,7 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 			reportButton.disabled = true;
 		}
 
+
 		
 
 		const allComments = comments || []; 	
@@ -1617,6 +1664,8 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 		const profileMap = new Map(
 			(profiles || []).map((profile) => [profile.id, profile])
 		);
+
+		const userBadges = await loadUserBadges(supabase, userIds);
 
 		const formatDate = (createdAt: string) =>
 			new Date(createdAt).toLocaleDateString('en-IN', {
@@ -1657,10 +1706,13 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 						<div class="home-comment-user">
 							${avatar}
 							<div class="home-comment-author">
-								<strong>@${escapeHTML(username)}</strong>
-								<span class="home-comment-time">
-									${escapeHTML(formatDate(comment.created_at))}
-								</span>
+							<strong class="home-comment-name">
+								<span>@${escapeHTML(username)}</span>
+								${renderUserBadges(comment.user_id, userBadges)}
+							</strong>
+							<span class="home-comment-time">
+								${escapeHTML(formatDate(comment.created_at))}
+							</span>	
 							</div>
 						</div>
 

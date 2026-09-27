@@ -1755,685 +1755,656 @@ const communityDescription =
 		}
 	}
 
+	:global(.dev-verified-badge) {
+		display: inline-flex !important;
+		align-items: center;
+		justify-content: center;
+
+		width: 18px;
+		height: 18px;
+		min-width: 18px;
+		flex: 0 0 18px;
+		box-sizing: border-box;
+
+		border: 1.5px solid #16a34a;
+		border-radius: 50% !important;
+
+		background: #16a34a;
+		color: #ffffff;
+
+		font-size: 12px;
+		font-weight: 900;
+		line-height: 1;
+		vertical-align: middle;
+
+		box-shadow: 0 0 8px rgba(22, 163, 74, 0.35);
+	}
+
 	</style>
 
-
-	<script>
-	import { supabase } from '../lib/supabase';
-
-
-	const tabs =
-		document.querySelectorAll<HTMLButtonElement>('.community-tab');
-
-	const feed =
-		document.querySelector<HTMLElement>('#community-feed-list');
-
-	const emptyState =
-		document.querySelector<HTMLElement>('#community-empty');
-	
-	const sortSelect =
-    document.querySelector<HTMLSelectElement>('#community-sort');
-
-	let currentCategory = 'all';
-	let currentSort = 'top';		
-	let allPosts: any[] = [];
-	let currentUser: any = null;
-
-	const discussionModal =
-		document.querySelector<HTMLElement>('#discussion-modal');
-
-	const openDiscussionButton =
-		document.querySelector<HTMLButtonElement>('#open-discussion-modal');
-
-	const openDiscussionBottom =
-		document.querySelector<HTMLButtonElement>(
-			'#open-discussion-modal-bottom'
-		);
-
-	const closeDiscussionButton =
-		document.querySelector<HTMLButtonElement>(
-			'#close-discussion-modal'
-		);
-
-	const cancelDiscussionButton =
-		document.querySelector<HTMLButtonElement>(
-			'#cancel-discussion'
-		);
-
-	const discussionModalBackdrop =
-		document.querySelector<HTMLElement>(
-			'#discussion-modal-backdrop'
-		);
-
-	function openDiscussionModal() {
-		discussionModal?.removeAttribute('hidden');
-	}
-
-	function closeDiscussionModal() {
-		discussionModal?.setAttribute('hidden', '');
-	}
-
-	openDiscussionButton?.addEventListener(
-		'click',
-		openDiscussionModal
-	);
-
-	openDiscussionBottom?.addEventListener(
-		'click',
-		openDiscussionModal
-	);
-
-	closeDiscussionButton?.addEventListener(
-		'click',
-		closeDiscussionModal
-	);
-
-	cancelDiscussionButton?.addEventListener(
-		'click',
-		closeDiscussionModal
-	);
-
-	discussionModalBackdrop?.addEventListener(
-		'click',
-		closeDiscussionModal
-	);
-
-	const createDiscussionButton =
-		document.querySelector<HTMLButtonElement>(
-			'#create-discussion'
-		);
-
-	const discussionTitleInput =
-		document.querySelector<HTMLInputElement>(
-			'#discussion-title-input'
-		);
-
-	const discussionCategoryInput =
-		document.querySelector<HTMLSelectElement>(
-			'#discussion-category-input'
-		);
-
-	const discussionBodyInput =
-		document.querySelector<HTMLTextAreaElement>(
-			'#discussion-body-input'
-		);
-
-	createDiscussionButton?.addEventListener('click', async () => {
-		const title = discussionTitleInput?.value.trim();
-		const category = discussionCategoryInput?.value;
-		const body = discussionBodyInput?.value.trim();
-
-		if (!title || !category || !body) {
-			alert('Please fill in the title, category, and discussion.');
-			return;
-		}
-
-		createDiscussionButton.disabled = true;
-		createDiscussionButton.textContent = 'Publishing...';
-
-		try {
-			const {
-				data: { user },
-				error: authError,
-			} = await supabase.auth.getUser();
-
-			if (authError) throw authError;
-
-			if (!user) {
-				alert('Please sign in before creating a discussion.');
-				return;
-			}
-
-			const { error } = await supabase
-				.from('community_posts')
-				.insert({
-					user_id: user.id,
-					title,
-					category,
-					body,
-				});
-
-			if (error) throw error;
-
-			if (discussionTitleInput) discussionTitleInput.value = '';
-			if (discussionBodyInput) discussionBodyInput.value = '';
-			if (discussionCategoryInput) {
-				discussionCategoryInput.value = 'Ideas';
-			}
-
-			closeDiscussionModal();
-			await loadCommunityPosts();
-
-		} catch (error) {
-			console.error('Create discussion error:', error);
-			alert(
-				error instanceof Error
-					? error.message
-					: 'Could not create the discussion. Please try again.'
-			);
-		} finally {
-			createDiscussionButton.disabled = false;
-			createDiscussionButton.textContent = 'Create Discussion';
-		}
-	});
-
-
-	/* =========================================================
-	   HELPERS
-	========================================================= */
-
-	function escapeHtml(value: string) {
-		return value
-			.replaceAll('&', '&amp;')
-			.replaceAll('<', '&lt;')
-			.replaceAll('>', '&gt;')
-			.replaceAll('"', '&quot;')
-			.replaceAll("'", '&#039;');
-	}
-
-
-	function formatTime(dateString: string) {
-
-		const date = new Date(dateString);
-
-		const seconds =
-			Math.floor(
-				(Date.now() - date.getTime()) / 1000
-			);
-
-
-		if (seconds < 60) {
-			return 'just now';
-		}
-
-
-		const minutes =
-			Math.floor(seconds / 60);
-
-
-		if (minutes < 60) {
-			return `${minutes}m ago`;
-		}
-
-
-		const hours =
-			Math.floor(minutes / 60);
-
-
-		if (hours < 24) {
-			return `${hours}h ago`;
-		}
-
-
-		const days =
-			Math.floor(hours / 24);
-
-
-		if (days < 7) {
-			return `${days}d ago`;
-		}
-
-
-		return date.toLocaleDateString(
-			'en-IN',
-			{
-				day: 'numeric',
-				month: 'short',
-				year: 'numeric',
-			}
-		);
-	}
-
-
-	function getCategoryIcon(category: string) {
-
-		if (category === 'Ideas') {
-			return '💡';
-		}
-
-		if (category === 'Projects') {
-			return '🚀';
-		}
-
-		if (category === 'Build & Tech') {
-			return '🛠️';
-		}
-
-		return '✦';
-	}
-
-
-	/* =========================================================
-	   RENDER POSTS
-	========================================================= */
-
-	function renderPosts() {
-    if (!feed) return;
-
-    const posts = allPosts
-        .filter((post) =>
-            currentCategory === 'all' ||
-            post.category === currentCategory
-        )
-        .sort((a, b) => {
-            // Highest upvotes first; newest breaks ties
-            if (currentSort === 'top') {
-                const upvoteDifference =
-                    (b.upvote_count ?? 0) - (a.upvote_count ?? 0);
-
-                if (upvoteDifference !== 0) {
-                    return upvoteDifference;
-                }
+<script>
+    import {
+        loadUserBadges,
+        renderUserBadges,
+        type UserBadgeMap,
+    } from '../lib/userBadges';
+    import { supabase } from '../lib/supabase';
+
+    const tabs =
+        document.querySelectorAll<HTMLButtonElement>('.community-tab');
+
+    const feed =
+        document.querySelector<HTMLElement>('#community-feed-list');
+
+    const emptyState =
+        document.querySelector<HTMLElement>('#community-empty');
+
+    const sortSelect =
+        document.querySelector<HTMLSelectElement>('#community-sort');
+
+    const discussionModal =
+        document.querySelector<HTMLElement>('#discussion-modal');
+
+    const openDiscussionButton =
+        document.querySelector<HTMLButtonElement>('#open-discussion-modal');
+
+    const openDiscussionBottom =
+        document.querySelector<HTMLButtonElement>(
+            '#open-discussion-modal-bottom'
+        );
+
+    const closeDiscussionButton =
+        document.querySelector<HTMLButtonElement>(
+            '#close-discussion-modal'
+        );
+
+    const cancelDiscussionButton =
+        document.querySelector<HTMLButtonElement>('#cancel-discussion');
+
+    const discussionModalBackdrop =
+        document.querySelector<HTMLElement>(
+            '#discussion-modal-backdrop'
+        );
+
+    const createDiscussionButton =
+        document.querySelector<HTMLButtonElement>('#create-discussion');
+
+    const discussionTitleInput =
+        document.querySelector<HTMLInputElement>(
+            '#discussion-title-input'
+        );
+
+    const discussionCategoryInput =
+        document.querySelector<HTMLSelectElement>(
+            '#discussion-category-input'
+        );
+
+    const discussionBodyInput =
+        document.querySelector<HTMLTextAreaElement>(
+            '#discussion-body-input'
+        );
+
+    let currentCategory = 'all';
+    let currentSort = 'top';
+    let allPosts: any[] = [];
+    let currentUser: any = null;
+
+    // Keep the badge map at script scope so renderPosts() can access it.
+    let userBadges: UserBadgeMap = new Map();
+
+    // ---------------------------------------------------------
+    // DISCUSSION MODAL
+    // ---------------------------------------------------------
+
+    function openDiscussionModal() {
+        discussionModal?.removeAttribute('hidden');
+    }
+
+    function closeDiscussionModal() {
+        discussionModal?.setAttribute('hidden', '');
+    }
+
+    openDiscussionButton?.addEventListener(
+        'click',
+        openDiscussionModal
+    );
+
+    openDiscussionBottom?.addEventListener(
+        'click',
+        openDiscussionModal
+    );
+
+    closeDiscussionButton?.addEventListener(
+        'click',
+        closeDiscussionModal
+    );
+
+    cancelDiscussionButton?.addEventListener(
+        'click',
+        closeDiscussionModal
+    );
+
+    discussionModalBackdrop?.addEventListener(
+        'click',
+        closeDiscussionModal
+    );
+
+    // ---------------------------------------------------------
+    // CREATE DISCUSSION
+    // ---------------------------------------------------------
+
+    createDiscussionButton?.addEventListener('click', async () => {
+        const title = discussionTitleInput?.value.trim();
+        const category = discussionCategoryInput?.value;
+        const body = discussionBodyInput?.value.trim();
+
+        if (!title || !category || !body) {
+            alert('Please fill in the title, category, and discussion.');
+            return;
+        }
+
+        createDiscussionButton.disabled = true;
+        createDiscussionButton.textContent = 'Publishing...';
+
+        try {
+            const {
+                data: { user },
+                error: authError,
+            } = await supabase.auth.getUser();
+
+            if (authError) throw authError;
+
+            if (!user) {
+                alert('Please sign in before creating a discussion.');
+                return;
             }
 
-            // Newest first
-            return new Date(b.created_at).getTime()
-                - new Date(a.created_at).getTime();
+            const { error } = await supabase
+                .from('community_posts')
+                .insert({
+                    user_id: user.id,
+                    title,
+                    category,
+                    body,
+                });
+
+            if (error) throw error;
+
+            if (discussionTitleInput) {
+                discussionTitleInput.value = '';
+            }
+
+            if (discussionBodyInput) {
+                discussionBodyInput.value = '';
+            }
+
+            if (discussionCategoryInput) {
+                discussionCategoryInput.value = 'Ideas';
+            }
+
+            closeDiscussionModal();
+            await loadCommunityPosts();
+        } catch (error) {
+            console.error('Create discussion error:', error);
+
+            alert(
+                error instanceof Error
+                    ? error.message
+                    : 'Could not create the discussion. Please try again.'
+            );
+        } finally {
+            createDiscussionButton.disabled = false;
+            createDiscussionButton.textContent = 'Create Discussion';
+        }
+    });
+
+    // ---------------------------------------------------------
+    // HELPERS
+    // ---------------------------------------------------------
+
+    function escapeHtml(value: string | null | undefined): string {
+        return String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+
+    function formatTime(dateString: string): string {
+        const date = new Date(dateString);
+        const seconds = Math.floor(
+            (Date.now() - date.getTime()) / 1000
+        );
+
+        if (seconds < 60) {
+            return 'just now';
+        }
+
+        const minutes = Math.floor(seconds / 60);
+
+        if (minutes < 60) {
+            return `${minutes}m ago`;
+        }
+
+        const hours = Math.floor(minutes / 60);
+
+        if (hours < 24) {
+            return `${hours}h ago`;
+        }
+
+        const days = Math.floor(hours / 24);
+
+        if (days < 7) {
+            return `${days}d ago`;
+        }
+
+        return date.toLocaleDateString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
         });
-
-
-		if (posts.length === 0) {
-
-			feed.innerHTML = '';
-
-			if (emptyState) {
-				emptyState.classList.remove('hidden');
-			}
-
-			return;
-		}
-
-
-		if (emptyState) {
-			emptyState.classList.add('hidden');
-		}
-
-
-		feed.innerHTML = posts.map((post) => {
-
-			const username =
-				post.username || 'RISE User';
-
-			const firstLetter =
-				username.charAt(0).toUpperCase();
-
-
-			const title =
-				escapeHtml(post.title);
-
-			const body =
-				escapeHtml(post.body);
-
-			const safeUsername =
-				escapeHtml(username);
-
-			const categoryName =
-				escapeHtml(post.category);
-
-
-			return `
-				<article
-					class="community-post"
-					data-category="${categoryName}"
-					data-post-id="${post.id}"
-				>
-
-					<div class="post-top">
-
-						<div class="post-category">
-							<span>${getCategoryIcon(post.category)}</span>
-							${categoryName}
-						</div>
-
-						<div class="post-options">
-
-							<span class="post-time">
-								${formatTime(post.created_at)}
-							</span>
-
-							${
-								currentUser?.id === post.user_id
-									? `
-										<div class="post-menu-container">
-
-											<button
-												class="post-menu-button"
-												data-post-id="${post.id}"
-												type="button"
-												aria-label="Discussion options"
-											>
-												⋮
-											</button>
-
-											<div
-												class="post-menu"
-												data-menu-id="${post.id}"
-												hidden
-											>
-												<button
-													class="post-delete"
-													data-post-id="${post.id}"
-													type="button"
-												>
-													Delete
-												</button>
-											</div>
-
-										</div>
-									`
-									: ''
-							}
-
-						</div>
-
-					</div>
-
-
-					<a
-						href="#"
-						class="post-title"
-						data-post-id="${post.id}"
-					>
-						${title}
-					</a>
-
-
-					<p class="post-preview">
-						${body}
-					</p>
-
-
-					<div class="post-meta">
-
-						<div class="post-author">
-
-							<div class="author-avatar" data-fallback="${firstLetter}">
-								${
-									post.avatar_url
-										? `<img
-											src="${escapeHtml(post.avatar_url)}"
-											alt="@${safeUsername}"
-											loading="lazy"
-											style="display:block;width:30px;height:30px;min-width:30px;max-width:30px;min-height:30px;max-height:30px;object-fit:cover;"
-										/>`
-										: firstLetter
-								}
-							</div>
-
-							<span>
-								@${safeUsername}
-							</span>
-
-						</div>
-
-
-						<div class="post-stats">
-							<span>▲ ${post.upvote_count ?? 0}</span>
-							<span>💬 ${post.comment_count ?? 0}</span>
-						</div>
-
-					</div>
-
-				</article>
-			`;
-
-		}).join('');
-
-		// Fallback for unavailable profile pictures
-		feed
-			.querySelectorAll<HTMLImageElement>('.author-avatar img')
-			.forEach((img) => {
-				img.addEventListener('error', () => {
-					const avatar = img.closest<HTMLElement>(
-						'.author-avatar'
-					);
-
-					if (!avatar) return;
-
-					avatar.textContent =
-						avatar.dataset.fallback || 'R';
-				}, { once: true });
-			});
-
-
-		/* Prevent placeholder links from jumping */
-
-		feed
-			.querySelectorAll<HTMLAnchorElement>('.post-title')
-			.forEach((link) => {
-
-				link.addEventListener('click', (event) => {
-					event.preventDefault();
-
-					const postId =
-						link.dataset.postId;
-
-					if (!postId) return;
-
-					window.location.href =
-						`/community/post?id=${postId}`;
-				});
-
-			});
-
-		feed
-			.querySelectorAll<HTMLButtonElement>('.post-menu-button')
-			.forEach((button) => {
-
-				button.addEventListener('click', (event) => {
-
-					event.stopPropagation();
-
-					const postId =
-						button.dataset.postId;
-
-					if (!postId) return;
-
-					feed
-						.querySelectorAll<HTMLElement>('.post-menu')
-						.forEach((menu) => {
-
-							if (menu.dataset.menuId === postId) {
-								menu.toggleAttribute('hidden');
-							} else {
-								menu.setAttribute('hidden', '');
-							}
-
-						});
-
-				});
-
-			});	
-
-		feed
-			.querySelectorAll<HTMLButtonElement>('.post-delete')
-			.forEach((button) => {
-
-				button.addEventListener('click', async () => {
-
-					const postId = button.dataset.postId;
-
-					if (!postId) return;
-
-					const confirmed =
-						window.confirm('Delete this discussion?');
-
-					if (!confirmed) return;
-
-					const { error } =
-						await supabase
-							.from('community_posts')
-							.delete()
-							.eq('id', postId)
-							.eq('user_id', currentUser?.id);
-
-					if (error) {
-						console.error(
-							'Delete discussion error:',
-							error
-						);
-
-						return;
-					}
-
-					await loadCommunityPosts();
-				});
-
-			});	
-	}
-
-
-	/* =========================================================
-	   LOAD COMMUNITY POSTS
-	========================================================= */
-
-	async function loadCommunityPosts() {
-
-
-		if (!feed) return;
-
-		const {
-			data: { user },
-		} = await supabase.auth.getUser();
-
-		currentUser = user;
-
-
-		feed.innerHTML = `
-			<div class="community-loading">
-				Loading discussions...
-			</div>
-		`;
-
-
-		const {
-			data: posts,
-			error: postsError,
-		} = await supabase
-			.from('community_posts')
-			.select(`
-				id,
-				user_id,
-				title,
-				body,
-				category,
-				created_at,
-				updated_at
-			`)
-			.order('created_at', {
-				ascending: false,
-			});
-		
-	
-
-		if (postsError) {
-
-			console.error(
-				'Community posts error:',
-                JSON.stringify(postsError, null, 2)
-			);
-
-			feed.innerHTML = `
-				<div class="community-loading">
-					Unable to load discussions.
-				</div>
-			`;
-
-			return;
-		}
-
-
-
-		if (!posts || posts.length === 0) {
-
-			allPosts = [];
-
-			feed.innerHTML = '';
-
-			if (emptyState) {
-				emptyState.classList.remove('hidden');
-			}
-
-			return;
-		}
-
-
-		/* =====================================================
-		   LOAD PUBLIC RISE USERNAMES
-		===================================================== */
-
-		const userIds = [
-			...new Set(
-				posts.map(
-					(post) => post.user_id
-				)
-			),
-		];
-
-
-		const {
-			data: profiles,
-			error: profilesError,
-		} = await supabase
-			.from('profiles')
-			.select('id, username, avatar_url')
-			.in('id', userIds);
-
-
-		if (profilesError) {
-
-			console.error(
-				'Profiles error:',
-				profilesError
-			);
-
-		}
-
-
-		const profileMap =
-			new Map(
-				(profiles || []).map(
-					(profile) => [
-						profile.id,
-						{
-							username: profile.username,
-							avatar_url: profile.avatar_url,
-						},
-					]
-				)
-			);
-
-
-		/* =====================================================
-		   COMBINE POSTS + USERNAMES
-		===================================================== */
-
-		allPosts =
-            posts.map((post) => {
-
-                const profile =
-                    profileMap.get(post.user_id);
-
-                return {
-                    ...post,
-
-                    username:
-                        profile?.username
-                        || 'RISE User',
-
-                    avatar_url:
-                        profile?.avatar_url
-                        || null,
-
-                    upvote_count: 0,
-                    comment_count: 0,
-                };
-
+    }
+
+    function getCategoryIcon(category: string): string {
+        if (category === 'Ideas') {
+            return '💡';
+        }
+
+        if (category === 'Projects') {
+            return '🚀';
+        }
+
+        if (category === 'Build & Tech') {
+            return '🛠️';
+        }
+
+        return '✦';
+    }
+
+    // ---------------------------------------------------------
+    // RENDER POSTS
+    // ---------------------------------------------------------
+
+    function renderPosts() {
+        if (!feed) return;
+
+        const posts = allPosts
+            .filter(
+                (post) =>
+                    currentCategory === 'all' ||
+                    post.category === currentCategory
+            )
+            .sort((a, b) => {
+                if (currentSort === 'top') {
+                    const upvoteDifference =
+                        (b.upvote_count ?? 0) -
+                        (a.upvote_count ?? 0);
+
+                    if (upvoteDifference !== 0) {
+                        return upvoteDifference;
+                    }
+                }
+
+                return (
+                    new Date(b.created_at).getTime() -
+                    new Date(a.created_at).getTime()
+                );
             });
 
-        // Load upvotes and comments for the fetched posts
-        const postIds = allPosts.map((post) => post.id);
+        if (posts.length === 0) {
+            feed.innerHTML = '';
 
+            if (emptyState) {
+                emptyState.classList.remove('hidden');
+            }
+
+            return;
+        }
+
+        if (emptyState) {
+            emptyState.classList.add('hidden');
+        }
+
+        feed.innerHTML = posts
+            .map((post) => {
+                const username = post.username || 'RISE User';
+                const firstLetter = username.charAt(0).toUpperCase();
+
+                const title = escapeHtml(post.title);
+                const body = escapeHtml(post.body);
+                const safeUsername = escapeHtml(username);
+                const categoryName = escapeHtml(post.category);
+
+                const avatarMarkup = post.avatar_url
+                    ? `
+                        <img
+                            src="${escapeHtml(post.avatar_url)}"
+                            alt="@${safeUsername}"
+                            loading="lazy"
+                            style="
+                                display: block;
+                                width: 30px;
+                                height: 30px;
+                                min-width: 30px;
+                                max-width: 30px;
+                                min-height: 30px;
+                                max-height: 30px;
+                                object-fit: cover;
+                            "
+                        />
+                    `
+                    : firstLetter;
+
+                const menuMarkup =
+                    currentUser?.id === post.user_id
+                        ? `
+                            <div class="post-menu-container">
+                                <button
+                                    class="post-menu-button"
+                                    data-post-id="${escapeHtml(post.id)}"
+                                    type="button"
+                                    aria-label="Discussion options"
+                                >
+                                    ⋮
+                                </button>
+
+                                <div
+                                    class="post-menu"
+                                    data-menu-id="${escapeHtml(post.id)}"
+                                    hidden
+                                >
+                                    <button
+                                        class="post-delete"
+                                        data-post-id="${escapeHtml(post.id)}"
+                                        type="button"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        `
+                        : '';
+
+                return `
+                    <article
+                        class="community-post"
+                        data-category="${categoryName}"
+                        data-post-id="${escapeHtml(post.id)}"
+                    >
+                        <div class="post-top">
+                            <div class="post-category">
+                                <span>${getCategoryIcon(post.category)}</span>
+                                ${categoryName}
+                            </div>
+
+                            <div class="post-options">
+                                <span class="post-time">
+                                    ${formatTime(post.created_at)}
+                                </span>
+
+                                ${menuMarkup}
+                            </div>
+                        </div>
+
+                        <a
+                            href="#"
+                            class="post-title"
+                            data-post-id="${escapeHtml(post.id)}"
+                        >
+                            ${title}
+                        </a>
+
+                        <p class="post-preview">
+                            ${body}
+                        </p>
+
+                        <div class="post-meta">
+                            <div class="post-author">
+                                <div
+                                    class="author-avatar"
+                                    data-fallback="${escapeHtml(firstLetter)}"
+                                >
+                                    ${avatarMarkup}
+                                </div>
+
+                                <span class="post-author-name">
+                                    @${safeUsername}
+                                </span>
+
+                                ${renderUserBadges(
+                                    post.user_id,
+                                    userBadges
+                                )}
+                            </div>
+
+                            <div class="post-stats">
+                                <span>▲ ${post.upvote_count ?? 0}</span>
+                                <span>💬 ${post.comment_count ?? 0}</span>
+                            </div>
+                        </div>
+                    </article>
+                `;
+            })
+            .join('');
+
+        // Replace unavailable profile pictures with the user's initial.
+        feed
+            .querySelectorAll<HTMLImageElement>('.author-avatar img')
+            .forEach((img) => {
+                img.addEventListener(
+                    'error',
+                    () => {
+                        const avatar = img.closest<HTMLElement>(
+                            '.author-avatar'
+                        );
+
+                        if (!avatar) return;
+
+                        avatar.textContent =
+                            avatar.dataset.fallback || 'R';
+                    },
+                    { once: true }
+                );
+            });
+
+        // Prevent placeholder links from jumping, then open the post page.
+        feed
+            .querySelectorAll<HTMLAnchorElement>('.post-title')
+            .forEach((link) => {
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+
+                    const postId = link.dataset.postId;
+                    if (!postId) return;
+
+                    window.location.href =
+                        `/community/post?id=${encodeURIComponent(postId)}`;
+                });
+            });
+
+        // Toggle the options menu for each post.
+        feed
+            .querySelectorAll<HTMLButtonElement>('.post-menu-button')
+            .forEach((button) => {
+                button.addEventListener('click', (event) => {
+                    event.stopPropagation();
+
+                    const postId = button.dataset.postId;
+                    if (!postId) return;
+
+                    feed
+                        .querySelectorAll<HTMLElement>('.post-menu')
+                        .forEach((menu) => {
+                            if (menu.dataset.menuId === postId) {
+                                menu.toggleAttribute('hidden');
+                            } else {
+                                menu.setAttribute('hidden', '');
+                            }
+                        });
+                });
+            });
+
+        // Delete only the signed-in user's own discussion.
+        feed
+            .querySelectorAll<HTMLButtonElement>('.post-delete')
+            .forEach((button) => {
+                button.addEventListener('click', async () => {
+                    const postId = button.dataset.postId;
+                    if (!postId || !currentUser?.id) return;
+
+                    const confirmed = window.confirm(
+                        'Delete this discussion?'
+                    );
+
+                    if (!confirmed) return;
+
+                    const { error } = await supabase
+                        .from('community_posts')
+                        .delete()
+                        .eq('id', postId)
+                        .eq('user_id', currentUser.id);
+
+                    if (error) {
+                        console.error(
+                            'Delete discussion error:',
+                            error
+                        );
+
+                        alert(
+                            'Could not delete the discussion. Please try again.'
+                        );
+                        return;
+                    }
+
+                    await loadCommunityPosts();
+                });
+            });
+    }
+
+    // ---------------------------------------------------------
+    // LOAD COMMUNITY POSTS, PROFILES, AND BADGES
+    // ---------------------------------------------------------
+
+    async function loadCommunityPosts() {
+        if (!feed) return;
+
+        const {
+            data: { user },
+            error: authError,
+        } = await supabase.auth.getUser();
+
+        if (authError) {
+            console.error('Could not get current user:', authError);
+        }
+
+        currentUser = user ?? null;
+
+        feed.innerHTML = `
+            <div class="community-loading">
+                Loading discussions...
+            </div>
+        `;
+
+        const {
+            data: posts,
+            error: postsError,
+        } = await supabase
+            .from('community_posts')
+            .select(`
+                id,
+                user_id,
+                title,
+                body,
+                category,
+                created_at,
+                updated_at
+            `)
+            .order('created_at', {
+                ascending: false,
+            });
+
+        if (postsError) {
+            console.error(
+                'Community posts error:',
+                JSON.stringify(postsError, null, 2)
+            );
+
+            feed.innerHTML = `
+                <div class="community-loading">
+                    Unable to load discussions.
+                </div>
+            `;
+
+            return;
+        }
+
+        if (!posts || posts.length === 0) {
+            allPosts = [];
+            userBadges = new Map();
+            feed.innerHTML = '';
+
+            if (emptyState) {
+                emptyState.classList.remove('hidden');
+            }
+
+            return;
+        }
+
+        // Collect unique author IDs for profile and badge lookups.
+        const userIds = [
+            ...new Set(
+                posts
+                    .map((post) => post.user_id)
+                    .filter((id): id is string => Boolean(id))
+            ),
+        ];
+
+        // Load public usernames and avatars.
+        const {
+            data: profiles,
+            error: profilesError,
+        } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url')
+            .in('id', userIds);
+
+        if (profilesError) {
+            console.error('Profiles error:', profilesError);
+        }
+
+        const profileMap = new Map<
+            string,
+            { username: string | null; avatar_url: string | null }
+        >(
+            (profiles ?? []).map((profile) => [
+                profile.id,
+                {
+                    username: profile.username,
+                    avatar_url: profile.avatar_url,
+                },
+            ])
+        );
+
+        // Load verified badges into the script-scope map used by renderPosts().
+        // This replaces the old verifiedUserIds reference.
+        userBadges = await loadUserBadges(supabase, userIds);
+
+        // Combine posts with their profile details.
+        allPosts = posts.map((post) => {
+            const profile = profileMap.get(post.user_id);
+
+            return {
+                ...post,
+                username: profile?.username || 'RISE User',
+                avatar_url: profile?.avatar_url || null,
+                upvote_count: 0,
+                comment_count: 0,
+            };
+        });
+
+        // Load upvotes and comments for the fetched posts.
+        const postIds = allPosts.map((post) => post.id);
 
         const [
             { data: upvotes, error: upvotesError },
@@ -2450,7 +2421,6 @@ const communityDescription =
                 .in('post_id', postIds),
         ]);
 
-
         if (upvotesError) {
             console.error('Upvote count error:', upvotesError);
         }
@@ -2462,14 +2432,14 @@ const communityDescription =
         const upvoteCounts = new Map<string, number>();
         const commentCounts = new Map<string, number>();
 
-        (upvotes || []).forEach(({ post_id }) => {
+        (upvotes ?? []).forEach(({ post_id }) => {
             upvoteCounts.set(
                 post_id,
                 (upvoteCounts.get(post_id) || 0) + 1
             );
         });
 
-        (comments || []).forEach(({ post_id }) => {
+        (comments ?? []).forEach(({ post_id }) => {
             commentCounts.set(
                 post_id,
                 (commentCounts.get(post_id) || 0) + 1
@@ -2482,50 +2452,39 @@ const communityDescription =
             comment_count: commentCounts.get(post.id) || 0,
         }));
 
-
         renderPosts();
-	}	
+    }
 
+    // ---------------------------------------------------------
+    // CATEGORY FILTERS
+    // ---------------------------------------------------------
 
+    tabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+            currentCategory = tab.dataset.category || 'all';
 
+            tabs.forEach((item) => {
+                item.classList.remove('active');
+            });
 
+            tab.classList.add('active');
+            renderPosts();
+        });
+    });
 
+    // ---------------------------------------------------------
+    // POST SORTING
+    // ---------------------------------------------------------
 
-	/* =========================================================
-	CATEGORY FILTERS
-	========================================================= */
+    sortSelect?.addEventListener('change', () => {
+        currentSort = sortSelect.value;
+        renderPosts();
+    });
 
-	tabs.forEach((tab) => {
-		tab.addEventListener('click', () => {
-			currentCategory = tab.dataset.category || 'all';
+    // ---------------------------------------------------------
+    // START
+    // ---------------------------------------------------------
 
-			tabs.forEach((item) => {
-				item.classList.remove('active');
-			});
-
-			tab.classList.add('active');
-
-			renderPosts();
-		});
-	});
-
-	/* =========================================================
-	POST SORTING
-	========================================================= */
-
-	sortSelect?.addEventListener('change', () => {
-		currentSort = sortSelect.value;
-		renderPosts();
-	});
-
-	/* =========================================================
-	   START
-	========================================================= */
-
-	loadCommunityPosts();
-
-
-	
+    loadCommunityPosts();
 </script>
-
 </html>

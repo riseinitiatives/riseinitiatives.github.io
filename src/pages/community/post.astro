@@ -49,8 +49,9 @@ const pageDescription = 'RISE Community discussion';
 						</div>
 
 						<span id="discussion-author"></span>
+                        <span id="discussion-author-badge"></span>
 
-						<span>·</span>
+                        <span>·</span>
 
 						<span id="discussion-time"></span>
 					</div>
@@ -803,9 +804,44 @@ const pageDescription = 'RISE Community discussion';
         :global(#comment-status.is-error) {
             color: #ff8b8b;
         }
+        :global(.comment-author) {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        }
+
+        :global(.dev-verified-badge) {
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            flex: 0 0 18px;
+            box-sizing: border-box;
+
+            border: 1.5px solid #16a34a;
+            border-radius: 50% !important;
+
+            background: #16a34a;
+            color: #ffffff;
+
+            font-size: 12px;
+            font-weight: 900;
+            line-height: 1;
+            vertical-align: middle;
+
+            box-shadow: 0 0 8px rgba(22, 163, 74, 0.35);
+        }
 	</style>
 
 	<script>
+        import {
+        loadUserBadges,
+        renderUserBadges,
+        } from '../../lib/userBadges';
 		import { supabase } from '../../lib/supabase';
 
         const {
@@ -860,6 +896,23 @@ const pageDescription = 'RISE Community discussion';
                     .select('username')
                     .eq('id', user.id)
                     .maybeSingle();
+             
+            const discussionBadges = await loadUserBadges(
+            supabase,
+            [post.user_id],
+            );
+
+            const discussionAuthorBadge =
+            document.querySelector<HTMLElement>(
+                '#discussion-author-badge'
+            );
+
+            if (discussionAuthorBadge) {
+            discussionAuthorBadge.innerHTML = renderUserBadges(
+                post.user_id,
+                discussionBadges,
+            );
+            }        
 
             if (profileError || !profile) {
                 console.error(
@@ -966,6 +1019,12 @@ const pageDescription = 'RISE Community discussion';
                 ])
             );
 
+
+            const commentBadges = await loadUserBadges(
+            supabase,
+            userIds,
+            );
+
             if (commentsList) {
                 const escapeHTML = (value: string) =>
                     value.replace(/[&<>"']/g, (char) => {
@@ -1052,6 +1111,7 @@ const pageDescription = 'RISE Community discussion';
                                     <div class="comment-meta">
                                         <span class="comment-author">
                                             @${safeUsername}
+                                            ${renderUserBadges(comment.user_id, commentBadges)}
                                         </span>
                                         <span class="comment-time">
                                             ${formattedTime}
