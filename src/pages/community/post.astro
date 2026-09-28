@@ -1040,23 +1040,7 @@ const pageDescription = 'RISE Community discussion';
                     const profile = profileMap.get(comment.user_id);
                     const username = profile?.username || comment.display_name || 'RISE User';
                         
-                    const discussionBadges = await loadUserBadges(
-                    supabase,
-                    [post.user_id],
-                    );
-
-                    const discussionAuthorBadge =
-                    document.querySelector<HTMLElement>(
-                        '#discussion-author-badge'
-                    );
-
-                    if (discussionAuthorBadge) {
-                    discussionAuthorBadge.innerHTML = renderUserBadges(
-                        post.user_id,
-                        discussionBadges,
-                    );
-                    }
-
+                    
                     const avatarUrl = profile?.avatar_url || '';
                     const safeUsername = escapeHTML(username);
                     const safeBody = escapeHTML(comment.body);
@@ -1606,6 +1590,24 @@ const pageDescription = 'RISE Community discussion';
 
 			const username =
 				profile?.username || 'RISE User';
+            
+            const discussionBadges = await loadUserBadges(
+            supabase,
+            [post.user_id],
+            );
+
+            const discussionAuthorBadge =
+            document.querySelector<HTMLElement>(
+                '#discussion-author-badge'
+            );
+
+            if (discussionAuthorBadge) {
+            discussionAuthorBadge.innerHTML = renderUserBadges(
+                post.user_id,
+                discussionBadges,
+            );
+            }
+
 
             const discussionMenuContainer =
                 document.querySelector<HTMLElement>(
