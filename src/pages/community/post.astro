@@ -899,17 +899,7 @@ const pageDescription = 'RISE Community discussion';
              
             
 
-            const discussionAuthorBadge =
-            document.querySelector<HTMLElement>(
-                '#discussion-author-badge'
-            );
-
-            if (discussionAuthorBadge) {
-            discussionAuthorBadge.innerHTML = renderUserBadges(
-                post.user_id,
-                discussionBadges,
-            );
-            }        
+                   
 
             if (profileError || !profile) {
                 console.error(
