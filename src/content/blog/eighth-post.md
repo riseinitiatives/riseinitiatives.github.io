@@ -1,6 +1,6 @@
 ---
 title: 'Added Detailing!'
-description: 'Documenting our progress and community projects.'
+description: 'Documenting RISE developed by Manish Sankar as the lead developer.'
 pubDate: 'Jul 20 2026'
 heroImage: '../../assets/images/blog8-pic-1.png'
 ---

@@ -1,6 +1,6 @@
 ---
 title: 'New Render of RISER V1 Prototype'
-description: 'Documenting our progress and community projects.'
+description: 'Documenting RISE developed by Manish Sankar as the lead developer.'
 pubDate: 'Jul 06 2026'
 heroImage: '../../assets/images/blog6-pic-1.png'
 ---

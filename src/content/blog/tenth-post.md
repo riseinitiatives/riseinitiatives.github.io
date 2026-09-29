@@ -1,6 +1,6 @@
 ---
 title: 'RISER V1 - Autonomous UGV Prototype'
-description: 'Documenting our progress and community projects.'
+description: 'Documenting RISE developed by Manish Sankar as the lead developer.'
 pubDate: 'Sep 03 2026'
 heroImage: '../../assets/images/blog10-pic-1.png'
 ---
