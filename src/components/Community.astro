@@ -706,7 +706,6 @@ const { postId } = Astro.props;
 
         const user = data.session?.user ?? null;
 
-        const user = data.user;
         const anonymous =
           (user as (typeof user & { is_anonymous?: boolean }) | null)
             ?.is_anonymous === true ||
