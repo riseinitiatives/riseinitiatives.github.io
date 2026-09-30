@@ -700,8 +700,11 @@ const { postId } = Astro.props;
       setFormEnabled(false);
 
       try {
-        const { data, error } = await supabase.auth.getUser();
+        const { data, error } = await supabase.auth.getSession();
+
         if (error) throw error;
+
+        const user = data.session?.user ?? null;
 
         const user = data.user;
         const anonymous =
