@@ -1,6 +1,5 @@
 ---
 import HeaderLink from './HeaderLink.astro';
-import { supabase } from '../lib/supabase';
 ---
 <div class="edge-neon edge-neon-left"></div>
 <div class="edge-neon edge-neon-right"></div>
@@ -71,7 +70,15 @@ import { supabase } from '../lib/supabase';
 		<div class="internal-links">
 			<HeaderLink href="/">Home</HeaderLink>
 			<HeaderLink href="/blog">Blog</HeaderLink>
-			<HeaderLink href="/community">Community</HeaderLink>
+			<a
+				class:list={[
+					"community-nav-link",
+					Astro.url.pathname.startsWith("/community") && "active"
+				]}
+				href="/community"
+			>
+				Community
+			</a>
 			<HeaderLink href="/about">About</HeaderLink>
 		</div>
 
@@ -115,37 +122,7 @@ import { supabase } from '../lib/supabase';
 			</a>
 			</div>
 
-			<!-- MOVE your existing account-area div here -->
-			<div class="account-area">
-				<div class="account-controls">
-				<button id="account-link" type="button" hidden>
-					<span id="account-label">Sign in</span>
-				</button>
-
-				<img
-					id="account-avatar"
-					class="account-avatar"
-					alt="Profile picture"
-					hidden
-				/>
-			</div>
-
-				<div id="account-menu" class="account-menu" hidden>
-					<div class="account-menu-username" id="account-username"></div>
-
-					<button id="account-settings-button" type="button">
-						⚙️ Account Settings
-					</button>
-
-					<button id="switch-account-button" type="button">
-						👥 Switch Account 
-					</button>
-
-					<button id="logout-button" type="button">
-						📤 Sign Out 
-					</button>
-				</div>
-			</div>
+			
 
 		</div>
 		
@@ -154,6 +131,46 @@ import { supabase } from '../lib/supabase';
 </header>
 
 <style>
+	.internal-links .community-nav-link {
+		display: inline-flex !important;
+		align-items: center;
+		justify-content: center;
+		visibility: visible !important;
+		opacity: 1 !important;
+		color: #f5f3ff;
+		padding: 0.3em 0.7em;
+		margin: 0 0.15em;
+		border: 3px solid transparent;
+		border-radius: 999px;
+		text-decoration: none;
+		transition: all 0.35s ease;
+		white-space: nowrap;
+	}
+
+	.internal-links .community-nav-link:hover {
+		color: #fff;
+		border-color: #4cffed;
+		background: rgba(53, 255, 235, 0.04);
+		box-shadow:
+			0 0 6px rgba(11, 255, 231, 0.64),
+			0 0 14px rgba(11, 255, 231, 0.28);
+	}
+
+	@media (max-width: 1100px) {
+		.internal-links .community-nav-link {
+			padding: 7px 9px;
+			margin: 0 1px;
+			border-width: 2px;
+			font-size: 0.82rem;
+		}
+	}
+
+	@media (max-width: 360px) {
+		.internal-links .community-nav-link {
+			padding: 6px;
+			font-size: 0.74rem;
+		}
+	}
 
 	.account-menu:not([hidden]) {
 		animation: account-menu-in 0.3s ease-out;
@@ -704,204 +721,3 @@ import { supabase } from '../lib/supabase';
 	}
 	
 </style>
-
-<script>
-	import { supabase } from '../lib/supabase';
-
-	const accountLink = document.querySelector('#account-link');
-	const accountMenu = document.querySelector('#account-menu');
-	const accountUsername = document.querySelector('#account-username');
-	const logoutButton = document.querySelector('#logout-button');
-	const accountSettingsButton =
-	document.querySelector('#account-settings-button');
-	const switchAccountButton =
-	document.querySelector('#switch-account-button');
-	const accountLabel = document.querySelector('#account-label');
-	const accountAvatar = document.querySelector('#account-avatar');
-
-
-	let accountState = 'loading';
-	let requestId = 0;
-
-	function showSignedOut() {
-		accountState = 'signed-out';
-
-		if (accountLabel) {
-			accountLabel.textContent = 'Sign in';
-		}
-
-		if (accountAvatar) {
-			accountAvatar.hidden = true;
-			accountAvatar.removeAttribute('src');
-		}
-
-		if (accountLink) {
-			accountLink.hidden = false;
-		}
-
-		accountMenu?.setAttribute('hidden', '');
-	}
-
-	async function updateAccountUI(session = null) {
-		if (!accountLink) return;
-
-		const currentRequest = ++requestId;
-
-		accountState = 'loading';
-		accountLink.hidden = true;
-		accountMenu?.setAttribute('hidden', '');
-
-		let user = session?.user ?? null;
-
-		if (!session) {
-			const {
-				data: { user: currentUser },
-			} = await supabase.auth.getUser();
-
-			user = currentUser;
-		}
-
-		if (currentRequest !== requestId) return;
-
-		/*
-		 * Anonymous Supabase users are NOT RISE accounts.
-		 * Treat them exactly like signed-out visitors.
-		 */
-		const isAnonymous =
-			user?.is_anonymous === true ||
-			user?.app_metadata?.is_anonymous === true;
-
-		if (!user || isAnonymous) {
-			showSignedOut();
-			return;
-		}
-
-		const {
-			data: profile,
-			error: profileError,
-		} = await supabase
-			.from('profiles')
-			.select('username, avatar_url')
-			.eq('id', user.id)
-			.maybeSingle();
-
-		if (currentRequest !== requestId) return;
-
-		if (profileError) {
-			console.error('Profile lookup error:', profileError);
-		}
-
-		if (!profile) {
-			accountState = 'profile-incomplete';
-
-			if (accountLabel) {
-				accountLabel.textContent = 'Complete profile';
-			}
-
-			if (accountAvatar) {
-				accountAvatar.hidden = true;
-				accountAvatar.removeAttribute('src');
-			}
-
-			accountLink.hidden = false;
-			return;
-		}
-
-		accountState = 'signed-in';
-
-			// Update the button label without removing its HTML
-			if (accountLabel) {
-				accountLabel.textContent = `@${profile.username}`;
-			}
-
-			accountLink.hidden = false;
-
-			// Get the avatar URL from the profile or Supabase user metadata
-			const avatarUrl =
-				profile?.avatar_url ||
-				user.user_metadata?.avatar_url ||
-				user.user_metadata?.picture;
-
-			if (accountAvatar) {
-				if (avatarUrl) {
-					accountAvatar.src = avatarUrl;
-					accountAvatar.hidden = false;
-				} else {
-					accountAvatar.hidden = true;
-					accountAvatar.removeAttribute('src');
-				}
-			}
-
-			if (accountUsername) {
-				accountUsername.textContent = `@${profile.username}`;
-			}
-		}
-
-	accountLink?.addEventListener('click', () => {
-		if (accountState === 'signed-out') {
-			window.location.href = '/login';
-			return;
-		}
-
-		if (accountState === 'profile-incomplete') {
-			window.location.href = '/setup-profile';
-			return;
-		}
-
-		if (accountState !== 'signed-in') {
-			return;
-		}
-
-		if (accountMenu?.hasAttribute('hidden')) {
-			accountMenu.removeAttribute('hidden');
-		} else {
-			accountMenu?.setAttribute('hidden', '');
-		}
-	});
-
-	logoutButton?.addEventListener('click', async () => {
-		const { error } = await supabase.auth.signOut({
-			scope: 'local',
-		});
-
-		if (error) {
-			console.error('Sign out error:', error);
-			return;
-		}
-
-		requestId++;
-		showSignedOut();
-
-		window.location.href = '/';
-	});
-
-	updateAccountUI();
-
-	supabase.auth.onAuthStateChange((_event, session) => {
-		if (!session?.user) {
-			requestId++;
-			showSignedOut();
-			return;
-		}
-
-		updateAccountUI(session);
-	});
-	accountSettingsButton?.addEventListener('click', () => {
-		window.location.href = '/account';
-	});
-
-	switchAccountButton?.addEventListener('click', async () => {
-		const { error } = await supabase.auth.signOut({
-			scope: 'local',
-		});
-
-		if (error) {
-			console.error('Switch account error:', error);
-			return;
-		}
-
-		window.location.href = '/login';
-	});
-
-	
-</script>

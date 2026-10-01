@@ -2,7 +2,6 @@
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
-import { supabase } from '../lib/supabase';
 import { SITE_TITLE } from '../consts';
 
 const communityTitle = `Community | ${SITE_TITLE}`;
@@ -24,270 +23,287 @@ const communityDescription =
 		<Header />
 
 		<main class="community-page">
+			<div class="community-locked-content" inert aria-hidden="true">
 
-			<!-- COMMUNITY HEADER -->
-			<section class="community-header">
-				<div class="community-header-content">
+				<!-- COMMUNITY HEADER -->
+				<section class="community-header">
+					<div class="community-header-content">
 
-					<div class="community-title-row">
-						<div>
-							<p class="eyebrow">RISE // COMMUNITY</p>
+						<div class="community-title-row">
+							<div>
+								<p class="eyebrow">RISE // COMMUNITY</p>
 
-							<h1>
-								Build.
-								<span> Discuss. </span>
-								Inspire.
-							</h1>
+								<h1>
+									Build.
+									<span> Discuss. </span>
+									Inspire.
+								</h1>
 
-							<p class="community-description">
-								A space for builders, creators, and curious minds to
-								share ideas, projects, questions, and everything in between.
-							</p>
+								<p class="community-description">
+									A space for builders, creators, and curious minds to
+									share ideas, projects, questions, and everything in between.
+								</p>
+							</div>
+
+							<button
+								id="open-discussion-modal"
+								class="start-discussion"
+								type="button"
+							>
+								<span>＋</span>
+								Start Discussion
+							</button>
 						</div>
 
-						<button
-							id="open-discussion-modal"
-							class="start-discussion"
-							type="button"
-						>
-							<span>＋</span>
-							Start Discussion
+					</div>
+				</section>
+
+
+				<!-- COMMUNITY NAVIGATION -->
+				<section class="community-navigation">
+
+					<div class="community-tabs">
+
+						<button class="community-tab active" data-category="all">
+							All
 						</button>
-					</div>
 
-				</div>
-			</section>
+						<button class="community-tab" data-category="Ideas">
+							💡 Ideas
+						</button>
 
+						<button class="community-tab" data-category="Projects">
+							🚀 Projects
+						</button>
 
-			<!-- COMMUNITY NAVIGATION -->
-			<section class="community-navigation">
-
-				<div class="community-tabs">
-
-					<button class="community-tab active" data-category="all">
-						All
-					</button>
-
-					<button class="community-tab" data-category="Ideas">
-						💡 Ideas
-					</button>
-
-					<button class="community-tab" data-category="Projects">
-						🚀 Projects
-					</button>
-
-					<button class="community-tab" data-category="Build & Tech">
-						🛠️ Build & Tech
-					</button>
-
-				</div>
-
-			</section>
-
-
-			<!-- COMMUNITY FEED -->
-			<section class="community-feed">
-
-				<div class="feed-heading">
-					<div>
-						<p class="feed-label">COMMUNITY FEED</p>
-
-						<h2>
-							What's happening
-							<span> right now.</span>
-						</h2>
-					</div>
-
-					<div class="feed-heading-side">
-						<p class="feed-description">
-							Discover discussions, projects, questions, and ideas
-							from the RISE community.
-						</p>
-
-						<div class="feed-sort">
-							<label for="community-sort">Sort by</label>
-							<select id="community-sort">
-								<option value="top" selected>⬆ Top upvoted</option>
-								<option value="newest">🕒 Newest</option>
-							</select>
-						</div>
-					</div>
-				</div>
-
-
-				<!--
-					POST FEED
-
-					This is intentionally a temporary visual structure.
-
-					Next step:
-					community_posts → Supabase → dynamic post cards
-				-->
-
-				<div id="community-feed-list" class="community-feed-list">
-                    <div class="community-loading">
-                        Loading discussions...
-                    </div>
-                </div>
-				<!-- EMPTY STATE -->
-				<div id="community-empty" class="community-empty hidden">
-
-					<div class="empty-icon">
-						✦
-					</div>
-
-					<h3>
-						Nothing here yet
-					</h3>
-
-					<p>
-						Be the first person to start a discussion in this category.
-					</p>
-
-					<a href="#start-discussion" class="empty-button">
-						Start Discussion
-					</a>
-
-				</div>
-
-			</section>
-
-
-			<!-- START DISCUSSION -->
-			<section id="start-discussion" class="start-section">
-
-				<div class="start-card">
-
-					<div class="start-icon">
-						＋
-					</div>
-
-					<div>
-
-						<p class="start-label">
-							GOT SOMETHING TO SAY?
-						</p>
-
-						<h2>
-							Start a discussion
-						</h2>
-
-						<p>
-							Have an idea, project, question, or something
-							interesting to share? Start the conversation.
-						</p>
+						<button class="community-tab" data-category="Build & Tech">
+							🛠️ Build & Tech
+						</button>
 
 					</div>
 
-					<button
-						id="open-discussion-modal-bottom"
-						class="start-button"
-						type="button"
-					>
-						Create Discussion
-						<span>→</span>
-					</button>
+				</section>
 
-				</div>
 
-			</section>
+				<!-- COMMUNITY FEED -->
+				<section class="community-feed">
 
-			<!-- CREATE DISCUSSION MODAL -->
-			<div
-				id="discussion-modal"
-				class="discussion-modal"
-				hidden
-			>
-				<div
-					class="discussion-modal-backdrop"
-					id="discussion-modal-backdrop"
-				></div>
-
-				<div
-					class="discussion-dialog"
-					role="dialog"
-					aria-modal="true"
-					aria-labelledby="discussion-dialog-title"
-				>
-
-					<div class="discussion-dialog-header">
-
+					<div class="feed-heading">
 						<div>
-							<p class="discussion-dialog-label">
-								RISE // COMMUNITY
-							</p>
+							<p class="feed-label">COMMUNITY FEED</p>
 
-							<h2 id="discussion-dialog-title">
-								Start a discussion
+							<h2>
+								What's happening
+								<span> right now.</span>
 							</h2>
 						</div>
 
-						<button
-							id="close-discussion-modal"
-							class="discussion-dialog-close"
-							type="button"
-							aria-label="Close"
-						>
-							×
-						</button>
+						<div class="feed-heading-side">
+							<p class="feed-description">
+								Discover discussions, projects, questions, and ideas
+								from the RISE community.
+							</p>
+
+							<div class="feed-sort">
+								<label for="community-sort">Sort by</label>
+								<select id="community-sort">
+									<option value="top" selected>⬆ Top upvoted</option>
+									<option value="newest">🕒 Newest</option>
+								</select>
+							</div>
+						</div>
+					</div>
+
+
+					<!--
+						POST FEED
+
+						This is intentionally a temporary visual structure.
+
+						Next step:
+						community_posts → Supabase → dynamic post cards
+					-->
+
+					<div id="community-feed-list" class="community-feed-list">
+						<div class="community-loading">
+							Loading discussions...
+						</div>
+					</div>
+					<!-- EMPTY STATE -->
+					<div id="community-empty" class="community-empty hidden">
+
+						<div class="empty-icon">
+							✦
+						</div>
+
+						<h3>
+							Nothing here yet
+						</h3>
+
+						<p>
+							Be the first person to start a discussion in this category.
+						</p>
+
+						<a href="#start-discussion" class="empty-button">
+							Start Discussion
+						</a>
 
 					</div>
 
-					<div class="discussion-dialog-body">
+				</section>
 
-						<label for="discussion-title-input">
-							Title
-						</label>
 
-						<input
-							id="discussion-title-input"
-							type="text"
-							placeholder="What's on your mind?"
-							maxlength="120"
-						/>
+				<!-- START DISCUSSION -->
+				<section id="start-discussion" class="start-section">
 
-						<label for="discussion-category-input">
-							Category
-						</label>
+					<div class="start-card">
 
-						<select id="discussion-category-input">
-							<option value="Ideas">💡 Ideas</option>
-							<option value="Projects">🚀 Projects</option>
-							<option value="Build & Tech">🛠️ Build & Tech</option>
-						</select>
+						<div class="start-icon">
+							＋
+						</div>
 
-						<label for="discussion-body-input">
-							Discussion
-						</label>
+						<div>
 
-						<textarea
-							id="discussion-body-input"
-							rows="7"
-							placeholder="Share your idea, project, question, or thought..."
-						></textarea>
+							<p class="start-label">
+								GOT SOMETHING TO SAY?
+							</p>
 
-					</div>
+							<h2>
+								Start a discussion
+							</h2>
 
-					<div class="discussion-dialog-footer">
+							<p>
+								Have an idea, project, question, or something
+								interesting to share? Start the conversation.
+							</p>
+
+						</div>
 
 						<button
-							id="cancel-discussion"
-							class="discussion-cancel-button"
-							type="button"
-						>
-							Cancel
-						</button>
-
-						<button
-							id="create-discussion"
-							class="discussion-create-button"
+							id="open-discussion-modal-bottom"
+							class="start-button"
 							type="button"
 						>
 							Create Discussion
+							<span>→</span>
 						</button>
 
 					</div>
 
+				</section>
+
+				<!-- CREATE DISCUSSION MODAL -->
+				<div
+					id="discussion-modal"
+					class="discussion-modal"
+					hidden
+				>
+					<div
+						class="discussion-modal-backdrop"
+						id="discussion-modal-backdrop"
+					></div>
+
+					<div
+						class="discussion-dialog"
+						role="dialog"
+						aria-modal="true"
+						aria-labelledby="discussion-dialog-title"
+					>
+
+						<div class="discussion-dialog-header">
+
+							<div>
+								<p class="discussion-dialog-label">
+									RISE // COMMUNITY
+								</p>
+
+								<h2 id="discussion-dialog-title">
+									Start a discussion
+								</h2>
+							</div>
+
+							<button
+								id="close-discussion-modal"
+								class="discussion-dialog-close"
+								type="button"
+								aria-label="Close"
+							>
+								×
+							</button>
+
+						</div>
+
+						<div class="discussion-dialog-body">
+
+							<label for="discussion-title-input">
+								Title
+							</label>
+
+							<input
+								id="discussion-title-input"
+								type="text"
+								placeholder="What's on your mind?"
+								maxlength="120"
+							/>
+
+							<label for="discussion-category-input">
+								Category
+							</label>
+
+							<select id="discussion-category-input">
+								<option value="Ideas">💡 Ideas</option>
+								<option value="Projects">🚀 Projects</option>
+								<option value="Build & Tech">🛠️ Build & Tech</option>
+							</select>
+
+							<label for="discussion-body-input">
+								Discussion
+							</label>
+
+							<textarea
+								id="discussion-body-input"
+								rows="7"
+								placeholder="Share your idea, project, question, or thought..."
+							></textarea>
+
+						</div>
+
+						<div class="discussion-dialog-footer">
+
+							<button
+								id="cancel-discussion"
+								class="discussion-cancel-button"
+								type="button"
+							>
+								Cancel
+							</button>
+
+							<button
+								id="create-discussion"
+								class="discussion-create-button"
+								type="button"
+							>
+								Create Discussion
+							</button>
+
+						</div>
+
+					</div>
+				</div>
+
+			</div>	
+
+			<div class="community-lock-overlay" role="status">
+				<div class="lock-strip">
+					<span>🔒 LOCKED</span>
+				</div>
+
+				<div class="lock-message">
+					<h2>RISE Community</h2>
+					<p>
+						A space for builders, creators, and curious minds.
+						Currently under development.
+					</p>
 				</div>
 			</div>
 
@@ -302,6 +318,74 @@ const communityDescription =
 
 
 	<style>
+		/*EXTRAS*/
+		.community-page {
+			position: relative;
+			isolation: isolate;
+			overflow: hidden;
+			min-height: 75vh;
+		}
+
+		.community-locked-content {
+			filter: blur(7px);
+			opacity: 0.45;
+			pointer-events: none;
+			user-select: none;
+		}
+
+		.community-lock-overlay {
+			position: absolute;
+			inset: 0;
+			z-index: 10;
+			display: grid;
+			place-items: center;
+			overflow: hidden;
+			background: rgba(8, 6, 14, 0.18);
+		}
+
+		.lock-strip {
+			position: absolute;
+			top: 42%;
+			left: -15%;
+			width: 130%;
+			padding: 18px;
+			transform: rotate(-14deg);
+			text-align: center;
+			background: linear-gradient(
+				90deg,
+				#6d28d9,
+				#a855f7,
+				#6d28d9
+			);
+			border-top: 1px solid #c084fc;
+			border-bottom: 1px solid #c084fc;
+			box-shadow: 0 0 35px rgba(168, 85, 247, 0.35);
+		}
+
+		.lock-strip span {
+			color: white;
+			font-size: clamp(2rem, 8vw, 5rem);
+			font-weight: 900;
+			letter-spacing: 0.18em;
+		}
+
+		.lock-message {
+			position: relative;
+			z-index: 2;
+			max-width: 420px;
+			margin-top: 0;
+			padding: 20px;
+			text-align: center;
+			color: white;
+			background: rgba(12, 8, 20, 0.88);
+			border: 1px solid rgba(168, 85, 247, 0.35);
+			border-radius: 16px;
+			backdrop-filter: blur(12px);
+		}
+
+		.lock-message p {
+			color: rgba(255, 255, 255, 0.7);
+		}
 
 		/* =========================================================
 		`  CREATE DISCUSSION MODAL
@@ -1782,709 +1866,4 @@ const communityDescription =
 
 	</style>
 
-<script>
-    import {
-        loadUserBadges,
-        renderUserBadges,
-        type UserBadgeMap,
-    } from '../lib/userBadges';
-    import { supabase } from '../lib/supabase';
-
-    const tabs =
-        document.querySelectorAll<HTMLButtonElement>('.community-tab');
-
-    const feed =
-        document.querySelector<HTMLElement>('#community-feed-list');
-
-    const emptyState =
-        document.querySelector<HTMLElement>('#community-empty');
-
-    const sortSelect =
-        document.querySelector<HTMLSelectElement>('#community-sort');
-
-    const discussionModal =
-        document.querySelector<HTMLElement>('#discussion-modal');
-
-    const openDiscussionButton =
-        document.querySelector<HTMLButtonElement>('#open-discussion-modal');
-
-    const openDiscussionBottom =
-        document.querySelector<HTMLButtonElement>(
-            '#open-discussion-modal-bottom'
-        );
-
-    const closeDiscussionButton =
-        document.querySelector<HTMLButtonElement>(
-            '#close-discussion-modal'
-        );
-
-    const cancelDiscussionButton =
-        document.querySelector<HTMLButtonElement>('#cancel-discussion');
-
-    const discussionModalBackdrop =
-        document.querySelector<HTMLElement>(
-            '#discussion-modal-backdrop'
-        );
-
-    const createDiscussionButton =
-        document.querySelector<HTMLButtonElement>('#create-discussion');
-
-    const discussionTitleInput =
-        document.querySelector<HTMLInputElement>(
-            '#discussion-title-input'
-        );
-
-    const discussionCategoryInput =
-        document.querySelector<HTMLSelectElement>(
-            '#discussion-category-input'
-        );
-
-    const discussionBodyInput =
-        document.querySelector<HTMLTextAreaElement>(
-            '#discussion-body-input'
-        );
-
-    let currentCategory = 'all';
-    let currentSort = 'top';
-    let allPosts: any[] = [];
-    let currentUser: any = null;
-
-    // Keep the badge map at script scope so renderPosts() can access it.
-    let userBadges: UserBadgeMap = new Map();
-
-    // ---------------------------------------------------------
-    // DISCUSSION MODAL
-    // ---------------------------------------------------------
-
-    function openDiscussionModal() {
-        discussionModal?.removeAttribute('hidden');
-    }
-
-    function closeDiscussionModal() {
-        discussionModal?.setAttribute('hidden', '');
-    }
-
-    openDiscussionButton?.addEventListener(
-        'click',
-        openDiscussionModal
-    );
-
-    openDiscussionBottom?.addEventListener(
-        'click',
-        openDiscussionModal
-    );
-
-    closeDiscussionButton?.addEventListener(
-        'click',
-        closeDiscussionModal
-    );
-
-    cancelDiscussionButton?.addEventListener(
-        'click',
-        closeDiscussionModal
-    );
-
-    discussionModalBackdrop?.addEventListener(
-        'click',
-        closeDiscussionModal
-    );
-
-    // ---------------------------------------------------------
-    // CREATE DISCUSSION
-    // ---------------------------------------------------------
-
-    createDiscussionButton?.addEventListener('click', async () => {
-        const title = discussionTitleInput?.value.trim();
-        const category = discussionCategoryInput?.value;
-        const body = discussionBodyInput?.value.trim();
-
-        if (!title || !category || !body) {
-            alert('Please fill in the title, category, and discussion.');
-            return;
-        }
-
-        createDiscussionButton.disabled = true;
-        createDiscussionButton.textContent = 'Publishing...';
-
-        try {
-            const {
-                data: { user },
-                error: authError,
-            } = await supabase.auth.getUser();
-
-            if (authError) throw authError;
-
-            if (!user) {
-                alert('Please sign in before creating a discussion.');
-                return;
-            }
-
-            const { error } = await supabase
-                .from('community_posts')
-                .insert({
-                    user_id: user.id,
-                    title,
-                    category,
-                    body,
-                });
-
-            if (error) throw error;
-
-            if (discussionTitleInput) {
-                discussionTitleInput.value = '';
-            }
-
-            if (discussionBodyInput) {
-                discussionBodyInput.value = '';
-            }
-
-            if (discussionCategoryInput) {
-                discussionCategoryInput.value = 'Ideas';
-            }
-
-            closeDiscussionModal();
-            await loadCommunityPosts();
-        } catch (error) {
-            console.error('Create discussion error:', error);
-
-            alert(
-                error instanceof Error
-                    ? error.message
-                    : 'Could not create the discussion. Please try again.'
-            );
-        } finally {
-            createDiscussionButton.disabled = false;
-            createDiscussionButton.textContent = 'Create Discussion';
-        }
-    });
-
-    // ---------------------------------------------------------
-    // HELPERS
-    // ---------------------------------------------------------
-
-    function escapeHtml(value: string | null | undefined): string {
-        return String(value ?? '')
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#39;');
-    }
-
-    function formatTime(dateString: string): string {
-        const date = new Date(dateString);
-        const seconds = Math.floor(
-            (Date.now() - date.getTime()) / 1000
-        );
-
-        if (seconds < 60) {
-            return 'just now';
-        }
-
-        const minutes = Math.floor(seconds / 60);
-
-        if (minutes < 60) {
-            return `${minutes}m ago`;
-        }
-
-        const hours = Math.floor(minutes / 60);
-
-        if (hours < 24) {
-            return `${hours}h ago`;
-        }
-
-        const days = Math.floor(hours / 24);
-
-        if (days < 7) {
-            return `${days}d ago`;
-        }
-
-        return date.toLocaleDateString('en-IN', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-        });
-    }
-
-    function getCategoryIcon(category: string): string {
-        if (category === 'Ideas') {
-            return '💡';
-        }
-
-        if (category === 'Projects') {
-            return '🚀';
-        }
-
-        if (category === 'Build & Tech') {
-            return '🛠️';
-        }
-
-        return '✦';
-    }
-
-    // ---------------------------------------------------------
-    // RENDER POSTS
-    // ---------------------------------------------------------
-
-    function renderPosts() {
-        if (!feed) return;
-
-        const posts = allPosts
-            .filter(
-                (post) =>
-                    currentCategory === 'all' ||
-                    post.category === currentCategory
-            )
-            .sort((a, b) => {
-                if (currentSort === 'top') {
-                    const upvoteDifference =
-                        (b.upvote_count ?? 0) -
-                        (a.upvote_count ?? 0);
-
-                    if (upvoteDifference !== 0) {
-                        return upvoteDifference;
-                    }
-                }
-
-                return (
-                    new Date(b.created_at).getTime() -
-                    new Date(a.created_at).getTime()
-                );
-            });
-
-        if (posts.length === 0) {
-            feed.innerHTML = '';
-
-            if (emptyState) {
-                emptyState.classList.remove('hidden');
-            }
-
-            return;
-        }
-
-        if (emptyState) {
-            emptyState.classList.add('hidden');
-        }
-
-        feed.innerHTML = posts
-            .map((post) => {
-                const username = post.username || 'RISE User';
-                const firstLetter = username.charAt(0).toUpperCase();
-
-                const title = escapeHtml(post.title);
-                const body = escapeHtml(post.body);
-                const safeUsername = escapeHtml(username);
-                const categoryName = escapeHtml(post.category);
-
-                const avatarMarkup = post.avatar_url
-                    ? `
-                        <img
-                            src="${escapeHtml(post.avatar_url)}"
-                            alt="@${safeUsername}"
-                            loading="lazy"
-                            style="
-                                display: block;
-                                width: 30px;
-                                height: 30px;
-                                min-width: 30px;
-                                max-width: 30px;
-                                min-height: 30px;
-                                max-height: 30px;
-                                object-fit: cover;
-                            "
-                        />
-                    `
-                    : firstLetter;
-
-                const menuMarkup =
-                    currentUser?.id === post.user_id
-                        ? `
-                            <div class="post-menu-container">
-                                <button
-                                    class="post-menu-button"
-                                    data-post-id="${escapeHtml(post.id)}"
-                                    type="button"
-                                    aria-label="Discussion options"
-                                >
-                                    ⋮
-                                </button>
-
-                                <div
-                                    class="post-menu"
-                                    data-menu-id="${escapeHtml(post.id)}"
-                                    hidden
-                                >
-                                    <button
-                                        class="post-delete"
-                                        data-post-id="${escapeHtml(post.id)}"
-                                        type="button"
-                                    >
-                                        Delete
-                                    </button>
-                                </div>
-                            </div>
-                        `
-                        : '';
-
-                return `
-                    <article
-                        class="community-post"
-                        data-category="${categoryName}"
-                        data-post-id="${escapeHtml(post.id)}"
-                    >
-                        <div class="post-top">
-                            <div class="post-category">
-                                <span>${getCategoryIcon(post.category)}</span>
-                                ${categoryName}
-                            </div>
-
-                            <div class="post-options">
-                                <span class="post-time">
-                                    ${formatTime(post.created_at)}
-                                </span>
-
-                                ${menuMarkup}
-                            </div>
-                        </div>
-
-                        <a
-                            href="#"
-                            class="post-title"
-                            data-post-id="${escapeHtml(post.id)}"
-                        >
-                            ${title}
-                        </a>
-
-                        <p class="post-preview">
-                            ${body}
-                        </p>
-
-                        <div class="post-meta">
-                            <div class="post-author">
-                                <div
-                                    class="author-avatar"
-                                    data-fallback="${escapeHtml(firstLetter)}"
-                                >
-                                    ${avatarMarkup}
-                                </div>
-
-                                <span class="post-author-name">
-                                    @${safeUsername}
-                                </span>
-
-                                ${renderUserBadges(
-                                    post.user_id,
-                                    userBadges
-                                )}
-                            </div>
-
-                            <div class="post-stats">
-                                <span>▲ ${post.upvote_count ?? 0}</span>
-                                <span>💬 ${post.comment_count ?? 0}</span>
-                            </div>
-                        </div>
-                    </article>
-                `;
-            })
-            .join('');
-
-        // Replace unavailable profile pictures with the user's initial.
-        feed
-            .querySelectorAll<HTMLImageElement>('.author-avatar img')
-            .forEach((img) => {
-                img.addEventListener(
-                    'error',
-                    () => {
-                        const avatar = img.closest<HTMLElement>(
-                            '.author-avatar'
-                        );
-
-                        if (!avatar) return;
-
-                        avatar.textContent =
-                            avatar.dataset.fallback || 'R';
-                    },
-                    { once: true }
-                );
-            });
-
-        // Prevent placeholder links from jumping, then open the post page.
-        feed
-            .querySelectorAll<HTMLAnchorElement>('.post-title')
-            .forEach((link) => {
-                link.addEventListener('click', (event) => {
-                    event.preventDefault();
-
-                    const postId = link.dataset.postId;
-                    if (!postId) return;
-
-                    window.location.href =
-                        `/community/post?id=${encodeURIComponent(postId)}`;
-                });
-            });
-
-        // Toggle the options menu for each post.
-        feed
-            .querySelectorAll<HTMLButtonElement>('.post-menu-button')
-            .forEach((button) => {
-                button.addEventListener('click', (event) => {
-                    event.stopPropagation();
-
-                    const postId = button.dataset.postId;
-                    if (!postId) return;
-
-                    feed
-                        .querySelectorAll<HTMLElement>('.post-menu')
-                        .forEach((menu) => {
-                            if (menu.dataset.menuId === postId) {
-                                menu.toggleAttribute('hidden');
-                            } else {
-                                menu.setAttribute('hidden', '');
-                            }
-                        });
-                });
-            });
-
-        // Delete only the signed-in user's own discussion.
-        feed
-            .querySelectorAll<HTMLButtonElement>('.post-delete')
-            .forEach((button) => {
-                button.addEventListener('click', async () => {
-                    const postId = button.dataset.postId;
-                    if (!postId || !currentUser?.id) return;
-
-                    const confirmed = window.confirm(
-                        'Delete this discussion?'
-                    );
-
-                    if (!confirmed) return;
-
-                    const { error } = await supabase
-                        .from('community_posts')
-                        .delete()
-                        .eq('id', postId)
-                        .eq('user_id', currentUser.id);
-
-                    if (error) {
-                        console.error(
-                            'Delete discussion error:',
-                            error
-                        );
-
-                        alert(
-                            'Could not delete the discussion. Please try again.'
-                        );
-                        return;
-                    }
-
-                    await loadCommunityPosts();
-                });
-            });
-    }
-
-    // ---------------------------------------------------------
-    // LOAD COMMUNITY POSTS, PROFILES, AND BADGES
-    // ---------------------------------------------------------
-
-    async function loadCommunityPosts() {
-        if (!feed) return;
-
-        const {
-            data: { user },
-            error: authError,
-        } = await supabase.auth.getUser();
-
-        if (authError) {
-            console.error('Could not get current user:', authError);
-        }
-
-        currentUser = user ?? null;
-
-        feed.innerHTML = `
-            <div class="community-loading">
-                Loading discussions...
-            </div>
-        `;
-
-        const {
-            data: posts,
-            error: postsError,
-        } = await supabase
-            .from('community_posts')
-            .select(`
-                id,
-                user_id,
-                title,
-                body,
-                category,
-                created_at,
-                updated_at
-            `)
-            .order('created_at', {
-                ascending: false,
-            });
-
-        if (postsError) {
-            console.error(
-                'Community posts error:',
-                JSON.stringify(postsError, null, 2)
-            );
-
-            feed.innerHTML = `
-                <div class="community-loading">
-                    Unable to load discussions.
-                </div>
-            `;
-
-            return;
-        }
-
-        if (!posts || posts.length === 0) {
-            allPosts = [];
-            userBadges = new Map();
-            feed.innerHTML = '';
-
-            if (emptyState) {
-                emptyState.classList.remove('hidden');
-            }
-
-            return;
-        }
-
-        // Collect unique author IDs for profile and badge lookups.
-        const userIds = [
-            ...new Set(
-                posts
-                    .map((post) => post.user_id)
-                    .filter((id): id is string => Boolean(id))
-            ),
-        ];
-
-        // Load public usernames and avatars.
-        const {
-            data: profiles,
-            error: profilesError,
-        } = await supabase
-            .from('profiles')
-            .select('id, username, avatar_url')
-            .in('id', userIds);
-
-        if (profilesError) {
-            console.error('Profiles error:', profilesError);
-        }
-
-        const profileMap = new Map<
-            string,
-            { username: string | null; avatar_url: string | null }
-        >(
-            (profiles ?? []).map((profile) => [
-                profile.id,
-                {
-                    username: profile.username,
-                    avatar_url: profile.avatar_url,
-                },
-            ])
-        );
-
-        // Load verified badges into the script-scope map used by renderPosts().
-        // This replaces the old verifiedUserIds reference.
-        userBadges = await loadUserBadges(supabase, userIds);
-
-        // Combine posts with their profile details.
-        allPosts = posts.map((post) => {
-            const profile = profileMap.get(post.user_id);
-
-            return {
-                ...post,
-                username: profile?.username || 'RISE User',
-                avatar_url: profile?.avatar_url || null,
-                upvote_count: 0,
-                comment_count: 0,
-            };
-        });
-
-        // Load upvotes and comments for the fetched posts.
-        const postIds = allPosts.map((post) => post.id);
-
-        const [
-            { data: upvotes, error: upvotesError },
-            { data: comments, error: commentsError },
-        ] = await Promise.all([
-            supabase
-                .from('upvotes')
-                .select('post_id')
-                .in('post_id', postIds),
-
-            supabase
-                .from('comments')
-                .select('post_id')
-                .in('post_id', postIds),
-        ]);
-
-        if (upvotesError) {
-            console.error('Upvote count error:', upvotesError);
-        }
-
-        if (commentsError) {
-            console.error('Comment count error:', commentsError);
-        }
-
-        const upvoteCounts = new Map<string, number>();
-        const commentCounts = new Map<string, number>();
-
-        (upvotes ?? []).forEach(({ post_id }) => {
-            upvoteCounts.set(
-                post_id,
-                (upvoteCounts.get(post_id) || 0) + 1
-            );
-        });
-
-        (comments ?? []).forEach(({ post_id }) => {
-            commentCounts.set(
-                post_id,
-                (commentCounts.get(post_id) || 0) + 1
-            );
-        });
-
-        allPosts = allPosts.map((post) => ({
-            ...post,
-            upvote_count: upvoteCounts.get(post.id) || 0,
-            comment_count: commentCounts.get(post.id) || 0,
-        }));
-
-        renderPosts();
-    }
-
-    // ---------------------------------------------------------
-    // CATEGORY FILTERS
-    // ---------------------------------------------------------
-
-    tabs.forEach((tab) => {
-        tab.addEventListener('click', () => {
-            currentCategory = tab.dataset.category || 'all';
-
-            tabs.forEach((item) => {
-                item.classList.remove('active');
-            });
-
-            tab.classList.add('active');
-            renderPosts();
-        });
-    });
-
-    // ---------------------------------------------------------
-    // POST SORTING
-    // ---------------------------------------------------------
-
-    sortSelect?.addEventListener('change', () => {
-        currentSort = sortSelect.value;
-        renderPosts();
-    });
-
-    // ---------------------------------------------------------
-    // START
-    // ---------------------------------------------------------
-
-    loadCommunityPosts();
-</script>
 </html>
